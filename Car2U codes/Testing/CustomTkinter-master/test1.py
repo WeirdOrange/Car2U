@@ -44,7 +44,7 @@ style.theme_create( "MyStyle", parent="alt", settings={
         "TNotebook.Tab": {"configure": {"padding": [20, 20] },}})
 
 style.theme_use("MyStyle")
-im = Image.open('path/to/image')
+im = Image.open('~~gradient1.png')
 ph = ImageTk.PhotoImage(im)
 
 a_notebook = ttk.Notebook(app, width=1280, height=200)

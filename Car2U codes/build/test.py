@@ -1,104 +1,315 @@
-from pathlib import Path
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox
-import customtkinter as ctk
-import tkinter as tk
-import pywinstyles
-from PIL import ImageTk, Image
+from tkinter import Tk, Canvas, Entry, Button, StringVar, filedialog, OptionMenu, Label, ttk, messagebox
+from PIL import Image, ImageTk
+import sqlite3
 
-# Function to handle sign-up button click
-def sign_up():
-    name = name_entry.get()
-    email = email_entry.get()
-    age = age_entry.get()
-    dob_day = dob_day_entry.get()
-    dob_month = dob_month_entry.get()
-    dob_year = dob_year_entry.get()
-    contact = contact_entry.get()
+selected_car_id = None
+image_path = None  # To store the uploaded image path
 
-    # Simple validation
-    if not name or not email or not age or not dob_day or not dob_month or not dob_year or not contact:
-        messagebox.showerror("Input Error", "All fields are required!")
+# Connect to the database and create the table
+def connect_db():
+    conn = sqlite3.connect('car_details.db')
+    cursor = conn.cursor()
+    cursor.execute(''' 
+        CREATE TABLE IF NOT EXISTS cars (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            registration_number TEXT,
+            make_and_model TEXT,
+            seating_capacity TEXT,
+            daily_rate REAL,
+            fuel_type TEXT,
+            company_name TEXT,
+            transmission TEXT,
+            roadtax TEXT,
+            image_path TEXT
+        )
+    ''')
+    conn.commit()
+    return conn
+
+
+# Function to save data to the database
+def save_data():
+    registration_number = entry_registration.get()
+    make_and_model = make_and_model_var.get()
+    seating_capacity = entry_seating.get()
+    daily_rate = entry_rate.get()
+    fuel_type = fuel_type_var.get()
+    company = company_entry.get()
+    gear = transmission_var.get()
+    roadtax = tax_entry.get()
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(''' 
+        INSERT INTO cars (registration_number, make_and_model, seating_capacity, daily_rate, fuel_type, company_name, transmission, roadtax, image_path)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (registration_number, make_and_model, seating_capacity, daily_rate, fuel_type, company, gear, roadtax, image_path))
+    conn.commit() #to make sure data save successfully in database.
+    conn.close()
+    messagebox.showinfo("Success", "Data saved successfully!")
+    refresh_treeview()
+
+def refresh_treeview():
+    for row in treeview.get_children():
+        treeview.delete(row)
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, registration_number, make_and_model, seating_capacity, daily_rate, fuel_type, company_name, transmission, roadtax FROM cars')
+    rows = cursor.fetchall()
+    conn.close()
+
+    for row in rows:
+        treeview.insert("", "end", values=row)
+
+
+# Function to upload an image
+def browse_image():
+    global image_path
+    image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+    if image_path:
+        upload_image()
+
+# Function to upload and display the image
+def upload_image():
+    img = Image.open(image_path)
+    img = img.resize((150, 150), Image.Resampling.LANCZOS)  # Resize the image to 150x150
+    img = ImageTk.PhotoImage(img)
+    image_display.config(image=img)
+    image_display.image = img
+
+# Function to delete a car from the database
+def delete_data():
+    global selected_car_id
+    if selected_car_id is not None:
+        confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this car?")
+        if confirm:
+            conn = connect_db()
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM cars WHERE id = ?', (selected_car_id,))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", "Car deleted successfully!")
+            refresh_treeview()
+            clear_selection()
     else:
-        messagebox.showinfo("Registration Successful", "You have successfully signed up!")
+        messagebox.showwarning("Warning", "Please select a car to delete.")
 
-# Function to handle login button click
-def log_in():
-    messagebox.showinfo("Login", "Redirecting to Login Page...")
 
-# Create main application window
-root = tk.Tk()
-root.title("Sign Up")
-root.geometry("1280x720")
-root.resizable(False, False)
+# Function to update a car's details
+def update_data():
+    global selected_car_id
+    if selected_car_id is not None:
+        registration_number = entry_registration.get()
+        make_and_model = make_and_model_var.get()
+        seating_capacity = entry_seating.get()
+        daily_rate = entry_rate.get()
+        fuel_type = fuel_type_var.get()
+        company = company_entry.get()
+        gear = transmission_var.get()
+        roadtax = tax_entry.get()
 
-# Load and set background image
-background_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\props\signupbg.png")
-background_image = background_image.resize((1280, 720), Image.Resampling.LANCZOS) 
-background_photo = ImageTk.PhotoImage(background_image)
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute(''' 
+            UPDATE cars 
+            SET registration_number = ?, make_and_model = ?, seating_capacity = ?, daily_rate = ?, fuel_type = ?, company_name = ?, transmission = ?, roadtax = ?, image_path = ?
+            WHERE id = ?
+        ''', (registration_number, make_and_model, seating_capacity, daily_rate, fuel_type, company, gear, roadtax, image_path, selected_car_id))
+        conn.commit()
+        conn.close()
+        messagebox.showinfo("Success", "Car updated successfully!")
+        refresh_treeview()
+        clear_selection()
+    else:
+        messagebox.showwarning("Warning", "Please select a car to update.")
 
-background_label = tk.Label(root, image=background_photo)
-background_label.place(relwidth=1, relheight=1)
+def select_item(event):
+    global selected_car_id, image_path
+    selected_item = treeview.selection()
+    if selected_item:
+        item = treeview.item(selected_item)
+        values = item['values']
+        selected_car_id = values[0]  # Get the ID of the selected car
 
-# Creating labels and entry fields
-name_label = ctk.CTkLabel(root, text="Name\t\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-name_label.place(x=250, y=200)
-pywinstyles.set_opacity(name_label,color="#FFAB40")
-name_entry = tk.Entry(root, font=('Arial', 16))
-name_entry.place(x=410, y=200)
+        # Fetch the selected car details from the database (including image path)
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM cars WHERE id = ?', (selected_car_id,))
+        car_data = cursor.fetchone()
+        conn.close()
 
-email_label = ctk.CTkLabel(root, text="Email Address\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-email_label.place(x=250, y=250)
-pywinstyles.set_opacity(email_label,color="#FFAB40")
-email_entry = tk.Entry(root, font=('Arial', 16))
-email_entry.place(x=410, y=250)
+        # retrieving the car details
+        if car_data:   #if car data not empty
+            entry_registration.delete(0, 'end')  #clear all the data
+            entry_registration.insert(0, car_data[1])
+            make_and_model_var.set(car_data[2])
+            entry_seating.set(car_data[3])  # Set the seating capacity dropdown
+            entry_rate.delete(0, 'end')
+            entry_rate.insert(0, car_data[4])
+            fuel_type_var.set(car_data[5])
+            company_entry.delete(0, 'end')
+            company_entry.insert(0, car_data[6])
+            transmission_var.set(0, car_data[7])
+            tax_entry.delete(0, 'end')
+            tax_entry.insert(0, car_data[8])
+            
+            # Load and display the image if the image path exists
+            image_path = car_data[6]  # This is the image path stored in the database
+            if image_path:
+                upload_image()
 
-dob_label = ctk.CTkLabel(root, text="Date Of Birth\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-dob_label.place(x=250, y=300)
-pywinstyles.set_opacity(dob_label,color="#FFAB40")
-dob_day_entry = tk.Entry(root, width=3, font=('Arial', 16))
-dob_day_entry.place(x=410, y=300)
-dob_month_entry = tk.Entry(root, width=3, font=('Arial', 16))
-dob_month_entry.place(x=460, y=300)
-dob_year_entry = tk.Entry(root, width=5, font=('Arial', 16))
-dob_year_entry.place(x=510, y=300)
+def clear_selection():
+    global selected_car_id
+    selected_car_id = None
+    entry_registration.delete(0, 'end')
+    make_and_model_var.set("Select")
+    entry_seating.set("Select")  # Reset dropdown
+    entry_rate.delete(0, 'end')
+    fuel_type_var.set("Select")
+    company_entry.delete(0, 'end')
+    transmission_var.set("Select")
+    tax_entry.delete(0,'end')
+    image_display.config(image="")  # Clear image
 
-contact_label = ctk.CTkLabel(root, text="Contact No\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-contact_label.place(x=250, y=350)
-pywinstyles.set_opacity(contact_label,color="#FFAB40")
-contact_entry = tk.Entry(root, font=('Arial', 16))
-contact_entry.place(x=410, y=350)
 
-passW_label = ctk.CTkLabel(root, text="Password\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-passW_label.place(x=250, y=400)
-pywinstyles.set_opacity(passW_label,color="#FFAB40")
-passW_entry = tk.Entry(root, font=('Arial', 16))
-passW_entry.place(x=410, y=400)
+# Setting up the main window
+window = Tk()
+window.geometry("900x700")
+window.configure(bg="#81BEEB")
 
-cpassW_label = ctk.CTkLabel(root, text="Confirm Password\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
-cpassW_label.place(x=250,y=450)
-pywinstyles.set_opacity(cpassW_label,color="#FFAB40")
-cpassW_entry = tk.Entry(root, font=('Arial', 16))
-cpassW_entry.place(x=410, y=450)
+# Canvas for layout
+canvas = Canvas(
+    window,
+    bg="#81BEEB",
+    height=600,
+    width=800,
+    bd=0,
+    highlightthickness=0,
+    relief="ridge"
+)
+canvas.place(x=0, y=0)
 
-# Sign-up button
-sign_up_button = ctk.CTkButton(root, text="Sign Up", font=('Arial', 16), width=247, height=30, bg_color="#FFAB40", corner_radius=10, command=sign_up)
-sign_up_button.place(x=410, y=500)
-pywinstyles.set_opacity(sign_up_button,color="#FFAB40")
+# Title
+canvas.create_text(400, 28, anchor="center", text="MANAGE CAR DETAILS", fill="#000000",
+                   font=("Times New Roman ExtraBold", 18))
 
-# Log in button
-login_label = ctk.CTkLabel(root, text="Already registered?", bg_color="#FFAB40", font=('Arial Bold', 10))
-login_label.place(x=510,y=540)
-pywinstyles.set_opacity(login_label,color="#FFAB40")
-login_button = tk.Button(root, text="Log In", font=('Arial', 10), bg="red", fg="white", command=log_in)
-login_button.place(x=610, y=540)
+# Input fields
+canvas.create_text(37.0, 98.0, anchor="nw", text="Registration Number:", fill="#000000", font=("Inter Bold", 14 * -1))
+entry_registration = Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+entry_registration.place(x=193.0, y=96.0, width=180.0, height=22.0)
 
-# Title and subtitle on the right
-title_label = ctk.CTkLabel(root, text="Register Now!", font=('Arial Bold', 32), bg_color="#FFAB40")
-title_label.place(x=750, y=280)
-pywinstyles.set_opacity(title_label,color="#FFAB40")
-subtitle_label = ctk.CTkLabel(root, text="Few more steps to make your trip better!", font=('Arial', 20), bg_color="#FFAB40")
-subtitle_label.place(x=700, y=320)
-pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
+canvas.create_text(37.0, 138.0, anchor="nw", text="Make & Model:", fill="#000000", font=("Inter Bold", 14 * -1))
+make_and_model_var = StringVar(window)
+make_and_model_var.set("Select")  # Default value
+make_and_model_options = ["Toyota Camry", "Honda Civic", "BMW 3 Series", "Ford Focus", "Audi A4"]
+make_and_model_dropdown = OptionMenu(window, make_and_model_var, *make_and_model_options)
+make_and_model_dropdown.place(x=193.0, y=136.0, width=180.0)
 
-# Start the Tkinter main loop
-root.mainloop()
+canvas.create_text(37.0, 178.0, anchor="nw", text="Seating Capacity:", fill="#000000", font=("Inter Bold", 14 * -1))
+entry_seating = StringVar(window)
+entry_seating.set("Select")  # Default value
+seating_options = ["2", "4", "5", "7", "8"]
+seating_dropdown = OptionMenu(window, entry_seating, *seating_options)
+seating_dropdown.place(x=193.0, y=176.0, width=180.0)
+
+canvas.create_text(37.0, 218.0, anchor="nw", text="Daily Rate (RM):", fill="#000000", font=("Inter Bold", 14 * -1))
+entry_rate = Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+entry_rate.place(x=193.0, y=216.0, width=180.0, height=22.0)
+
+canvas.create_text(37.0, 258.0, anchor="nw", text="Fuel Type:", fill="#000000", font=("Inter Bold", 14 * -1))
+fuel_type_var = StringVar(window)
+fuel_type_var.set("Select")  # Default value
+fuel_type_options = ["Petrol", "Diesel", "Electric", "Hybrid"]
+fuel_type_dropdown = OptionMenu(window, fuel_type_var, *fuel_type_options)
+fuel_type_dropdown.place(x=193.0, y=256.0, width=180.0)
+
+canvas.create_text(37.0, 330.0, anchor="nw", text="Company Name:", fill="#000000", font=("Inter Bold", 14 * -1))
+company_entry = Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+company_entry.place(x=193.0, y=332.0, width=180.0, height=22.0)
+
+canvas.create_text(37.0, 380.0, anchor="nw", text="Transmission:", fill="#000000", font=("Inter Bold", 14 * -1))
+transmission_var = StringVar(window)
+transmission_var.set("Select")  # Default value
+transmission_options = ["Manual", "Automatic"]
+transmission_dropdown = OptionMenu(window, fuel_type_var, *fuel_type_options)
+transmission_dropdown.place(x=193.0, y=382.0, width=180.0)
+
+canvas.create_text(37.0, 420.0, anchor="nw", text="Road Tax \n(Expired Date):", fill="#000000", font=("Inter Bold", 14 * -1))
+tax_entry = Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+tax_entry.place(x=193.0, y=332.0, width=422.0, height=22.0)
+
+# Browse image button
+button_browse = Button(
+    text="Browse Image",
+    command=browse_image,
+    bg="#64C4ED",  # Light blue background
+    fg="black"
+)
+button_browse.place(x=193.0, y=450.0, width=100.0, height=30.0)
+
+# Image display area
+image_display = Label(window)
+image_display.place(x=450, y=130, width=150, height=150)
+
+treeview = ttk.Treeview(window, columns=("ID", "Registration Number", "Make & Model", "Seating Capacity", "Daily Rate", "Fuel Type", "Company Name","Transmission","Road Tax"), show="headings")
+
+treeview.heading("ID", text="ID")
+treeview.heading("Registration Number", text="Reg. No.")
+treeview.heading("Make & Model", text="Make & Model")
+treeview.heading("Seating Capacity", text="Seats")
+treeview.heading("Daily Rate", text="Rate (RM)")
+treeview.heading("Fuel Type", text="Fuel Type")
+treeview.heading("Company Name", text="Company Name")
+treeview.heading("Transmission", text="Transmission")
+treeview.heading("Road Tax", text="Road Tax")
+
+treeview.column("ID", width=50, anchor="center")
+treeview.column("Registration Number", width=100, anchor="center")
+treeview.column("Make & Model", width=150, anchor="center")
+treeview.column("Seating Capacity", width=100, anchor="center")
+treeview.column("Daily Rate", width=100, anchor="center")
+treeview.column("Fuel Type", width=100, anchor="center")
+treeview.column("Company Name", width=100, anchor="center")
+treeview.column("Transmission", width=100, anchor="center")
+treeview.column("Road Tax", width=100, anchor="center")
+
+treeview.place(x=50, y=520, width=1000, height=150)
+treeview.bind("<<TreeviewSelect>>", select_item)
+
+# Buttons for saving, updating, deleting, and clearing (below the image)
+button_save = Button(
+    text="Save",
+    command=save_data,
+    bg="green",  # Light blue background
+    fg="#FFFFFF"
+)
+button_save.place(x=450, y=400, width=80, height=30)
+
+button_update = Button(
+    text="Update",
+    command=update_data,
+    bg="#FFA500",  # Orange background for update
+    fg="#FFFFFF"
+)
+button_update.place(x=540, y=400, width=80, height=30)
+
+button_delete = Button(
+    text="Delete",
+    command=delete_data,
+    bg="#D9534F",  # Red background for delete
+    fg="#FFFFFF"
+)
+button_delete.place(x=630, y=400, width=80, height=30)
+
+button_clear = Button(
+    text="Clear",
+    command=clear_selection,
+    bg="#DCDCDC",  # Light gray background for clear
+    fg="#000000"
+)
+button_clear.place(x=720, y=400, width=80, height=30)
+
+refresh_treeview()
+window.mainloop()
+

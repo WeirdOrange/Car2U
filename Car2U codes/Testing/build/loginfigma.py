@@ -140,6 +140,7 @@ entry_2.place(
     height=58.0
 )
 
+#Take this
 canvas.create_text(
     360.0,
     149.0,
@@ -165,6 +166,7 @@ button_2.place(
     height=27.0
 )
 
+#Take this
 canvas.create_text(
     818.0,
     63.0,

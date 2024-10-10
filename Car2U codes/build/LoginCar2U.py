@@ -2,7 +2,7 @@ import sqlite3
 import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
-from tkinter import messagebox,StringVar,Frame,Toplevel
+from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
 
 def Database(): #creating connection to database and creating table
@@ -43,7 +43,7 @@ def logingui(signup_callback):
 
     # Load and set background image
     bg_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\props\loginbg.png")
-    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)  # Updated line
+    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
     bg_photo = ImageTk.PhotoImage(bg_image)
 
     # Create a label to display the background image

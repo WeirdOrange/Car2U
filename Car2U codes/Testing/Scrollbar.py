@@ -4,7 +4,7 @@ from tkinter import ttk
 # Step 2: Create the Tkinter Window
 root = tk.Tk()
 root.title("Scrollable Grid Example")
-root.geometry("720x250")
+root.geometry("1280x720")
 
 # Step 3: Create a Frame for Grid Layout
 frame = ttk.Frame(root)

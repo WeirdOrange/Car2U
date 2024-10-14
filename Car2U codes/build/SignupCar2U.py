@@ -7,6 +7,13 @@ import sqlite3
 from dateutil.parser import parse
 from PIL import ImageTk, Image
 
+# Set up the asset path (same as original)
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\SignUp")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
+
 # Connecting to database
 def Database():
     global conn, cursor
@@ -52,12 +59,15 @@ def sign_up_get(name,email,dob_day,dob_month,dob_year,contact,password,cpassword
             conn.close()
 
 # Function to handle login button click
-def open_login(current_window, signup_callback):
-    messagebox.showinfo("Login", "Redirecting to Login Page...")
+def open_login(current_window, login_callback):
     current_window.destroy()  # Close the signup window
-    signup_callback()
+    login_callback()
+    
+def open_home(current_window, home_callback):
+    current_window.destroy()  # Close the login window
+    home_callback()
 
-def signupgui(login_callback):
+def signupgui(login_callback, home_callback):
     global RegisterFrame, background_photo
     RegisterFrame = Toplevel()
     RegisterFrame.title("Sign Up")
@@ -65,12 +75,32 @@ def signupgui(login_callback):
     RegisterFrame.resizable(False, False)
 
     # Load and set background image
-    background_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\props\signupbg.png")
-    background_image = background_image.resize((1280, 720), Image.Resampling.LANCZOS) 
-    background_photo = ImageTk.PhotoImage(background_image)
+    bg_image = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1073,720))
+    bg_label = ctk.CTkLabel(RegisterFrame, image=bg_image,text="")
+    bg_label.place(x=207, y=0)
+    
+    rectangle1_img = ctk.CTkImage(Image.open(relative_to_assets("image_2.png")),size=(527,720))
+    rectangle1 = ctk.CTkLabel(RegisterFrame, image=rectangle1_img,text="")
+    rectangle1.place(x=0, y=0)
 
-    background_label = tk.Label(RegisterFrame, image=background_photo)
-    background_label.place(relwidth=1, relheight=1)
+    rectangle2_img = ctk.CTkImage(Image.open(relative_to_assets("image_3.png")),size=(930,520))
+    rectangle2 = ctk.CTkLabel(RegisterFrame, image=rectangle2_img,text="")
+    rectangle2.place(x=210, y=100)
+
+    car_img = ctk.CTkImage(Image.open(relative_to_assets("image_4.png")),size=(500,500))
+    car_bg = ctk.CTkLabel(RegisterFrame, image=car_img,text="", bg_color="#FC4F3E", fg_color="#FC4F3E")
+    car_bg.place(x=780, y=320)
+    pywinstyles.set_opacity(car_bg,color="#FC4F3E")
+
+    home_image = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(30,30))
+    home_button = ctk.CTkButton(master=RegisterFrame, text="  Home", image=home_image, width=120, fg_color=("#F86544","#FA5740"), bg_color="#FA5740", text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),command=lambda:open_home(RegisterFrame,home_callback))
+    home_button.place(x=30, y=20)
+    pywinstyles.set_opacity(home_button,color="#FA5740")
+    
+    logo_img = ctk.CTkImage(Image.open(relative_to_assets("logo.png")),size=(90,45))
+    logo_label = ctk.CTkLabel(master=RegisterFrame, text="", image=logo_img, fg_color="#FF865A", bg_color="#FF865A")
+    logo_label.place(x=160, y=15)
+    pywinstyles.set_opacity(logo_label,color="#FF865A")
 
     # Creating labels and entry fields
     name_label = ctk.CTkLabel(RegisterFrame, text="Name\t\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
@@ -113,9 +143,8 @@ def signupgui(login_callback):
     cpassW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
     cpassW_entry.place(x=410, y=450)
 
-
     # Sign-up button
-    sign_up_button = ctk.CTkButton(RegisterFrame, text="Sign Up", font=('Arial Bold', 16), width=247, height=30, 
+    sign_up_button = ctk.CTkButton(RegisterFrame, text="Sign Up", font=('Arial Bold', 16), width=270, height=30, 
                                    bg_color="#FFA843", fg_color=("#FC503E","white"), corner_radius=10, 
                                    command=lambda:sign_up_get(name_entry.get(),email_entry.get(),dob_day_entry.get(),dob_month_entry.get(),dob_year_entry.get(),contact_entry.get(),passW_entry.get(),cpassW_entry.get()))
     sign_up_button.place(x=410, y=500)
@@ -123,19 +152,19 @@ def signupgui(login_callback):
 
     # Log in button
     login_label = ctk.CTkLabel(RegisterFrame, text="Already registered?", bg_color="#FFAB40", font=('Arial Bold', 11))
-    login_label.place(x=478,y=540)
+    login_label.place(x=500,y=540)
     pywinstyles.set_opacity(login_label,color="#FFAB40")
     login_button = ctk.CTkButton(RegisterFrame, text="Log In", font=('Arial Bold', 11), bg_color="#FF7E52", fg_color=("#FE1A0A","white"), width=50,
                              corner_radius=50, command=lambda:open_login(RegisterFrame,login_callback))
-    login_button.place(x=592, y=540)
+    login_button.place(x=615, y=540)
     pywinstyles.set_opacity(login_button,color="#FF7E52")
 
     # Title and subtitle on the right
     title_label = ctk.CTkLabel(RegisterFrame, text="Register Now!", font=('Arial Bold', 32), bg_color="#FFAB40")
-    title_label.place(x=750, y=280)
+    title_label.place(x=760, y=280)
     pywinstyles.set_opacity(title_label,color="#FFAB40")
     subtitle_label = ctk.CTkLabel(RegisterFrame, text="Few more steps to make your trip better!", font=('Arial', 20), bg_color="#FFAB40")
-    subtitle_label.place(x=700, y=320)
+    subtitle_label.place(x=710, y=320)
     pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
 
 # Start the Tkinter main loop

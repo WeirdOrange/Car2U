@@ -1,18 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
-import customtkinter as ctk
-from customtkinter import CTkComboBox
 import pywinstyles
 import sqlite3
-from pathlib import Path
 
-# Set up the asset path (same as original)
-OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Details")
-
-def relative_to_assets(path: str) -> Path:
-    return ASSETS_PATH / Path(path)
 
 # Connect to the database and create the tables if they don't exist
 def connect_db():
@@ -29,7 +20,7 @@ def connect_db():
             fuelType VARCHAR(20) NOT NULL,
             seatingCapacity VARCHAR(20) NOT NULL,
             transmissionType VARCHAR(20) NOT NULL,
-            price DECIMAL(10, 2) NOT NULL,
+            price REAL NOT NULL,
             carImage BLOB,
             agencyID INTEGER NOT NULL,
             dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +217,8 @@ root.geometry("1280x720")
 
 
 # Load the background image
-bg_image = Image.open(relative_to_assets("bg cardetails.png"))
+bg_image_path = "C:\\Users\\chewy\\OneDrive\\Pictures\\Screenshots\\bg cardetails.png"
+bg_image = Image.open(bg_image_path)
 bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
 
@@ -263,8 +255,8 @@ icon_image = ImageTk.PhotoImage(resized_image)
 
 
 # Button to upload image
-upload_button = tk.Button(root, text="Upload an Image", command=upload_image, font= "Arial", bg="white", fg="black", bd=0, width=18, height=1)
-upload_button.place(x=163, y=416)
+upload_button = tk.Button(root, image= icon_image, command=upload_image, font= "Arial", bg="#394552", fg="black", bd=0, width=180, height=180)
+upload_button.place(x=175, y=210)
 
 
 

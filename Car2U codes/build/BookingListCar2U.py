@@ -2,10 +2,11 @@ import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
+from Car2U_UserInfo import get_user_info
 from tkcalendar import DateEntry
 from pathlib import Path
 from PIL import Image
-from tkinter import Toplevel
+from tkinter import Toplevel, messagebox
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
@@ -24,6 +25,14 @@ def open_home(current_window, home_callback):
     current_window.destroy()  # Close the signup window
     home_callback()
 
+# Function to handle profile button click
+def open_listing():
+    messagebox.showinfo("You are on the Car Selection page")
+
+# Function to handle selection button click
+def open_profile(current_window, profile_callback):
+    current_window.destroy()  # Close the signup window
+    profile_callback()
 
 def Database(): #creating connection to database and creating table
     global conn, cursor
@@ -34,7 +43,7 @@ def Database(): #creating connection to database and creating table
 
 # Hover over Items
 def focus_frame(frame):
-    frame.configure(fg_color="yellow")
+    frame.configure(fg_color="#35AAA4")
 def unfocus_frame(frame):
     frame.configure(fg_color="#FFFFFF")
 
@@ -61,7 +70,6 @@ def fetchdata():
     if i > 0:
         query = query+f" OFFSET {i}"
 
-    print(query)
     cursor.execute(query)
     result = cursor.fetchall()
     conn.close()
@@ -225,7 +233,7 @@ def filters():
         chk.place(x=10, y=340 + i * 30)
         transmission_vars.append(var)
 
-def booking(login_callback,home_callback):
+def booking(login_callback,home_callback,profile_callback):
     # Create the main application window
     global bookingFrame
     bookingFrame = Toplevel()
@@ -240,6 +248,8 @@ def booking(login_callback,home_callback):
     filterTransmission = []
     filtering = []
     i = 0
+    userInfo = get_user_info()
+    print(f"Selection : {userInfo}")
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("image_2.png")),size=(1280,60))
@@ -257,19 +267,26 @@ def booking(login_callback,home_callback):
     pywinstyles.set_opacity(pfp_label,color="#F47749")
 
     # Relocate buttons
-    home_button = ctk.CTkButton(master=bookingFrame, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda:open_home(bookingFrame,home_callback))
+    home_button = ctk.CTkButton(master=bookingFrame, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", 
+                                text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
+                                command=lambda:open_home(bookingFrame,home_callback,profile_callback))
     home_button.place(x=627, y=14)
     pywinstyles.set_opacity(home_button,color="#FA5740")
 
-    selections_button = ctk.CTkButton(master=bookingFrame, text="Selections", width=120, fg_color=("#FA5740","#FB543F"), bg_color="#FB543F", text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Selections clicked"))
+    selections_button = ctk.CTkButton(master=bookingFrame, text="Selections", width=120, fg_color=("#FA5740","#FB543F"), bg_color="#FB543F", 
+                                      text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Selections clicked"))
     selections_button.place(x=763, y=14)
     pywinstyles.set_opacity(selections_button,color="#FB543F")
 
-    contact_us_button = ctk.CTkButton(master=bookingFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Contact Us clicked"))
+    contact_us_button = ctk.CTkButton(master=bookingFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
+                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
+                                      command=lambda: print("Contact Us clicked"))
     contact_us_button.place(x=910, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 
-    about_us_button = ctk.CTkButton(master=bookingFrame, text="About Us", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+    about_us_button = ctk.CTkButton(master=bookingFrame, text="About Us", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
+                                    command=lambda: print("About Us clicked"))
     about_us_button.place(x=1055, y=14)
     pywinstyles.set_opacity(about_us_button,color="#FC4D3D")
 

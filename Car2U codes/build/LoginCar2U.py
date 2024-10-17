@@ -2,6 +2,7 @@ import sqlite3
 import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
+from Car2U_UserInfo import set_user_info
 from pathlib import Path
 from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
@@ -73,7 +74,9 @@ def logingui(signup_callback,home_callback):
 
     # Return to main page
     home_image = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(30,30))
-    home_button = ctk.CTkButton(master=loginFrame, text="  Home", image=home_image, width=120, fg_color=("#F86544","#FA5740"), bg_color="#FA5740", text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),command=lambda:open_home(loginFrame,home_callback))
+    home_button = ctk.CTkButton(master=loginFrame, text="  Home", image=home_image, width=120, 
+                                fg_color=("#F86544","#FA5740"), bg_color="#FA5740", text_color="#000000", 
+                                font=("Tw Cen MT Condensed Extra Bold", 20),command=lambda:open_home(loginFrame,home_callback))
     home_button.place(x=30, y=20)
     pywinstyles.set_opacity(home_button,color="#FA5740")
     
@@ -105,7 +108,7 @@ def logingui(signup_callback,home_callback):
     # Create login button
     login_button = ctk.CTkButton(loginFrame, text="Login", font=("Arial", 18), width=350, height=40, 
                                  bg_color="#FFA843", fg_color=("#F47749","white"), corner_radius=50, 
-                                 command=lambda:LoginAccess(email_entry.get(),password_entry.get()))
+                                 command=lambda:LoginAccess(email_entry.get(),password_entry.get(),home_callback))
     login_button.place(x=700, y=375)
     pywinstyles.set_opacity(login_button,color="#FFA843")
 
@@ -126,18 +129,15 @@ def logingui(signup_callback,home_callback):
     pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
 
 # Function to handle login button click
-def LoginAccess(email,password):
+def LoginAccess(email,password,home_callback):
     Database()
     if email == "" or password == "":
         messagebox.showerror("Error", "Please complete the required field!")
     else:
-        cursor.execute("SELECT * FROM CUSTUSER WHERE `email` = ? and `userPassword` = ?",(email,password))
+        cursor.execute("SELECT * FROM UserDetails WHERE `email` = ? and `password` = ?",(email,password))
         if cursor.fetchone() is not None:
             messagebox.showinfo("Success", "You Successfully Login")
-            #Home()  # Call Home function after successful login
+            set_user_info(email)
+            open_home(loginFrame,home_callback)  # Call Home function after successful login
         else:
             messagebox.showerror("Error", "Invalid Username or password")
-
-
-# Start the main loop
-#root.mainloop()

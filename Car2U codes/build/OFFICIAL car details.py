@@ -218,6 +218,7 @@ root.geometry("1280x720")
 
 # Load the background image
 bg_image_path = "C:\\Users\\chewy\\OneDrive\\Pictures\\Screenshots\\bg cardetails.png"
+print("abcdefg")
 bg_image = Image.open(bg_image_path)
 bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
@@ -257,8 +258,6 @@ icon_image = ImageTk.PhotoImage(resized_image)
 # Button to upload image
 upload_button = tk.Button(root, image= icon_image, command=upload_image, font= "Arial", bg="#394552", fg="black", bd=0, width=180, height=180)
 upload_button.place(x=175, y=210)
-
-
 
 # Agency Name
 selected_agency = tk.StringVar(value="Select")

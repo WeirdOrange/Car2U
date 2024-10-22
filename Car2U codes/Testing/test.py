@@ -1,10 +1,5 @@
-try:
-    import tkinter as tk
-    from tkinter import ttk
-except ImportError:
-    import Tkinter as tk
-    import ttk
-
+import tkinter as tk
+from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
 
 def example1():
@@ -38,13 +33,16 @@ def example2():
 
 
 def example3():
+    def print_sel():
+        print(cal.get_date())
     top = tk.Toplevel(root)
 
     ttk.Label(top, text='Choose date').pack(padx=10, pady=10)
 
-    cal = DateEntry(top, width=12, background='darkblue',
+    cal = DateEntry(top, width=12, background='darkblue', date_pattern='MM/dd/yyyy',
                     foreground='white', borderwidth=2, year=2010)
     cal.pack(padx=10, pady=10)
+    ttk.Button(top, text="ok", command=print_sel).pack()
 
 
 root = tk.Tk()

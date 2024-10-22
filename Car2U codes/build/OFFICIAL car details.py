@@ -1,9 +1,16 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
+from pathlib import Path
 import pywinstyles
 import sqlite3
 
+# Set up the asset path (same as original)
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\\Ivan\\Ivan\\Ivan\\Deg CS\\ALL Project\\Car2U\\Car2U codes\\main\\assets\\Details")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 # Connect to the database and create the tables if they don't exist
 def connect_db():
@@ -217,9 +224,7 @@ root.geometry("1280x720")
 
 
 # Load the background image
-bg_image_path = "C:\\Users\\chewy\\OneDrive\\Pictures\\Screenshots\\bg cardetails.png"
-print("abcdefg")
-bg_image = Image.open(bg_image_path)
+bg_image = Image.open(relative_to_assets("bg cardetails.png"))
 bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
 
@@ -250,7 +255,7 @@ def upload_image():
 
 
 # Upload the upload icon
-ori_image = Image.open("C:\\Users\\chewy\\Downloads\\image-upload.png")
+ori_image = Image.open(relative_to_assets("image-upload.png"))
 resized_image = ori_image.resize((180, 180), Image.LANCZOS)
 icon_image = ImageTk.PhotoImage(resized_image)
 

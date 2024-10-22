@@ -7,7 +7,7 @@ from pathlib import Path
 from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
 
-# Set up the asset path (same as original)
+# Set up the asset path 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Login")
 
@@ -17,6 +17,7 @@ def relative_to_assets(path: str) -> Path:
 def Database(): #creating connection to database and creating table
     global conn, cursor
     conn = sqlite3.connect("car2u.db")
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
 def userPlaceholder(event):
@@ -116,7 +117,7 @@ def logingui(signup_callback,home_callback):
     signup_label = ctk.CTkLabel(loginFrame, text="New User?", bg_color="#FFA843", font=("Arial", 10, "bold"))
     signup_label.place(x=900,y=422)
     pywinstyles.set_opacity(signup_label,color="#FFA843")
-    signup_button = ctk.CTkButton(loginFrame, text="Sign up", font=("Arial", 10, "bold"), width=80, height=25, 
+    signup_button = ctk.CTkButton(loginFrame, text="Sign up", font=("Arial", 10, "bold"), width=80,
                                   bg_color="#FFA843", fg_color=("#FE1A0A","white"),command=lambda:open_signup(loginFrame,signup_callback))
     signup_button.place(x=968, y=425)
     pywinstyles.set_opacity(signup_button,color="#FFA843")
@@ -136,8 +137,11 @@ def LoginAccess(email,password,home_callback):
     else:
         cursor.execute("SELECT * FROM UserDetails WHERE `email` = ? and `password` = ?",(email,password))
         if cursor.fetchone() is not None:
+            result = cursor.execute("SELECT userID FROM UserDetails WHERE `email` = ? and `password` = ?",(email,password))
+            for row in result:
+                userid = row[0]
             messagebox.showinfo("Success", "You Successfully Login")
-            set_user_info(email)
+            set_user_info(userid)
             open_home(loginFrame,home_callback)  # Call Home function after successful login
         else:
             messagebox.showerror("Error", "Invalid Username or password")

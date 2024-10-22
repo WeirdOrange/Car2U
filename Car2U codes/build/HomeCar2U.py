@@ -117,16 +117,16 @@ def homepage(login_callback,list_callback,profile_callback):
                                   bg_color="#D9D9D9", font=("SegoeUI Bold", 16))
     location_label.place(x=189,y=165)
     pywinstyles.set_opacity(location_label,color="#D9D9D9")
-    date_label = ctk.CTkLabel(master=homeFrame, text="Date Of Visit:", text_color="#000000", fg_color=("#FFFFFF","#D9D9D9"), 
+    passenger_label = ctk.CTkLabel(master=homeFrame, text="Number of Passenger(s):", text_color="#000000", fg_color=("#FFFFFF","#D9D9D9"), 
                               bg_color="#D9D9D9", font=("SegoeUI Bold", 16))
-    date_label.place(x=580,y=165)
-    pywinstyles.set_opacity(date_label,color="#D9D9D9")
+    passenger_label.place(x=580,y=165)
+    pywinstyles.set_opacity(passenger_label,color="#D9D9D9")
 
     entry_1 = ctk.CTkEntry(master=homeFrame, width=240, height=51, fg_color="#D9D9D9", text_color="#000716", placeholder_text="Place Of Rental")
     entry_1.place(x=311, y=150)
 
-    entry_2 = DateEntry(homeFrame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10))
-    entry_2.place(x=750, y=165)
+    entry_2 = ctk.CTkEntry(homeFrame, width=50, fg_color="#D9D9D9", text_color="#000716", font=("Arial", 10))
+    entry_2.place(x=780, y=165)
 
     submit_button = ctk.CTkButton(master=homeFrame, text="Find", width=85, height=35, fg_color="#067BC1", command=lambda: print("Submit clicked"))
     submit_button.place(x=958, y=159)

@@ -1,11 +1,16 @@
-from pathlib import Path
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox, Toplevel
 import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
+import smtplib
+import ssl
+import easygui
+import random, string
 from dateutil.parser import parse
-from PIL import ImageTk, Image
+from PIL import Image
+from email.message import EmailMessage
+from pathlib import Path
+from tkinter import messagebox, Toplevel
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
@@ -29,6 +34,7 @@ def Database():
 
 # Function to handle sign-up button click
 def sign_up_get(name,email,dob_day,dob_month,dob_year,contact,password,cpassword):
+    global otp
     Database()
     dob = str(dob_year).zfill(4)+"-"+str(dob_month).zfill(2)+"-"+str(dob_day).zfill(2)
     while(True):
@@ -37,26 +43,94 @@ def sign_up_get(name,email,dob_day,dob_month,dob_year,contact,password,cpassword
             break    # Break pulls you out of the loop
         except:
             print("INVALID Date: ",dob)
-    # Simple validation
+        
+    # Validation
     if not name or not email or not dob_day or not dob_month or not dob_year or not contact or not password or not cpassword:
         messagebox.showerror("Input Error", "All fields are required!")
     elif password != cpassword:
         messagebox.showerror("Input Error", "Password and Confirm Password do not match.")
     else:
-        try:
-            cursor.execute("SELECT * FROM CUSTUSER WHERE `email` = ?",(str(email),))
-            if cursor.fetchone() is not None:
-                messagebox.showerror("Error","Email is already Registered!")
-            else:
-                cursor.execute(
-                    "INSERT INTO CUSTUSER(email,name,dob,contactNo,userPassword) VALUES (?,?,?,?,?)",
-                    (str(email),str(name),str(DDate),str(contact),str(password)))
-                conn.commit()
-                messagebox.showinfo("Registration Successful", "You have successfully signed up!")
-        except sqlite3.Error as e:
-            messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
-        finally:
-            conn.close()
+        while True:
+            try:
+                cursor.execute("SELECT * FROM CUSTUSER WHERE `email` = ?",(str(email),))
+                if cursor.fetchone() is not None:
+                    messagebox.showerror("Error","Email is already Registered!")
+                else:
+                    # Sending OTP to user
+                    subject = 'Car2U: OTP to verify your identity'
+                    body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not being done by you, please contact our customer service.
+                            \n\nCar2U contact: 016-407 5284 or email via this account"""
+                    emailNotif(email,subject,body)
+
+                    # Validate email
+                    userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")
+                    
+                    if userotp == otp: # If OTP is enter correctly
+                        cursor.execute("INSERT INTO CUSTUSER(email,name,dob,contactNo,userPassword) VALUES (?,?,?,?,?)",
+                                        (str(email),str(name),str(DDate),str(contact),str(password)))
+                        conn.commit()
+                        messagebox.showinfo("Registration Successful", "You have successfully signed up!")
+                        
+                        # Notify user through email as well
+                        subject = 'Registration Completed!'
+                        body = """Someone has registered this email account in the Car2U application. If this is not you, please contact Car2U as soon as possible. 
+                            Please ignore this message if this was you.\n\nCar2U contact: 016-407 5284"""
+                        emailNotif(email,subject,body)
+                        break
+                    # If the user clicks "Cancel" (user_input will be None)
+                    elif userotp is None:
+                        # Display the buttonbox with options
+                        choice = easygui.buttonbox("You clicked Cancel. What would you like to do next?", "Options", 
+                                                choices=["Back", "Resend OTP", "Cancel"])
+                        
+                        if choice == "Back":
+                            # Return back to the enterbox (loop continues)
+                            continue  # This goes back to the beginning of the loop
+                        
+                        elif choice == "Resend OTP":
+                            for x in range(5):
+                                otp = otp + str(random.choice(string.ascii_letters))
+                            
+                            easygui.msgbox("Resending OTP.", "Do check your email for an OTP. (Delay might happen)")
+                            
+                            # Sending OTP to user
+                            subject = 'Car2U: OTP to verify your identity'
+                            body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
+                            \n\nCar2U contact: 016-407 5284 or email via this account"""
+                            emailNotif(email,subject,body)
+                        
+                        elif choice == "Cancel":
+                            easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
+                        break  # Exit the loop if the user doesn't want to continue
+                    else:
+                        break
+                        
+
+            except sqlite3.Error as e:
+                messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+            finally:
+                conn.close()
+    
+# Email notification
+def emailNotif(email_receiver,subject,body):
+    # Define email sender and receiver
+    email_sender = 'cartwoyouofficial@gmail.com'
+    email_password = 'asjy kqjh eizl wgnu'
+
+    # Set up the email
+    em = EmailMessage()
+    em['From'] = email_sender
+    em['To'] = email_receiver
+    em['Subject'] = subject
+    em.set_content(body)
+
+    # Add SSL (layer of security)
+    context = ssl.create_default_context()
+
+    # Log in and send the email
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
@@ -68,6 +142,13 @@ def open_home(current_window, home_callback):
     home_callback()
 
 def signupgui(login_callback, home_callback):
+    # For signup verification
+    global otp
+    otp = ""
+    for x in range(5):
+        otp = otp + str(random.choice(string.ascii_letters))
+    print(otp)
+
     global RegisterFrame, background_photo
     RegisterFrame = Toplevel()
     RegisterFrame.title("Sign Up")
@@ -106,42 +187,42 @@ def signupgui(login_callback, home_callback):
     name_label = ctk.CTkLabel(RegisterFrame, text="Name\t\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     name_label.place(x=250, y=200)
     pywinstyles.set_opacity(name_label,color="#FFAB40")
-    name_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
-    name_entry.place(x=410, y=200)
+    name_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10))
+    name_entry.place(x=410, y=200, width=270, height=30)
 
     email_label = ctk.CTkLabel(RegisterFrame, text="Email Address\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     email_label.place(x=250, y=250)
     pywinstyles.set_opacity(email_label,color="#FFAB40")
-    email_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
-    email_entry.place(x=410, y=250)
+    email_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10))
+    email_entry.place(x=410, y=250, width=270, height=30)
 
     dob_label = ctk.CTkLabel(RegisterFrame, text="Date Of Birth\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     dob_label.place(x=250, y=300)
     pywinstyles.set_opacity(dob_label,color="#FFAB40")
-    dob_day_entry = tk.Entry(RegisterFrame, width=3, font=('Lucida Console', 16))
-    dob_day_entry.place(x=410, y=300)
-    dob_month_entry = tk.Entry(RegisterFrame, width=3, font=('Lucida Console', 16))
-    dob_month_entry.place(x=460, y=300)
-    dob_year_entry = tk.Entry(RegisterFrame, width=5, font=('Lucida Console', 16))
-    dob_year_entry.place(x=510, y=300)
+    dob_day_entry = tk.Entry(RegisterFrame, width=3, font=('Lucida Console', 10))
+    dob_day_entry.place(x=410, y=300, height=30)
+    dob_month_entry = tk.Entry(RegisterFrame, width=3, font=('Lucida Console', 10))
+    dob_month_entry.place(x=460, y=300, height=30)
+    dob_year_entry = tk.Entry(RegisterFrame, width=5, font=('Lucida Console', 10))
+    dob_year_entry.place(x=510, y=300, height=30)
 
     contact_label = ctk.CTkLabel(RegisterFrame, text="Contact No\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     contact_label.place(x=250, y=350)
     pywinstyles.set_opacity(contact_label,color="#FFAB40")
-    contact_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
-    contact_entry.place(x=410, y=350)
+    contact_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10))
+    contact_entry.place(x=410, y=350, width=270, height=30)
 
     passW_label = ctk.CTkLabel(RegisterFrame, text="Password\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     passW_label.place(x=250, y=400)
     pywinstyles.set_opacity(passW_label,color="#FFAB40")
-    passW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
-    passW_entry.place(x=410, y=400)
+    passW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10), show="*")
+    passW_entry.place(x=410, y=400, width=270, height=30)
 
     cpassW_label = ctk.CTkLabel(RegisterFrame, text="Confirm Password\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     cpassW_label.place(x=250,y=450)
     pywinstyles.set_opacity(cpassW_label,color="#FFAB40")
-    cpassW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 16))
-    cpassW_entry.place(x=410, y=450)
+    cpassW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10), show="*")
+    cpassW_entry.place(x=410, y=450, width=270, height=30)
 
     # Sign-up button
     sign_up_button = ctk.CTkButton(RegisterFrame, text="Sign Up", font=('Arial Bold', 16), width=270, height=30, 

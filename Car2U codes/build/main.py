@@ -1,5 +1,6 @@
 import LoginCar2U
 import SignupCar2U
+import UpRenterCar2U
 
 import HomeCar2U
 import ProfileCar2U
@@ -18,15 +19,19 @@ def open_signup():
 def open_login():
     LoginCar2U.logingui(open_signup,open_home,open_admin_home)
 
+def open_upRent():
+    UpRenterCar2U.upRenter(open_login,open_home)
+
 # User Callbacks
 def open_home():
-    HomeCar2U.homepage(open_login,open_listing,open_profile)
+    HomeCar2U.homepage(open_login,open_upRent,open_listing,open_profile)
 
 def open_listing():
     BookingListCar2U.booking(open_login,open_home,open_profile)
 
 def open_profile():
     ProfileCar2U.profile(open_login,open_home,open_listing)
+
 
 # Admin Callbacks
 def open_admin_home():

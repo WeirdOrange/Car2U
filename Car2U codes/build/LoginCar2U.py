@@ -148,10 +148,10 @@ def LoginAccess(email,password,home_callback,adminHome_callback):
     result = cursor.fetchone()
     
     if result:  # Check if result is not None
-        userid = result[0]  # Get userID
+        userid = result[0]  # Get agencyID
         messagebox.showinfo("Success", "You Successfully Login")
         set_user_info(userid)
-        open_home(loginFrame, home_callback)  # Call Home function after successful login
+        open_adminHome(loginFrame, adminHome_callback)  # Call Admin Home function after successful login
         return
     
     # Check in RentalAgency table
@@ -159,9 +159,9 @@ def LoginAccess(email,password,home_callback,adminHome_callback):
     result = cursor.fetchone()
     
     if result:  # Check if result is not None
-        userid = result[0]  # Get agencyID
+        userid = result[0]  # Get userID
         messagebox.showinfo("Success", "You Successfully Login")
         set_user_info(userid)
-        open_adminHome(loginFrame, adminHome_callback)  # Call Admin Home function after successful login
+        open_home(loginFrame, home_callback)  # Call Home function after successful login
     else:
         messagebox.showerror("Error", "Invalid Username or Password")

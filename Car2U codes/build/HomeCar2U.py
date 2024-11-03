@@ -33,6 +33,10 @@ def open_profile(current_window, profile_callback):
     current_window.destroy()  # Close the signup window
     profile_callback()
 
+def open_upRent(current_window, uprent_callback):
+    current_window.destroy()  # Close the login window
+    uprent_callback()
+
 def accManage(current_window, login_callback,profile_callback):
     userInfo = get_user_info()
     droptabFrame = ctk.CTkFrame(homeFrame,width=190,height=240, bg_color="#E6F6FF",fg_color="#E6F6FF")
@@ -82,7 +86,7 @@ def saveCarPax(pax):
 def getCarPax():
     return chosen_Pax
 
-def homepage(login_callback,list_callback,profile_callback):
+def homepage(login_callback,uprent_callback,list_callback,profile_callback):
     # Create the main application window
     global homeFrame
     homeFrame = Toplevel()
@@ -175,25 +179,25 @@ def homepage(login_callback,list_callback,profile_callback):
     promobg_label.place(x=26,y=300)
 
     promo1_img = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(275,150))
-    promo1_label = ctk.CTkLabel(homeFrame, image=promo1_img, text="HAPPY MALAYSIA DAY\n10% OFF EVERY BOOKING")
+    promo1_label = ctk.CTkLabel(homeFrame, image=promo1_img, text="HAPPY MALAYSIA DAY\n10% OFF\nEVERY BOOKING", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
     promo1_label.place(x=50, y=300)
 
     promo2_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")),size=(275,150))
-    promo2_label = ctk.CTkLabel(homeFrame, image=promo2_img, text="FIRST TIME USER\nGET 15% OFF YOUR FIRST BOOKING")
+    promo2_label = ctk.CTkLabel(homeFrame, image=promo2_img, text="FIRST TIME USER\nGET 15% OFF\nYOUR FIRST BOOKING", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
     promo2_label.place(x=364, y=300)
 
     promo3_img = ctk.CTkImage(Image.open(relative_to_assets("image_7.png")),size=(275,150))
-    promo3_label = ctk.CTkLabel(homeFrame, image=promo3_img, text="ENJOY 5% OFF FOR ANY BOOKINGS IN LANGKAWI")
+    promo3_label = ctk.CTkLabel(homeFrame, image=promo3_img, text="ENJOY 5% OFF\nFOR ANY BOOKINGS\nIN LANGKAWI", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
     promo3_label.place(x=667, y=300)
 
     promo4_img = ctk.CTkImage(Image.open(relative_to_assets("image_8.png")),size=(275,150))
-    promo4_label = ctk.CTkButton(homeFrame, image=promo4_img, text="GET FREE CANCELLATION VOUCHER")
+    promo4_label = ctk.CTkLabel(homeFrame, image=promo4_img, text="GET FREE\nCANCELLATION VOUCHER", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
     promo4_label.place(x=970, y=300)
 
     nextbttn_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(30,30))
     nextPromo_button = ctk.CTkButton(master=homeFrame, text="", image=nextbttn_img, width=10, height=10, 
                                      corner_radius=100, fg_color="#4B5B6C", bg_color="#4B5B6C", 
-                                     font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: bookingManual())
+                                     font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Next Promotion"))
     nextPromo_button.place(x=1200, y=360)
     pywinstyles.set_opacity(nextPromo_button,color="#4B5B6C")
 
@@ -202,17 +206,15 @@ def homepage(login_callback,list_callback,profile_callback):
     manual = 1
     manual_lbl = ctk.CTkLabel(homeFrame, text="How to book a car?", fg_color=("#FFFFFF", "25272A"), font=('SegoeUI Bold', 24))
     manual_lbl.bind('<Enter>', lambda event, label=manual_lbl: label.configure(font=('SegoeUI Bold', 24, 'underline')))
-    manual_lbl.bind("<Button-1>",bookingManual())
+    manual_lbl.bind("<Button-1>", bookingManual)
     manual_lbl.bind('<Leave>', lambda event, label=manual_lbl: label.configure(font=('SegoeUI Bold', 24)))
     manual_lbl.place(x=251,y=490)
-    pywinstyles.set_opacity(manual_lbl,color="#FFFFFF")
 
     tnc_lbl = ctk.CTkLabel(homeFrame, text="Terms & Conditions", fg_color=("#FFFFFF", "25272A"), font=('SegoeUI Bold', 24))
     tnc_lbl.bind('<Enter>', lambda event, label=tnc_lbl: label.configure(font=('SegoeUI Bold', 24, 'underline')))
-    tnc_lbl.bind('<Button-1>', openTNC())
+    tnc_lbl.bind("<Button-1>", openTNC)
     tnc_lbl.bind('<Leave>', lambda event, label=tnc_lbl: label.configure(font=('SegoeUI Bold', 24)))
     tnc_lbl.place(x=754,y=490)
-    pywinstyles.set_opacity(tnc_lbl,color="#FFFFFF")
 
     footer_frame = ctk.CTkLabel(homeFrame,text="", fg_color="#2A333D", width=1280, height=180)
     footer_frame.place(x=0,y=550)
@@ -223,20 +225,24 @@ def homepage(login_callback,list_callback,profile_callback):
     account_label.place(x=140,y=587)
     pywinstyles.set_opacity(account_label,color="#2A333D")
 
-    myprofile_label = ctk.CTkLabel(master=homeFrame, text="My Profile", bg_color="#2A333D", text_color="#9EA3A9", 
-                                   font=("Tw Cen MT Condensed Extra Bold", 20))
+    myprofile_label = ctk.CTkButton(master=homeFrame, text="My Profile", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                                   font=("Tw Cen MT Condensed Extra Bold", 20),
+                                   command= lambda:open_profile(homeFrame,profile_callback))
     myprofile_label.place(x=290,y=577)
     pywinstyles.set_opacity(myprofile_label,color="#2A333D")
-    aboutus_label = ctk.CTkLabel(master=homeFrame, text="About Car2U", bg_color="#2A333D", text_color="#9EA3A9", 
-                                 font=("Tw Cen MT Condensed Extra Bold", 20))
+    aboutus_label = ctk.CTkButton(master=homeFrame, text="About Car2U", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                                 font=("Tw Cen MT Condensed Extra Bold", 20),
+                                 command=lambda:print("connecting to about us"))
     aboutus_label.place(x=290,y=620)
     pywinstyles.set_opacity(aboutus_label,color="#2A333D")
-    upRenter_label = ctk.CTkLabel(master=homeFrame, text="Upgrade to Renter", bg_color="#2A333D", text_color="#9EA3A9", 
-                                  font=("Tw Cen MT Condensed Extra Bold", 20))
+    upRenter_label = ctk.CTkButton(master=homeFrame, text="Upgrade to Renter", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                                  font=("Tw Cen MT Condensed Extra Bold", 20),
+                                 command=lambda:print("connecting to about us"))
     upRenter_label.place(x=430,y=577)
     pywinstyles.set_opacity(upRenter_label,color="#2A333D")
-    upMember_label = ctk.CTkLabel(master=homeFrame, text="Upgrade to Member", bg_color="#2A333D", text_color="#9EA3A9", 
-                                  font=("Tw Cen MT Condensed Extra Bold", 20))
+    upMember_label = ctk.CTkButton(master=homeFrame, text="Upgrade to Member", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                                  font=("Tw Cen MT Condensed Extra Bold", 20),
+                                 command=lambda:open_upRent(homeFrame, uprent_callback))
     upMember_label.place(x=430,y=620)
     pywinstyles.set_opacity(upMember_label,color="#2A333D")
 
@@ -246,12 +252,14 @@ def homepage(login_callback,list_callback,profile_callback):
     support_label.place(x=725, y=587)
     pywinstyles.set_opacity(support_label,color="#2A333D")
 
-    guide_label = ctk.CTkLabel(master=homeFrame, text="Car2U Guide", bg_color="#2A333D", text_color="#9EA3A9", 
-                               font=("Tw Cen MT Condensed Extra Bold", 24))
+    guide_label = ctk.CTkButton(master=homeFrame, text="Car2U Guide", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                               font=("Tw Cen MT Condensed Extra Bold", 24),
+                                 command=lambda:bookingManual)
     guide_label.place(x=880,y=577)
     pywinstyles.set_opacity(guide_label,color="#2A333D")
-    findus_label = ctk.CTkLabel(master=homeFrame, text="Find Us", bg_color="#2A333D", text_color="#9EA3A9", 
-                                font=("Tw Cen MT Condensed Extra Bold", 24))
+    findus_label = ctk.CTkButton(master=homeFrame, text="Find Us", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+                                font=("Tw Cen MT Condensed Extra Bold", 24),
+                                 command=lambda:print("connecting to about us"))
     findus_label.place(x=880,y=620)
     pywinstyles.set_opacity(findus_label,color="#2A333D")
 
@@ -263,31 +271,36 @@ def homepage(login_callback,list_callback,profile_callback):
     userInfo = get_user_info()
     print(f"Home : {userInfo}")
 
-def bookingManual():
+def bookingManual(event):
     global manual
     if manual == 1:
         global manualFrame
-        manualFrame = ctk.CTkFrame(homeFrame, width=200, height=240,fg_color="#FFFFFF")
-        manualFrame.place(x=256,y=261)
+        manualFrame = ctk.CTkFrame(homeFrame, width=200, height=240,fg_color="#FFFFFF", border_color="#000000", border_width=2)
+        manualFrame.place(x=256,y=240)
 
         steps = ["Step 1","Step 2","Step 3","Step 4","Step 5"]
         for i,step in enumerate(steps):
-            stepLabel = ctk.CTkLabel(manualFrame, text=step, text_color="#000000", font=("Segeo UI",14))
-            stepLabel.place(x=10,y=12+i*37)
+            stepLabel = ctk.CTkLabel(manualFrame, text=step, fg_color="#FFFFFF", text_color="#000000", font=("Segeo UI",14))
+            stepLabel.place(x=10,y=10+i*40)
+            pywinstyles.set_opacity(stepLabel,color="#FFFFFF")
         
         definition = ["Choose a car","Fill in relative details","Send a booking request","Pay for booking after request\nis approved","Have a fun rental experience"]
         for i,define in enumerate(definition):
-            defLabel = ctk.CTkLabel(manualFrame, text=define, text_color="#000000", font=("Segeo UI",12))
-            defLabel.place(x=10,y=32+i*37)
+            defLabel = ctk.CTkLabel(manualFrame, text=define, fg_color="#FFFFFF", text_color="#000000", font=("Segeo UI",12))
+            defLabel.place(x=25,y=32+i*40)
+            pywinstyles.set_opacity(defLabel,color="#FFFFFF")
         manual = 0
     else:
         for widget in manualFrame.winfo_children():
             if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel)):
                 widget.destroy()
+        for widget in homeFrame.winfo_children():
+            if isinstance(manualFrame, (ctk.CTkFrame)):
+                manualFrame.destroy()
         manual = 1
 
-def openTNC():
-    theFile = open("Terms&Condition.txt","r")
+def openTNC(event):
+    theFile = open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\build\Terms&Condition.txt","r")
     greatString = theFile.read()
     theFile.close()
     messagebox.showinfo("Terms & Condition",greatString)

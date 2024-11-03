@@ -101,6 +101,7 @@ def accInfo():
     user_image = ctk.CTkButton(profileFrame, image=pfp_img, text="", width=240, height=240, fg_color="#D9D9D9", 
                                command=lambda: convertToBinaryData())
     user_image.place(x=40, y=153)
+    pywinstyles.set_opacity(user_image,color="#D9D9D9")
 
     info_labels = [("Email:", 10), ("Date Of Birth:", 50), ("Phone Number:", 90), ("Gender:", 130), ("Nationality:", 170)]
     for text, y_pos in info_labels:
@@ -156,21 +157,27 @@ def editInfo():
     emailEntry.place(x=175, y=10)
 
     contactEntry = ctk.CTkEntry(info_frame, width=438, height=28, font=("Skranji", 20), text_color="#000000")
-    contactEntry.insert(0,contact)
+    if contact != None:
+        contactEntry.insert(0,contact)
     contactEntry.place(x=175, y=90)
     
-    genderEntry = ctk.CTkComboBox(master=info_frame, width=438, height=28, state="readonly", values=["Male", "Female"], font=("Skranji", 20))
-    genderEntry.set(gender)
+    genderEntry = ctk.CTkComboBox(master=info_frame, width=438, height=28, state="readonly", values=["","Male", "Female"], font=("Skranji", 20))
+    if gender != None:
+        genderEntry.set(gender)
+    else:
+        genderEntry.set("")
     genderEntry.bind("<<ComboboxSelected>>", genderSelect())
     genderEntry.place(x=175, y=130)
 
     nationalityEntry = ctk.CTkEntry(info_frame, width=438, height=28, font=("Skranji", 20), text_color="#000000")
-    nationalityEntry.insert(0,nationality)
+    if nationality != None:
+        nationalityEntry.insert(0,nationality)
     nationalityEntry.place(x=175, y=170)
     
     global dobEntry
     dobEntry = DateEntry(profileFrame, date_pattern='yyyy-mm-dd', locale='en_US', font=("Skranji", 12), text_color="#000000")
-    dobEntry.set_date(dob)
+    if nationality != None:
+        dobEntry.set_date(dob)
     dobEntry.place(x=520, y=206)
 
     edit_info = ctk.CTkButton(info_frame, text="Done", width=80, corner_radius=50, fg_color="#F95F43", bg_color="#FFFFFF",
@@ -282,6 +289,7 @@ def profile(login_callback,home_callback,list_callback):
     profileFrame.title("Profile Page")
     profileFrame.geometry("1280x720")
     profileFrame.resizable(False, False)
+    profileFrame.config(bg="white")
 
     # Background
     bg_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1280,720))
@@ -328,7 +336,6 @@ def profile(login_callback,home_callback,list_callback):
 
     global pfpState
     pfpState = 1
-    droptabFrame = None
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")),size=(40,40))
     pfp_label = ctk.CTkButton(profileFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
                               width=40, height=40, command=lambda:accManage(profileFrame,login_callback))

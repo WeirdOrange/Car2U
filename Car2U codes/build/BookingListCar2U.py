@@ -3,7 +3,9 @@ import tkinter as tk
 import pywinstyles
 import sqlite3
 from Car2U_UserInfo import get_user_info
+from HomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
+from datetime import datetime
 from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox
@@ -26,7 +28,8 @@ def open_home(current_window, home_callback):
     home_callback()
 
 # Function to handle profile button click
-def open_listing():
+def open_listing(login_callback,home_callback,profile_callback):
+    booking(login_callback,home_callback,profile_callback)
     messagebox.showinfo("You are on the Car Selection page")
 
 # Function to handle selection button click
@@ -64,7 +67,7 @@ def fetchdata():
         transmission = "OR ".join(f"transmissionType LIKE '{gear}'" for gear in filterTransmission)
         filtering.append(transmission)
     if filtering:
-        query += " WHERE " + " AND ".join(filtering)
+        query += " WHERE " + " AND ".join(filtering)\
 
     query = query +" LIMIT 6"
     if i > 0:
@@ -180,7 +183,7 @@ def filter_brand(var, brand_name):
 
 def filter_capacity(var, capacity):
     global filterSeats
-    if var.get() == 1:
+    if var.get() == True:
         filterSeats.append(f"{str(capacity)}")
     else:
         filterSeats.remove(f"{str(capacity)}")
@@ -189,7 +192,7 @@ def filter_capacity(var, capacity):
 
 def filter_transmission(var, transmission):
     global filterTransmission
-    if var.get() == 1:
+    if var.get() == True:
         filterTransmission.append(f"{str(transmission)}")
     else:
         filterTransmission.remove(f"{str(transmission)}")
@@ -213,13 +216,20 @@ def filters():
     capacity_label = ctk.CTkLabel(filter_frame, text="Seating Capacity", font=("Arial", 20))
     capacity_label.place(x=10, y=180)
 
+    global capacities
     capacity_vars = []
     capacities = ["2-seater", "4-seater", "6-seater"]
     for i, capacity in enumerate(capacities):
-        var = ctk.IntVar()
-        chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b))
-        chk.place(x=10, y=210 + i * 30)
-        capacity_vars.append(var)
+        if pax == capacity:
+            var = ctk.IntVar(value=1)
+            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b))
+            chk.place(x=10, y=210 + i * 30)
+            filterSeats.append(f"{str(pax)}")
+        else:
+            var = ctk.IntVar()
+            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b))
+            chk.place(x=10, y=210 + i * 30)
+            capacity_vars.append(var)
 
     # Transmission Type options
     transmission_label = ctk.CTkLabel(filter_frame, text="Transmission Type", font=("Arial", 20))
@@ -232,6 +242,33 @@ def filters():
         chk = ctk.CTkCheckBox(filter_frame, text=transmission, variable=var, font=("Arial", 16), command=lambda v=var, b=transmission: filter_transmission(v, b))
         chk.place(x=10, y=340 + i * 30)
         transmission_vars.append(var)
+
+def accManage(current_window, login_callback,profile_callback):
+    userInfo = get_user_info()
+    droptabFrame = ctk.CTkFrame(droptabFrame,width=190,height=240, bg_color="#E6F6FF",fg_color="#E6F6FF")
+    droptabFrame.place(x=1090, y=60)
+
+    if userInfo == "":
+        droptabFrame.configure(height=57)
+        logoin = ctk.CTkButton(master=droptabFrame, text="Log In", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
+        logoin.place(x=30,y=13)
+    else:
+        myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
+        myAcc.place(x=30,y=13)
+
+        history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+        history.place(x=30,y=70)
+
+        setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+        setting.place(x=30,y=127)
+
+        logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
+        logout.place(x=30,y=184)
 
 def booking(login_callback,home_callback,profile_callback):
     # Create the main application window
@@ -248,8 +285,6 @@ def booking(login_callback,home_callback,profile_callback):
     filterTransmission = []
     filtering = []
     i = 0
-    userInfo = get_user_info()
-    print(f"Selection : {userInfo}")
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("image_2.png")),size=(1280,60))
@@ -261,15 +296,18 @@ def booking(login_callback,home_callback,profile_callback):
     logo_label.place(x=5, y=5)
     pywinstyles.set_opacity(logo_label,color="#F47749")
 
+    global pfpState
+    pfpState = 1
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_4.png")),size=(40,40))
-    pfp_label = ctk.CTkButton(bookingFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749", width=40, height=40, command=lambda:open_login(bookingFrame,login_callback))
+    pfp_label = ctk.CTkButton(bookingFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749", width=40, height=40, 
+                                command=lambda:accManage(bookingFrame,login_callback,profile_callback))
     pfp_label.place(x=1180, y=5)
     pywinstyles.set_opacity(pfp_label,color="#F47749")
 
     # Relocate buttons
     home_button = ctk.CTkButton(master=bookingFrame, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", 
                                 text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
-                                command=lambda:open_home(bookingFrame,home_callback,profile_callback))
+                                command=lambda:open_home(bookingFrame,home_callback))
     home_button.place(x=627, y=14)
     pywinstyles.set_opacity(home_button,color="#FA5740")
 
@@ -291,6 +329,10 @@ def booking(login_callback,home_callback,profile_callback):
     pywinstyles.set_opacity(about_us_button,color="#FC4D3D")
 
     # Locations frame
+    global location, pax
+    location = ""
+    pax = ""
+
     location_frame = ctk.CTkFrame(bookingFrame, corner_radius=0, width=1090, height=90, fg_color="light grey")
     location_frame.place(x=190, y=60)
 
@@ -307,7 +349,13 @@ def booking(login_callback,home_callback,profile_callback):
     pickup_text.place(x=30,y=10)
     pywinstyles.set_opacity(pickup_text,color="#D7D7D7")
 
-    pickup_entry = ctk.CTkEntry(location_frame, font=("Arial", 10), width=100, fg_color="#bbbbbb")
+    global locations
+    locations = ["Choose A Location","Penang International Airport","Penang Komtar","Penang Sentral",
+                 "Kuala Lumpur International Airport","Kuala Lumpur Sentral","Kuala Lumpur City Centre",
+                 "Sultan Azlan Shah Airport","Bus Terminal Amanjaya Ipoh","Ipoh Railway Station",
+                 "INTI INTERNATION COLLEGE PENANG"]
+    
+    pickup_entry = ctk.CTkComboBox(master=location_frame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
     pickup_entry.place(x=85, y=50)
     pickup_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10))
     pickup_date.place(x=345, y=50)
@@ -325,10 +373,19 @@ def booking(login_callback,home_callback,profile_callback):
     dropoff_text.place(x=565,y=5)
     pywinstyles.set_opacity(dropoff_text,color="#D7D7D7")
 
-    dropoff_entry = ctk.CTkEntry(location_frame, font=("Arial", 10), width=100, fg_color="#bbbbbb")
+    dropoff_entry = ctk.CTkComboBox(master=location_frame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
     dropoff_entry.place(x=620, y=50)
     dropoff_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10))
     dropoff_date.place(x=880, y=50)
+
+    # If user had already chosen location from home page
+    location = getCarLocate()
+    pax = getCarPax()
+    print(f"Location: {location}, Pax: {pax}")
+    if location != None:
+        if location != "Choose A Location":
+            pickup_entry.set(location)
+            dropoff_entry.set(location)
 
     # Create a frame for the filter options
     global filter_frame

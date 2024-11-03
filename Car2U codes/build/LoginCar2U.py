@@ -47,7 +47,11 @@ def open_home(current_window, home_callback):
     current_window.destroy()  # Close the login window
     home_callback()
 
-def logingui(signup_callback,home_callback):
+def open_adminHome(current_window, adminHome_callback):
+    current_window.destroy()  # Close the login window
+    adminHome_callback()
+
+def logingui(signup_callback,home_callback,adminHome_callback):
     # Create the main application window
     global loginFrame,email_entry,password_entry
     loginFrame = Toplevel()
@@ -109,7 +113,7 @@ def logingui(signup_callback,home_callback):
     # Create login button
     login_button = ctk.CTkButton(loginFrame, text="Login", font=("Arial", 18), width=350, height=40, 
                                  bg_color="#FFA843", fg_color=("#F47749","white"), corner_radius=50, 
-                                 command=lambda:LoginAccess(email_entry.get(),password_entry.get(),home_callback))
+                                 command=lambda:LoginAccess(email_entry.get(),password_entry.get(),home_callback,adminHome_callback))
     login_button.place(x=700, y=375)
     pywinstyles.set_opacity(login_button,color="#FFA843")
 
@@ -130,18 +134,34 @@ def logingui(signup_callback,home_callback):
     pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
 
 # Function to handle login button click
-def LoginAccess(email,password,home_callback):
+def LoginAccess(email,password,home_callback,adminHome_callback):
+    global userid
+    userid = ""
     Database()
+    
     if email == "" or password == "":
-        messagebox.showerror("Error", "Please complete the required field!")
+        messagebox.showerror("Error", "Please complete the required fields!")
+        return
+    
+    # Check in UserDetails table
+    cursor.execute("SELECT userID FROM UserDetails WHERE `email` = ? and `password` = ?", (email, password))
+    result = cursor.fetchone()
+    
+    if result:  # Check if result is not None
+        userid = result[0]  # Get userID
+        messagebox.showinfo("Success", "You Successfully Login")
+        set_user_info(userid)
+        open_home(loginFrame, home_callback)  # Call Home function after successful login
+        return
+    
+    # Check in RentalAgency table
+    cursor.execute("SELECT agencyID FROM RentalAgency WHERE `agencyEmail` = ? and `agencyPassword` = ?", (email, password))
+    result = cursor.fetchone()
+    
+    if result:  # Check if result is not None
+        userid = result[0]  # Get agencyID
+        messagebox.showinfo("Success", "You Successfully Login")
+        set_user_info(userid)
+        open_adminHome(loginFrame, adminHome_callback)  # Call Admin Home function after successful login
     else:
-        cursor.execute("SELECT * FROM UserDetails WHERE `email` = ? and `password` = ?",(email,password))
-        if cursor.fetchone() is not None:
-            result = cursor.execute("SELECT userID FROM UserDetails WHERE `email` = ? and `password` = ?",(email,password))
-            for row in result:
-                userid = row[0]
-            messagebox.showinfo("Success", "You Successfully Login")
-            set_user_info(userid)
-            open_home(loginFrame,home_callback)  # Call Home function after successful login
-        else:
-            messagebox.showerror("Error", "Invalid Username or password")
+        messagebox.showerror("Error", "Invalid Username or Password")

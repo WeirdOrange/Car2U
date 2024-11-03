@@ -3,10 +3,11 @@ from PIL import Image
 from tkinter import Toplevel, messagebox
 from tkcalendar import DateEntry
 from Car2U_UserInfo import get_user_info
+import tkinter as tk
 import customtkinter as ctk 
 import pywinstyles
 
-# Set up the asset path (same as original)
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Home")
 
@@ -59,6 +60,28 @@ def accManage(current_window, login_callback,profile_callback):
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
         logout.place(x=30,y=184)
 
+def findcar(homeFrame,list_callback,location,pax):
+    print(location,"  ",pax)
+    if location != None:
+        saveCarLocate(location)
+    if pax != None:
+        saveCarPax(pax)
+    open_listing(homeFrame,list_callback)
+
+def saveCarLocate(location):
+    global chosen_Location
+    for x in locations:
+        if location == x:
+            chosen_Location = str(location)
+def getCarLocate():
+    return chosen_Location
+
+def saveCarPax(pax):
+    global chosen_Pax
+    chosen_Pax = str(pax)
+def getCarPax():
+    return chosen_Pax
+
 def homepage(login_callback,list_callback,profile_callback):
     # Create the main application window
     global homeFrame
@@ -66,6 +89,11 @@ def homepage(login_callback,list_callback,profile_callback):
     homeFrame.title("Login")
     homeFrame.geometry("1280x720")
     homeFrame.resizable(False, False)
+    homeFrame.config(bg="white")
+
+    global chosen_Location, chosen_Pax
+    chosen_Location = ""
+    chosen_Pax = ""
 
     searchbg_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1280,253))
     searchbg_label = ctk.CTkLabel(homeFrame, image=searchbg_img, text="", width=1280, height=253)
@@ -122,55 +150,66 @@ def homepage(login_callback,list_callback,profile_callback):
     passenger_label.place(x=580,y=165)
     pywinstyles.set_opacity(passenger_label,color="#D9D9D9")
 
-    entry_1 = ctk.CTkEntry(master=homeFrame, width=240, height=51, fg_color="#D9D9D9", text_color="#000716", placeholder_text="Place Of Rental")
-    entry_1.place(x=311, y=150)
+    global locations
+    locations = ["Choose A Location","Penang International Airport","Penang Komtar","Penang Sentral",
+                 "Kuala Lumpur International Airport","Kuala Lumpur Sentral","Kuala Lumpur City Centre",
+                 "Sultan Azlan Shah Airport","Bus Terminal Amanjaya Ipoh","Ipoh Railway Station",
+                 "INTI INTERNATION COLLEGE PENANG"]
 
-    entry_2 = ctk.CTkEntry(homeFrame, width=50, fg_color="#D9D9D9", text_color="#000716", font=("Arial", 10))
+    entry_1 = ctk.CTkComboBox(master=homeFrame, width=240, state="readonly", values=locations, fg_color="#D9D9D9", font=("Skranji", 14))
+    entry_1.place(x=311, y=165)
+    
+    capacities = ["","2-seater", "4-seater", "6-seater"]
+
+    entry_2 = ctk.CTkComboBox(master=homeFrame, width=100, state="readonly", values=capacities, fg_color="#D9D9D9", font=("Skranji", 14))
     entry_2.place(x=780, y=165)
 
-    submit_button = ctk.CTkButton(master=homeFrame, text="Find", width=85, height=35, fg_color="#067BC1", command=lambda: print("Submit clicked"))
+    submit_button = ctk.CTkButton(master=homeFrame, text="Find", width=85, height=35, fg_color="#067BC1", command=lambda: findcar(homeFrame,list_callback,entry_1.get(),entry_2.get()))
     submit_button.place(x=958, y=159)
 
     # Promotions
     promotions_label = ctk.CTkLabel(master=homeFrame, text="Promotions", text_color="#000000", font=("SegoeUI Bold", 24))
     promotions_label.place(x=21, y=261)
 
-    promobg_label = ctk.CTkLabel(master=homeFrame, text="",fg_color="#EDEDED", width=1280, height=220)
+    promobg_label = ctk.CTkLabel(master=homeFrame, text="",fg_color="#FFFFFF", width=1280, height=220)
     promobg_label.place(x=26,y=300)
 
     promo1_img = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(275,150))
-    promo1_label = ctk.CTkLabel(homeFrame, image=promo1_img, text="")
+    promo1_label = ctk.CTkLabel(homeFrame, image=promo1_img, text="HAPPY MALAYSIA DAY\n10% OFF EVERY BOOKING")
     promo1_label.place(x=50, y=300)
 
     promo2_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")),size=(275,150))
-    promo2_label = ctk.CTkLabel(homeFrame, image=promo2_img, text="")
+    promo2_label = ctk.CTkLabel(homeFrame, image=promo2_img, text="FIRST TIME USER\nGET 15% OFF YOUR FIRST BOOKING")
     promo2_label.place(x=364, y=300)
 
     promo3_img = ctk.CTkImage(Image.open(relative_to_assets("image_7.png")),size=(275,150))
-    promo3_label = ctk.CTkLabel(homeFrame, image=promo3_img, text="")
+    promo3_label = ctk.CTkLabel(homeFrame, image=promo3_img, text="ENJOY 5% OFF FOR ANY BOOKINGS IN LANGKAWI")
     promo3_label.place(x=667, y=300)
 
     promo4_img = ctk.CTkImage(Image.open(relative_to_assets("image_8.png")),size=(275,150))
-    promo4_label = ctk.CTkLabel(homeFrame, image=promo4_img, text="")
+    promo4_label = ctk.CTkButton(homeFrame, image=promo4_img, text="GET FREE CANCELLATION VOUCHER")
     promo4_label.place(x=970, y=300)
 
     nextbttn_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(30,30))
     nextPromo_button = ctk.CTkButton(master=homeFrame, text="", image=nextbttn_img, width=10, height=10, 
                                      corner_radius=100, fg_color="#4B5B6C", bg_color="#4B5B6C", 
-                                     font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+                                     font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: bookingManual())
     nextPromo_button.place(x=1200, y=360)
     pywinstyles.set_opacity(nextPromo_button,color="#4B5B6C")
 
     # Extra Content
-    # Remember to continue
+    global manual
+    manual = 1
     manual_lbl = ctk.CTkLabel(homeFrame, text="How to book a car?", fg_color=("#FFFFFF", "25272A"), font=('SegoeUI Bold', 24))
     manual_lbl.bind('<Enter>', lambda event, label=manual_lbl: label.configure(font=('SegoeUI Bold', 24, 'underline')))
+    manual_lbl.bind("<Button-1>",bookingManual())
     manual_lbl.bind('<Leave>', lambda event, label=manual_lbl: label.configure(font=('SegoeUI Bold', 24)))
     manual_lbl.place(x=251,y=490)
     pywinstyles.set_opacity(manual_lbl,color="#FFFFFF")
 
     tnc_lbl = ctk.CTkLabel(homeFrame, text="Terms & Conditions", fg_color=("#FFFFFF", "25272A"), font=('SegoeUI Bold', 24))
     tnc_lbl.bind('<Enter>', lambda event, label=tnc_lbl: label.configure(font=('SegoeUI Bold', 24, 'underline')))
+    tnc_lbl.bind('<Button-1>', openTNC())
     tnc_lbl.bind('<Leave>', lambda event, label=tnc_lbl: label.configure(font=('SegoeUI Bold', 24)))
     tnc_lbl.place(x=754,y=490)
     pywinstyles.set_opacity(tnc_lbl,color="#FFFFFF")
@@ -223,3 +262,32 @@ def homepage(login_callback,list_callback,profile_callback):
 
     userInfo = get_user_info()
     print(f"Home : {userInfo}")
+
+def bookingManual():
+    global manual
+    if manual == 1:
+        global manualFrame
+        manualFrame = ctk.CTkFrame(homeFrame, width=200, height=240,fg_color="#FFFFFF")
+        manualFrame.place(x=256,y=261)
+
+        steps = ["Step 1","Step 2","Step 3","Step 4","Step 5"]
+        for i,step in enumerate(steps):
+            stepLabel = ctk.CTkLabel(manualFrame, text=step, text_color="#000000", font=("Segeo UI",14))
+            stepLabel.place(x=10,y=12+i*37)
+        
+        definition = ["Choose a car","Fill in relative details","Send a booking request","Pay for booking after request\nis approved","Have a fun rental experience"]
+        for i,define in enumerate(definition):
+            defLabel = ctk.CTkLabel(manualFrame, text=define, text_color="#000000", font=("Segeo UI",12))
+            defLabel.place(x=10,y=32+i*37)
+        manual = 0
+    else:
+        for widget in manualFrame.winfo_children():
+            if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel)):
+                widget.destroy()
+        manual = 1
+
+def openTNC():
+    theFile = open("Terms&Condition.txt","r")
+    greatString = theFile.read()
+    theFile.close()
+    messagebox.showinfo("Terms & Condition",greatString)

@@ -3,6 +3,7 @@ from PIL import Image
 from tkinter import Toplevel, messagebox, ttk
 from Car2U_UserInfo import get_user_info
 from tkcalendar import Calendar, DateEntry
+from calendar import monthrange
 import pandas as pd
 import customtkinter as ctk 
 import pywinstyles
@@ -92,20 +93,43 @@ def refresh_CalendarEvent():
     finally:
         conn.close()
 
-def select_calendar():
+def select_calendar(event):
+    global calendarTreeview
+    for row in calendarTreeview.get_children():
+        calendarTreeview.delete(row)
+    for widget in cTaskFrame.winfo_children():
+        if isinstance(widget, ctk.CTkLabel):
+            widget.destroy()
+    
+    global selected_date
     selected_date = task_calendar.get_date()
+    print(selected_date)
+    setDate = ctk.CTkLabel(cTaskFrame, text=selected_date, anchor='center', width=250, height=28, font=("Segoe UI", 20))
+    setDate.place(x=5, y=8)
+    selected_month = task_calendar.get_displayed_month()
+    print(selected_month)
+
+    # Filter month and year from selection
+    start_month = f"{selected_month[0]}-{selected_month[1]}-01"
+    # Find last date of the month
+    last_day = monthrange(selected_month[1],selected_month[0])
+    end_month = f"{selected_month[0]}-{selected_month[1]}-{last_day}"
     try:
         Database()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("""SELECT C.registrationNo, pickupDate,pickupLocation,pickupTime,dropoffDate,dropoffLocation,dropoffTime 
+        cursor.execute("""SELECT C.registrationNo, pickupDate,pickupLocation,pickupTime,dropoffDate,dropoffLocation,dropoffTime,bookingID
                             FROM BookingDetails B 
-                            INNER JOIN CarDetails C ON B.carID = C.carID
-                            WHERE agencyID = ? AND pickupDate <= ? AND ? <= dropoffDate""",(userinfo,selected_date,selected_date))
+                                INNER JOIN CarDetails C ON B.carID = C.carID
+                                WHERE agencyID = ? AND ((pickupDate >= ? AND pickupDate <= ?) or (dropoffDate >= ? AND dropoffDate <= ?))""",(userinfo,start_month,end_month,start_month,end_month))
         fetchData = cursor.fetchall()
-        
-        # RMB TO PROCEED
+
+        if not fetchData:
+            calendarTreeview.insert('', '0', 'noBooking', text ='No Bookings Today')
+
+        i=0
         for row in fetchData:
+            global carNo,start_date,pickLocate,pickTime,end_date,dropLocate,dropTime,date_range
             carNo = row[0]
             start_date = row[1]
             pickLocate = row[2]
@@ -113,12 +137,52 @@ def select_calendar():
             end_date = row[4]
             dropLocate = row[5]
             dropTime = row[6]
+            bookingID = row[7]
 
+            onRent_content = f"Pick-Up Time (Client) : {pickTime} || Drop-Off Time (Client) : {dropTime}\nLocation : {pickLocate}"
+            pickdate_content = f"Time : {pickTime} || Location : {pickLocate}"
+            dropdate_content = f"Time : {dropTime} || Location : {dropLocate}"
+            
+            # checking if date selected is within the period
+            start_date = pd.Timestamp(start_date)
+            end_date = pd.Timestamp(end_date)
+            date_range = pd.date_range(start=start_date, end=end_date)
+
+            
+            if not calendarTreeview.exists('o1'):
+                calendarTreeview.insert('', '0', 'o1', text ='On Rent')
+            if not calendarTreeview.exists('o2'):
+                calendarTreeview.insert('', '1', 'o2', text ='Car Pick-Up')
+            if not calendarTreeview.exists('o3'):
+                calendarTreeview.insert('', '2', 'o3', text ='Car Drop-Off')
+            
+            if selected_date == start_date:
+                carNoKey = carNo+"pick"
+                if not calendarTreeview.exists(carNoKey):
+                    calendarTreeview.insert('', i, carNoKey, text = carNo) # for pickup
+                calendarTreeview.insert(carNoKey, 'end', bookingID, text = onRent_content)
+                calendarTreeview.move(carNoKey, 'o2', 'end')
+                i+=1
+            elif selected_date == end_date:
+                carNoKey = carNo+"drop"
+                if not calendarTreeview.exists(carNoKey):
+                    calendarTreeview.insert('', i, carNoKey, text = carNo) # for dropoff
+                calendarTreeview.insert(carNoKey, 'end', bookingID, text = pickdate_content)
+                calendarTreeview.move(carNoKey, 'o3', 'end')
+                i+=1
+            elif selected_date in date_range: # Check if the selected date is within the booking period
+                carNoKey = carNo+"renting"
+                if not calendarTreeview.exists(carNoKey):
+                    calendarTreeview.insert('', i, carNoKey, text = carNo) # Rejected
+                calendarTreeview.insert(carNoKey, 'end', bookingID, text = dropdate_content)
+                calendarTreeview.move(carNoKey, 'o1', 'end')
+                i+=1
 
     except sqlite3.Error as e:
         messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
     finally:
         conn.close()
+    
 
 def adminHome(login_callback,detail_callback,booking_callback):
     # Create the main application window
@@ -126,7 +190,7 @@ def adminHome(login_callback,detail_callback,booking_callback):
     adminHomeFrame = Toplevel()
     adminHomeFrame.title("Login")
     adminHomeFrame.geometry("1280x720")
-    adminHomeFrame.resizable(False, False)
+    #adminHomeFrame.resizable(False, False)
     adminHomeFrame.config(bg="white")
 
     # Linking user data
@@ -189,44 +253,33 @@ def adminHome(login_callback,detail_callback,booking_callback):
     task_calendar = Calendar(taskFrame,date_pattern='y-mm-dd',showothermonthdays=False)
     task_calendar.pack(fill="both", expand=True)
     refresh_CalendarEvent()
+    task_calendar.bind("<<CalendarSelected>>",select_calendar)
 
+    global cTaskFrame
     cTaskFrame = ctk.CTkFrame(adminHomeFrame, width=260, height=300, fg_color="#FFFFFF", border_width=2, border_color="#000000")
     cTaskFrame.place(x=620,y=80)
-    cTask = ctk.CTkLabel(cTaskFrame, text="No Bookings Today")
-    cTask.place(x=70,y=70)
 
+    ##Treeview widget data
+    global calendarTreeview
+    calendarTreeview = ttk.Treeview(cTaskFrame, show="tree")
+    calendarTreeview.place(x=5,y=45,width=250,height=250,bordermode='ignore')
+    calendarTreeview.insert('', '0', 'noBooking', text ='No Bookings Today')
+
+    global notifFrame
     notifFrame = ctk.CTkFrame(adminHomeFrame, width=325, height=245,fg_color="#FFFFFF", border_width=2, border_color="#000000")
     notifFrame.place(x=930,y=80)
-
-    notifTitle = ctk.CTkLabel(notifFrame, text="Notification", font=("Segoe UI",24,"underline"))
-    notifTitle.place(x=35,y=5)
-    statusTitle = ctk.CTkLabel(notifFrame, text="Status", font=("Segoe UI",24,"underline"))
-    statusTitle.place(x=235,y=5)
-
-    notif1 = ctk.CTkLabel(notifFrame, text="Booking Request", font=("Segoe UI",16))
-    notif1.place(x=12,y=40)
-    notif2 = ctk.CTkLabel(notifFrame, text="Customer Feedback Review", font=("Segoe UI",16))
-    notif2.place(x=12,y=75)
-    notif3 = ctk.CTkLabel(notifFrame, text="Enquiries", font=("Segoe UI",16))
-    notif3.place(x=12,y=110)
-
-    status1 = ctk.CTkLabel(notifFrame, text="Pending", width=64, justify="center", font=("Segoe UI",16))
-    status1.place(x=240,y=40)
-    status2 = ctk.CTkLabel(notifFrame, text="Pending", width=64, justify="center", font=("Segoe UI",16))
-    status2.place(x=240,y=75)
-    status2 = ctk.CTkLabel(notifFrame, text="Pending", width=64, justify="center", font=("Segoe UI",16))
-    status2.place(x=240,y=110)
+    notifs()
 
     inventoryFrame = ctk.CTkFrame(adminHomeFrame, width=1020, height=300, fg_color="#FFFFFF")
     inventoryFrame.place(x=220, y=400)
-    inventorybg = ctk.CTkLabel(inventoryFrame,text="", bg_color="#FFFFFF", fg_color="#85BCDA", width=1020, height=300, corner_radius=20)
+    inventorybg = ctk.CTkLabel(inventoryFrame,text="", bg_color="#FFFFFF", fg_color="#2F59C1", width=1020, height=300, corner_radius=20)
     inventorybg.place(x=0,y=0)
 
-    invenTitle = ctk.CTkLabel(inventoryFrame, text="Inventory", bg_color="#85BCDA", text_color="#067BC1", font=("Segoe UI Bold",24))
+    invenTitle = ctk.CTkLabel(inventoryFrame, text="Inventory", bg_color="#85BCDA", text_color="#CBECFF", font=("Segoe UI Bold",24))
     invenTitle.place(x=40,y=5)
     pywinstyles.set_opacity(invenTitle,color="#85BCDA")
     
-    inven = ctk.CTkFrame(inventoryFrame, width=960, height=170)
+    inven = ctk.CTkFrame(inventoryFrame, width=1000, height=200)
     inven.place(x=30,y=40)
     
     # Treeview for displaying saved data
@@ -252,34 +305,11 @@ def adminHome(login_callback,detail_callback,booking_callback):
     inven.grid_columnconfigure(0, weight=1)
     refresh_treeview()
 
-    forRent = 2
-    onRent = 1
-    onHold = 3
-
-    carFRent = ctk.CTkLabel(inventoryFrame, text="Car FOR Rent:", bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",20))
-    carFRent.place(x=30,y=220)
-    pywinstyles.set_opacity(carFRent,color="#85BCDA")
-    carFRentValue = ctk.CTkLabel(inventoryFrame, text=forRent, bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",36))
-    carFRentValue.place(x=170,y=250)
-    pywinstyles.set_opacity(carFRentValue,color="#85BCDA")
-
-    carORent = ctk.CTkLabel(inventoryFrame, text="Car ON Rent:", bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",20))
-    carORent.place(x=260,y=220)
-    pywinstyles.set_opacity(carORent,color="#85BCDA")
-    carORentValue = ctk.CTkLabel(inventoryFrame, text=onRent, bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",36))
-    carORentValue.place(x=410,y=250)
-    pywinstyles.set_opacity(carFRentValue,color="#85BCDA")
-    
-    carHold = ctk.CTkLabel(inventoryFrame, text="Car ON Hold:", bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",20))
-    carHold.place(x=530,y=220)
-    pywinstyles.set_opacity(carHold,color="#85BCDA")
-    carHoldValue = ctk.CTkLabel(inventoryFrame, text=onHold, bg_color="#85BCDA", text_color="#000000", font=("Segoe UI",36))
-    carHoldValue.place(x=700,y=250)
-    pywinstyles.set_opacity(carHoldValue,color="#85BCDA")
-
-    viewMore = ctk.CTkButton(inventoryFrame, text="View More", bg_color="#85BCDA", fg_color="#FED000", text_color="#000000", font=("Segoe UI",16), width=100, height=35, corner_radius=50)
+    viewMore = ctk.CTkButton(inventoryFrame, text="View More", bg_color="#85BCDA", fg_color="#FED000", text_color="#000000", font=("Segoe UI",16), 
+                             width=100, height=35, corner_radius=50)
     viewMore.place(x=885,y=240)
     pywinstyles.set_opacity(viewMore,color="#85BCDA")
+
 
 # Function to refresh treeview
 def refresh_treeview():
@@ -295,12 +325,84 @@ def refresh_treeview():
 
     for row in result:
         treeview.insert("", "end", values=row)
-        """
-        registrationNo = row[1]
-        model = row[2]
-        colour = row[3]
-        fuelType = row[4]
-        seatingCapacity = row[5]
-        transmissionType = row[6]
-        price = row[7]
-        """
+
+def notifs():
+    for widgets in notifFrame.winfo_children():
+        if isinstance(widgets, ctk.CTkLabel):
+            widgets.destroy()
+    
+    notifTitle = ctk.CTkLabel(notifFrame, text="Notification", font=("Segoe UI",24,"underline"))
+    notifTitle.place(x=35,y=5)
+    statusTitle = ctk.CTkLabel(notifFrame, text="Status", font=("Segoe UI",24,"underline"))
+    statusTitle.place(x=235,y=5)
+
+    notif1 = ctk.CTkLabel(notifFrame, text="Pending Booking Request", font=("Segoe UI",16))
+    notif1.place(x=12,y=40)
+    notif2 = ctk.CTkLabel(notifFrame, text="Cars Booked", font=("Segoe UI",16))
+    notif2.place(x=12,y=75)
+    notif3 = ctk.CTkLabel(notifFrame, text="Cars On Rent", font=("Segoe UI",16))
+    notif3.place(x=12,y=110)
+
+    try:
+        Database()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""SELECT count(bookingID) as Pendings from BookingDetails b
+                            INNER JOIN CarDetails r ON b.carID = r.carID
+                            WHERE bookingStatus = 'Pending' AND agencyID = ?""",(userinfo,))
+        result = cursor.fetchone()
+
+        if not result:
+            status1 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+            status1.place(x=240,y=40)
+        for row in result:
+            status1 = ctk.CTkLabel(notifFrame, text=f"Pending({row})", width=64, justify="center", font=("Segoe UI",16))
+            status1.place(x=240,y=40)
+
+    except sqlite3.Error as e:
+        messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+    finally:
+        conn.close()
+    
+    try:
+        Database()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""SELECT count(bookingID) as Booked from BookingDetails b
+                            INNER JOIN CarDetails r ON b.carID = r.carID
+                            WHERE bookingStatus = 'Approved' AND agencyID = ?""",(userinfo,))
+        result = cursor.fetchone()
+
+        if not result:
+            status2 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+            status2.place(x=240,y=40)
+        for row in result:
+            status2 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
+            status2.place(x=240,y=75)
+
+    except sqlite3.Error as e:
+        messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+    finally:
+        conn.close()
+
+    try:
+        Database()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""SELECT count(bookingID) as OnRent from BookingDetails b
+                            INNER JOIN CarDetails r ON b.carID = r.carID
+                            WHERE bookingStatus = 'On Rent' AND agencyID = ?""",(userinfo,))
+        result = cursor.fetchone()
+
+        if not result:
+            status3 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+            status3.place(x=240,y=40)
+        for row in result:
+            status3 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
+            status3.place(x=240,y=75)
+
+    except sqlite3.Error as e:
+        messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+    finally:
+        conn.close()
+    

@@ -5,6 +5,7 @@ import UpRenterCar2U
 import HomeCar2U
 import ProfileCar2U
 import BookingListCar2U
+import AboutUsCar2U
 
 import AdminHomeCar2U
 import OFFICIAL_car_details
@@ -24,13 +25,16 @@ def open_upRent():
 
 # User Callbacks
 def open_home():
-    HomeCar2U.homepage(open_login,open_upRent,open_listing,open_profile)
+    HomeCar2U.homepage(open_login,open_upRent,open_listing,open_profile,open_aboutUs)
 
 def open_listing():
-    BookingListCar2U.booking(open_login,open_home,open_profile)
+    BookingListCar2U.booking(open_login,open_home,open_profile,open_aboutUs)
 
 def open_profile():
-    ProfileCar2U.profile(open_login,open_home,open_listing)
+    ProfileCar2U.profile(open_login,open_home,open_listing,open_aboutUs)
+
+def open_aboutUs():
+    AboutUsCar2U.aboutUspage(open_login,open_upRent,open_home,open_listing,open_profile)
 
 
 # Admin Callbacks

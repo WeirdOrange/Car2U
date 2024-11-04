@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
-from Car2U_UserInfo import get_user_info
+from Car2U_UserInfo import get_user_info,set_user_info
 from HomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
 from datetime import datetime
@@ -20,6 +20,8 @@ def relative_to_assets(path: str) -> Path:
 # Function to handle login button click
 def open_login(current_window, login_callback):
     current_window.destroy()  # Close the signup window
+    userInfo = ""
+    set_user_info(userInfo)
     login_callback()
 
 # Function to handle selection button click
@@ -36,6 +38,11 @@ def open_listing(login_callback,home_callback,profile_callback):
 def open_profile(current_window, profile_callback):
     current_window.destroy()  # Close the signup window
     profile_callback()
+
+# Function to handle about us button click
+def open_aboutUs(current_window, about_callback):
+    current_window.destroy()  # Close the signup window
+    about_callback()
 
 def Database(): #creating connection to database and creating table
     global conn, cursor
@@ -244,33 +251,40 @@ def filters():
         transmission_vars.append(var)
 
 def accManage(current_window, login_callback,profile_callback):
-    userInfo = get_user_info()
-    droptabFrame = ctk.CTkFrame(droptabFrame,width=190,height=240, bg_color="#E6F6FF",fg_color="#E6F6FF")
-    droptabFrame.place(x=1090, y=60)
+    global pfpState, droptabFrame
 
-    if userInfo == "":
-        droptabFrame.configure(height=57)
-        logoin = ctk.CTkButton(master=droptabFrame, text="Log In", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+    if pfpState == 1:
+        droptabFrame = ctk.CTkFrame(current_window,width=190,height=240, bg_color="#E6F6FF",fg_color="#E6F6FF")
+        droptabFrame.place(x=1090, y=60)
+
+        if userInfo == "":
+            droptabFrame.configure(height=57)
+            logoin = ctk.CTkButton(master=droptabFrame, text="Log In", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-        logoin.place(x=30,y=13)
+            logoin.place(x=30,y=13)
+
+        else:
+            myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
+            myAcc.place(x=30,y=23)
+
+            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            history.place(x=30,y=80)
+
+            setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            setting.place(x=30,y=137)
+
+            logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
+            logout.place(x=30,y=184)
+        pfpState = 0
     else:
-        myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
-        myAcc.place(x=30,y=13)
+        droptabFrame.destroy()
+        pfpState = 1
 
-        history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
-        history.place(x=30,y=70)
-
-        setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
-        setting.place(x=30,y=127)
-
-        logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-        logout.place(x=30,y=184)
-
-def booking(login_callback,home_callback,profile_callback):
+def booking(login_callback,home_callback,profile_callback,about_callback):
     # Create the main application window
     global bookingFrame
     bookingFrame = Toplevel()
@@ -279,12 +293,14 @@ def booking(login_callback,home_callback,profile_callback):
     bookingFrame.resizable(False, False)
 
     # Initialize global variables
-    global i, filterBrand, filterSeats, filterTransmission, filtering
+    global i, filterBrand, filterSeats, filterTransmission, filtering, userInfo
     filterBrand = []
     filterSeats = []
     filterTransmission = []
     filtering = []
     i = 0
+    userInfo = get_user_info()
+    print(f"About Us : {userInfo}")
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("image_2.png")),size=(1280,60))
@@ -324,7 +340,7 @@ def booking(login_callback,home_callback,profile_callback):
 
     about_us_button = ctk.CTkButton(master=bookingFrame, text="About Us", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
                                     text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
-                                    command=lambda: print("About Us clicked"))
+                                    command=lambda: open_aboutUs(bookingFrame, about_callback))
     about_us_button.place(x=1055, y=14)
     pywinstyles.set_opacity(about_us_button,color="#FC4D3D")
 

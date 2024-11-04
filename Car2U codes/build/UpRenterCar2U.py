@@ -57,8 +57,9 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                     if userotp == otp: # If OTP is enter correctly
                         Database()
                         cursor.execute("INSERT INTO RentalAgency(agencyEmail,agencyName,agencyLocation,agencyContactNo,agencyPassword) VALUES (?,?,?,?,?)",
-                                        (str(email),str(name),str(contact),str(password)))
+                                        (str(email),str(name),str(location),str(contact),str(password)))
                         conn.commit()
+                        conn.close()
                         messagebox.showinfo("Registration Successful", "You have successfully signed up!")
                         
                         # Notify user through email as well
@@ -68,6 +69,10 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                             \nIf this is not you, please contact Car2U as soon as possible. 
                             \nPlease ignore this message if this was you.\n\nCar2U contact: 016-407 5284"""
                         emailNotif(email,subject,body)
+
+                        Database()
+                        cursor.execute("""DELETE FROM UserDetails WHERE email = ?""",(email))
+                        conn.commit()
                         open_login(RenterFrame,login_callback)
                         break
 
@@ -136,7 +141,7 @@ def open_home(current_window, home_callback):
     home_callback()
 
 def info_checker():
-    if userInfo is not None:
+    if userInfo != "":
         try:
             Database()
             conn.row_factory = sqlite3.Row
@@ -191,85 +196,85 @@ def upRenter(login_callback, home_callback):
     pywinstyles.set_opacity(car_bg,color="#FC4F3E")
 
     home_image = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(30,30))
-    home_button = ctk.CTkButton(master=RenterFrame, text="  Home", image=home_image, width=120, fg_color=("#F86544","#FA5740"), bg_color="#FA5740", 
+    home_button = ctk.CTkButton(master=RenterFrame, text="  Home", image=home_image, width=120, fg_color=("#067BC1","#5EC5FF"), bg_color="#FA5740", 
                                 text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),
                                 command=lambda:open_home(RenterFrame,home_callback))
     home_button.place(x=30, y=20)
-    pywinstyles.set_opacity(home_button,color="#FA5740")
+    pywinstyles.set_opacity(home_button,color="#5EC5FF")
     
     logo_img = ctk.CTkImage(Image.open(relative_to_assets("logo.png")),size=(90,45))
-    logo_label = ctk.CTkLabel(master=RenterFrame, text="", image=logo_img, fg_color="#FF865A", bg_color="#FF865A")
+    logo_label = ctk.CTkLabel(master=RenterFrame, text="", image=logo_img, fg_color="#76CEFF", bg_color="#76CEFF")
     logo_label.place(x=160, y=15)
-    pywinstyles.set_opacity(logo_label,color="#FF865A")
+    pywinstyles.set_opacity(logo_label,color="#76CEFF")
 
     # Creating labels and entry fields
-    name_label = ctk.CTkLabel(RenterFrame, text="Agency Name:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    name_label.place(x=180, y=140)
-    pywinstyles.set_opacity(name_label,color="#FFAB40")
+    name_label = ctk.CTkLabel(RenterFrame, text="Agency Name:", width=177, height=27, anchor="e", bg_color="#880FC1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    name_label.place(x=190, y=140)
+    pywinstyles.set_opacity(name_label,color="#880FC1")
     global name_entry
     name_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))
-    name_entry.place(x=370, y=140, width=270, height=30)
+    name_entry.place(x=380, y=140, width=270, height=30)
 
-    email_label = ctk.CTkLabel(RenterFrame, text="Email Address:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    email_label.place(x=180, y=205)
-    pywinstyles.set_opacity(email_label,color="#FFAB40")
+    email_label = ctk.CTkLabel(RenterFrame, text="Email Address:", width=177, height=27, anchor="e", bg_color="#7121C1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    email_label.place(x=190, y=205)
+    pywinstyles.set_opacity(email_label,color="#7121C1")
     global email_entry
     email_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))
-    email_entry.place(x=370, y=205, width=270, height=30)
+    email_entry.place(x=380, y=205, width=270, height=30)
 
-    location_label = ctk.CTkLabel(RenterFrame, text="Location:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    location_label.place(x=180, y=270)
-    pywinstyles.set_opacity(location_label,color="#FFAB40")
+    location_label = ctk.CTkLabel(RenterFrame, text="Location:", width=177, height=27, anchor="e", bg_color="#5E32C1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    location_label.place(x=190, y=270)
+    pywinstyles.set_opacity(location_label,color="#5E32C1")
     location_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))
-    location_entry.place(x=370, y=270, width=270, height=30)
+    location_entry.place(x=380, y=270, width=270, height=30)
 
-    contact_label = ctk.CTkLabel(RenterFrame, text="Contact No:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    contact_label.place(x=180, y=335)
-    pywinstyles.set_opacity(contact_label,color="#FFAB40")
+    contact_label = ctk.CTkLabel(RenterFrame, text="Contact No:", width=177, height=27, anchor="e", bg_color="#503DC1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    contact_label.place(x=190, y=335)
+    pywinstyles.set_opacity(contact_label,color="#503DC1")
     global contact_entry
     contact_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))
-    contact_entry.place(x=370, y=335, width=270, height=30)
+    contact_entry.place(x=380, y=335, width=270, height=30)
 
-    passW_label = ctk.CTkLabel(RenterFrame, text="Password:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    passW_label.place(x=180, y=400)
-    pywinstyles.set_opacity(passW_label,color="#FFAB40")
+    passW_label = ctk.CTkLabel(RenterFrame, text="Password:", width=177, height=27, anchor="e", bg_color="#3C4EC1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    passW_label.place(x=190, y=400)
+    pywinstyles.set_opacity(passW_label,color="#3C4EC1")
     passW_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10), show="*")
-    passW_entry.place(x=370, y=400, width=270, height=30)
+    passW_entry.place(x=380, y=400, width=270, height=30)
 
-    cpassW_label = ctk.CTkLabel(RenterFrame, text="Confirm Password:", width=177, height=27, anchor="e", bg_color="#FFAB40", font=('Arial Bold', 16))
-    cpassW_label.place(x=180,y=465)
-    pywinstyles.set_opacity(cpassW_label,color="#FFAB40")
+    cpassW_label = ctk.CTkLabel(RenterFrame, text="Confirm Password:", width=177, height=27, anchor="e", bg_color="#2F59C1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    cpassW_label.place(x=190,y=465)
+    pywinstyles.set_opacity(cpassW_label,color="#2F59C1")
     cpassW_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10), show="*")
-    cpassW_entry.place(x=370, y=465, width=270, height=30)
+    cpassW_entry.place(x=380, y=465, width=270, height=30)
 
     # Sign-up button
-    sign_up_button = ctk.CTkButton(RenterFrame, text="Sign Up", font=('Arial Bold', 16), width=270, height=30, 
-                                   bg_color="#FFA843", fg_color=("#7CF6BF","white"), corner_radius=10, 
+    sign_up_button = ctk.CTkButton(RenterFrame, text="Sign Up", font=('Tw Cen MT Condensed Extra Bold', 20), width=400, height=40, 
+                                   text_color="#000000",bg_color="#067BC1", fg_color="#7CF6BF", corner_radius=50, 
                                    command=lambda:sign_up_get(login_callback,name_entry.get(),email_entry.get(),location_entry.get(),contact_entry.get(),passW_entry.get(),cpassW_entry.get()))
-    sign_up_button.place(x=410, y=500)
-    pywinstyles.set_opacity(sign_up_button,color="#FFA843")
+    sign_up_button.place(x=250, y=515)
+    pywinstyles.set_opacity(sign_up_button,color="#067BC1")
 
     # When user is logged in
     global userInfo
     userInfo = get_user_info()
 
     # Log in button
-    if userInfo is None:
-        login_label = ctk.CTkLabel(RenterFrame, text="Return to login?", bg_color="#FFAB40", font=('Segeo UI Bold', 11))
-        login_label.place(x=500,y=540)
-        pywinstyles.set_opacity(login_label,color="#FFAB40")
+    if userInfo == "":
+        login_label = ctk.CTkLabel(RenterFrame, text="Already Registered?", bg_color="#1C69C1", font=('Tw Cen MT Condensed Extra Bold', 14), text_color="#FFFFFF")
+        login_label.place(x=465,y=565)
+        pywinstyles.set_opacity(login_label,color="#1C69C1")
         login_img = ctk.CTkImage(Image.open(relative_to_assets("Rectangle_3.png")),size=(65,27))
-        login_button = ctk.CTkButton(RenterFrame, text="", image=login_img, font=('Arial Bold', 11), bg_color="#FF7E52", fg_color=("#FE1A0A","white"), width=65, height=27,
-                                        command=lambda:open_login(RenterFrame,login_callback))
-        login_button.place(x=615, y=540)
-        pywinstyles.set_opacity(login_button,color="#FF7E52")
+        login_button = ctk.CTkButton(RenterFrame, text="", image=login_img, bg_color="#1C69C1", fg_color="#1C69C1", width=65, height=27,
+                                    command=lambda:open_login(RenterFrame,login_callback))
+        login_button.place(x=580, y=560)
+        pywinstyles.set_opacity(login_button,color="#1C69C1")
 
     # Title and subtitle on the right
-    title_label = ctk.CTkLabel(RenterFrame, text="Become A Renter!", font=('Arial Bold', 32), bg_color="#FFAB40")
-    title_label.place(x=760, y=280)
-    pywinstyles.set_opacity(title_label,color="#FFAB40")
-    subtitle_label = ctk.CTkLabel(RenterFrame, text="Join Us On Your Journey\nOf Becoming A Renter!", font=('Segeo UI', 20,'Bold'), bg_color="#FFAB40")
-    subtitle_label.place(x=710, y=320)
-    pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
+    title_label = ctk.CTkLabel(RenterFrame, text="Become A Renter!", font=('Bauhaus 93', 48), bg_color="#5E32C1")
+    title_label.place(x=710, y=240)
+    pywinstyles.set_opacity(title_label,color="#5E32C1")
+    subtitle_label = ctk.CTkLabel(RenterFrame, text="Join Us On Your Journey\nOf Becoming A Renter!", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 24), bg_color="#503DC1")
+    subtitle_label.place(x=770, y=310)
+    pywinstyles.set_opacity(subtitle_label,color="#503DC1")
 
     info_checker()

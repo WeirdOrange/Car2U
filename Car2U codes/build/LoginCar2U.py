@@ -143,8 +143,8 @@ def LoginAccess(email,password,home_callback,adminHome_callback):
         messagebox.showerror("Error", "Please complete the required fields!")
         return
     
-    # Check in UserDetails table
-    cursor.execute("SELECT userID FROM UserDetails WHERE `email` = ? and `password` = ?", (email, password))
+    # Check in RentalAgency table
+    cursor.execute("SELECT agencyID FROM RentalAgency WHERE `agencyEmail` = ? and `agencyPassword` = ?", (email, password))
     result = cursor.fetchone()
     
     if result:  # Check if result is not None
@@ -154,8 +154,8 @@ def LoginAccess(email,password,home_callback,adminHome_callback):
         open_adminHome(loginFrame, adminHome_callback)  # Call Admin Home function after successful login
         return
     
-    # Check in RentalAgency table
-    cursor.execute("SELECT agencyID FROM RentalAgency WHERE `agencyEmail` = ? and `agencyPassword` = ?", (email, password))
+    # Check in UserDetails table
+    cursor.execute("SELECT userID FROM UserDetails WHERE `email` = ? and `password` = ?", (email, password))
     result = cursor.fetchone()
     
     if result:  # Check if result is not None

@@ -418,5 +418,3 @@ def carDetails(login_callback,home_callback,bookings_callback):
 
     # Call this function after the mainloop to initialize the display of existing data
     refresh_treeview()
-
-

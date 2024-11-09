@@ -1,40 +1,103 @@
-import tkinter
-from tkinter import ttk
-import customtkinter
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.pdfgen import canvas
+from datetime import datetime
 
-customtkinter.set_appearance_mode("Dark")
-customtkinter.set_default_color_theme("blue")
+# Create a function for header and footer
+def add_header_footer(canvas, doc_title):
+    width, height = A4
+    print(width,height)
 
-root = customtkinter.CTk()
-root.geometry("250x300")
-root.title("Treeview x Customtkinter")
+    # Add Header
+    canvas.setFont("Helvetica Bold", 16)
+    canvas.drawString(40, height - 40, doc_title)
+    canvas.setFont("Helvetica", 10)
+    canvas.drawString(40, height - 60, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    canvas.line(40, height - 65, width - 40, height - 65)
 
-frame_1 = customtkinter.CTkFrame(master=root)
-frame_1.pack(pady=20, padx=20, fill="both", expand=True)
+    # Add Footer
+    canvas.setFont("Helvetica", 10)
+    canvas.drawString(40, 30, "Car2U Official Car Rental Services")
+    canvas.drawString(width - 200, 30, "Contact Us: car2uofficial@gmail.com")
+    canvas.line(40, 50, width - 40, 50)
+    canvas.setFont("Helvetica", 8)
+    canvas.drawString(width - 60, 20, f"Page {canvas.getPageNumber()}")
 
-label = customtkinter.CTkLabel(master=frame_1,text="Treeview")
-label.grid(pady=10)
+# Create a PDF layout
+def generate_pdf_layout(filename):
+    doc = SimpleDocTemplate(filename, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
 
-###Treeview Customisation (theme colors are selected)
-bg_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"])
-text_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkLabel"]["text_color"])
-selected_color = root._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkButton"]["fg_color"])
+    # Title and basic info
+    title = Paragraph("Monthly Report", styles['Title'])
+    elements.append(title)
+    elements.append(Spacer(1, 0.2 * inch))
 
-treestyle = ttk.Style()
-treestyle.theme_use('default')
-treestyle.configure("Treeview", background=bg_color, foreground=text_color, fieldbackground=bg_color, borderwidth=0)
-treestyle.map('Treeview', background=[('selected', bg_color)], foreground=[('selected', selected_color)])
-root.bind("<<TreeviewSelect>>", lambda event: root.focus_set())
+    agency_info = [
+        ["Agency Name:", ""],
+        ["Email:", ""],
+        ["Address:", ""]
+    ]
+    table = Table(agency_info, colWidths=[100, 300])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 0.2 * inch))
 
-##Treeview widget data
-treeview = ttk.Treeview(frame_1, height=6, show="tree")
-treeview.grid(padx=10)
-treeview.insert('', '0', 'i1', text ='Python')
-treeview.insert('', '1', 'i2', text ='Customtkinter')
-treeview.insert('', '2', 'i3', text ='Tkinter')
-treeview.insert('i2', 'end', 'Frame', text ='Frame')
-treeview.insert('i2', 'end', 'Label', text ='Label')
-treeview.insert('i3', 'end', 'Treeview', text ='Treeview')
-treeview.move('i3', 'i1', 'end')
+    # Table Headers
+    data = [
+        ["Car No.", "Car Average Rating", "Number(s) of New Rating"],
+        ["", "", ""]
+    ]
+    table = Table(data, colWidths=[100, 150, 150])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 0.3 * inch))
 
-root.mainloop()
+    # Another table example for other sections
+    data = [
+        ["Car Rented", "Car Number", "Number of days booked", "Earnings"],
+        ["Car Cancelled", "", "", ""],
+        ["Car Rejected", "", "", ""],
+        ["Total", "", "", ""]
+    ]
+    table = Table(data, colWidths=[100, 100, 150, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+    elements.append(table)
+    doc_title = "Monthly"
+    # Build the document with header and footer callbacks
+    doc.build(elements, onFirstPage=add_header_footer(doc,doc_title), onLaterPages=add_header_footer(doc,doc_title))
+
+# Generate the PDF
+generate_pdf_layout("monthly_report.pdf")
+
+width, height = A4
+print(width,height)

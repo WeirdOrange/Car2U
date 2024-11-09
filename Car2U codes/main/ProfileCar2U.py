@@ -1,8 +1,6 @@
-import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-import tkcalendar as tkc
 from Car2U_UserInfo import get_user_info,set_user_info
 from tkinter import Toplevel, messagebox, filedialog
 from tkcalendar import Calendar, DateEntry
@@ -66,7 +64,7 @@ def accInfo():
         if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel,ctk.CTkEntry,ctk.CTkComboBox,ctk.CTkButton)):
             widget.destroy()
     # Check if dobEntry and nameEntry exists before trying to destroy it
-    if 'nameEntry' in globals() and isinstance(dobEntry, DateEntry):
+    if 'nameEntry' in globals() and isinstance(nameEntry, ctk.CTkEntry):
         if isinstance(nameEntry,ctk.CTkEntry):
             nameEntry.destroy()
     if 'dobEntry' in globals() and isinstance(dobEntry, DateEntry):
@@ -144,14 +142,14 @@ def editInfo():
             returnGender = 0
         return returnGender
     for widget in info_frame.winfo_children():
-        if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel)):
+        if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel,ctk.CTkButton)):
             widget.destroy()
     if isinstance(user_name_label,ctk.CTkLabel):
         user_name_label.destroy()
 
     info_labels = [("Email:", 10), ("Date Of Birth:", 50), ("Phone Number:", 90), ("Gender:", 130), ("Nationality:", 170)]
     for text, y_pos in info_labels:
-        label = ctk.CTkLabel(info_frame, text=text, font=("Skranji", 20), text_color="#000000")
+        label = ctk.CTkLabel(info_frame, text=text, font=("Skranji", 20), anchor='e', text_color="#000000")
         label.place(x=15, y=y_pos)
     # Entries 
     global nameEntry
@@ -183,7 +181,7 @@ def editInfo():
     
     global dobEntry
     dobEntry = DateEntry(profileFrame, date_pattern='yyyy-mm-dd', locale='en_US', font=("Skranji", 12), text_color="#000000")
-    if nationality != None:
+    if dobEntry != None:
         dobEntry.set_date(dob)
     dobEntry.place(x=520, y=206)
 
@@ -196,8 +194,7 @@ def info_Update_Checker(returnName,returnEmail,returnContact,returnGender,return
     Database()
     returnDOB = dobEntry.get_date()
     returnDOB = str(returnDOB)
-    print(returnDOB)
-    print(returnName,returnEmail,returnContact,returnGender)
+
     if not returnName or not returnEmail or not returnContact or not returnDOB or not returnNationality:
         messagebox.showerror("Input Error", "All fields are required!")
     elif returnName == name and returnEmail == email and returnContact == contact and returnDOB == dob and returnGender == gender and returnNationality == nationality:

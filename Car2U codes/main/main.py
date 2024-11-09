@@ -8,8 +8,9 @@ import BookingListCar2U
 import AboutUsCar2U
 
 import AdminHomeCar2U
-import OFFICIAL_car_details
+#import OFFICIAL_car_details
 import AdminBookingCar2U
+import AdminProfileCar2U
 
 import tkinter as tk
 
@@ -39,13 +40,17 @@ def open_aboutUs():
 
 # Admin Callbacks
 def open_admin_home():
-    AdminHomeCar2U.adminHome(open_login,open_car_details,open_admin_Booking)
+    AdminHomeCar2U.adminHome(open_login,open_car_details,open_admin_Booking,open_admin_Profile)
 
 def open_car_details():
-    OFFICIAL_car_details.carDetails(open_login,open_admin_home,open_admin_Booking)
+    print("awaits")
+ #   OFFICIAL_car_details.carDetails(open_login,open_admin_home,open_admin_Booking,open_admin_Profile)
 
 def open_admin_Booking():
-    AdminBookingCar2U.carBooking(open_login,open_admin_home,open_car_details)
+    AdminBookingCar2U.carBooking(open_login,open_admin_home,open_car_details,open_admin_Profile)
+
+def open_admin_Profile():
+    AdminProfileCar2U.adminProfile(open_login,open_admin_home,open_car_details,open_admin_Booking)
 
 global root
 root = tk.Tk()

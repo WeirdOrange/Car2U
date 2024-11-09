@@ -7,21 +7,6 @@ PORT = 1234 # You can use any port between 0 to 65535
 LISTENER_LIMIT = 5
 active_clients = [] # List of all currently connected users
 
-# Function to listen for upcoming messages from a client
-def listen_for_messages(client, username):
-
-    while 1:
-
-        message = client.recv(2048).decode('utf-8')
-        if message != '':
-            
-            final_msg = username + '~' + message
-            send_messages_to_all(final_msg)
-
-        else:
-            print(f"The message send from client {username} is empty")
-
-
 # Function to send message to a single client
 def send_message_to_client(client, message):
 
@@ -41,8 +26,10 @@ def client_handler(client):
     # Server will listen for client message that will
     # Contain the username
     while 1:
+        oldUsername = client.recv(2048).decode('utf-8')
+        oldUsername = str(oldUsername)
+        username = oldUsername[0] + "*" * (len(oldUsername) - 2) + oldUsername[-1] 
 
-        username = client.recv(2048).decode('utf-8')
         if username != '':
             active_clients.append((username, client))
             prompt_message = "SERVER~" + f"{username} added to the chat"
@@ -81,6 +68,34 @@ def main():
 
         threading.Thread(target=client_handler, args=(client, )).start()
 
+# Function to send a direct message to a chosen user
+def send_direct_message(target_username, message):
+    for user in active_clients:
+        if user[0] == target_username:
+            send_message_to_client(user[1], message)
+            return
+    print(f"User {target_username} not found or not connected.")
+
+# Modified listen_for_messages function to handle direct messages
+def listen_for_messages(client, username):
+    while 1:
+        message = client.recv(2048).decode('utf-8')
+        if message != '':
+            if message.startswith("@"):  # If message starts with '@', treat it as a direct message
+                try:
+                    # Example message format: "@target_username message"
+                    target_username, msg_content = message[1:].split(' ', 1)
+                    final_msg = f"{username} (direct)~{msg_content}"
+                    send_direct_message(target_username, final_msg)
+                except ValueError:
+                    error_msg = "SERVER~Invalid direct message format. Use '@username message'."
+                    send_message_to_client(client, error_msg)
+            else:
+                # Handle as a broadcast message if no '@' prefix
+                final_msg = username + '~' + message
+                send_messages_to_all(final_msg)
+        else:
+            print(f"The message sent from client {username} is empty")
 
 if __name__ == '__main__':
     main()

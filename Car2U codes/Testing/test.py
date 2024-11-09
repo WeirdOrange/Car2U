@@ -1,49 +1,86 @@
-import tkinter as tk
-from tkinter import ttk
-from tkcalendar import Calendar, DateEntry
+import tkinter
+import customtkinter
 
-def example1():
-    def print_sel():
-        print(cal.selection_get())
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+# Implement the default Matplotlib key bindings.
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
-    top = tk.Toplevel(root)
-
-    cal = Calendar(top, font="Arial 14", selectmode='day', locale='en_US',
-                   cursor="hand1", year=2018, month=2, day=5)
-
-    cal.pack(fill="both", expand=True)
-    ttk.Button(top, text="ok", command=print_sel).pack()
+import numpy as np
+from datetime import datetime
 
 
-def example2():
-    top = tk.Toplevel(root)
-    cal = Calendar(top, selectmode='none')
-    date = cal.datetime.today() + cal.timedelta(days=2)
-    cal.calevent_create(date, 'Hello World', 'message')
-    cal.calevent_create(date, 'Reminder 2', 'reminder')
-    cal.calevent_create(date + cal.timedelta(days=-2), 'Reminder 1', 'reminder')
-    cal.calevent_create(date + cal.timedelta(days=3), 'Message', 'message')
-    cal.tag_config('reminder', background='red', foreground='yellow')
+sizes = [35, 25, 20, 15, 5]
+labels = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E']
+explode = (0.1, 0, 0, 0, 0)  # Explode the first slice
 
-    cal.pack(fill="both", expand=True)
-    ttk.Label(top, text="Hover over the events.").pack()
+plt.pie(sizes, labels=labels, explode=explode, autopct='%1.1f%%', shadow=True)
+plt.title('Matplotlib Pie Chart with Exploded Slice - how2matplotlib.com')
+plt.axis('equal')
+plt.show()
 
-def example3():
-    def print_sel():
-        print(cal.get_date())
-    top = tk.Toplevel(root)
+"""
+root = customtkinter.CTk()
+root.geometry("1280x720")
+root.title("Embedding in Tk")
 
-    ttk.Label(top, text='Choose date').pack(padx=10, pady=10)
+canvasFrame = customtkinter.CTkFrame(root, width=200, height=200)
+canvasFrame.place(x=10, y=10)
 
-    cal = DateEntry(top, width=12, background='darkblue', date_pattern='MM/dd/yyyy',
-                    foreground='white', borderwidth=2, year=2010)
-    cal.pack(padx=10, pady=10)
-    ttk.Button(top, text="ok", command=print_sel).pack()
+# x-coordinates of left sides of bars 
+left = [1, 2, 3, 4, 5]
+
+# heights of bars
+height = [10, 24, 36, 40, 5]
+
+# labels for bars
+tick_label = ['one', 'two', 'three', 'four', 'five']
+
+# plotting a bar chart
+plt
+
+# naming the x-axis
+plt.xlabel('x - axis')
+# naming the y-axis
+plt.ylabel('y - axis')
+# plot title
+plt.title('My bar chart!')
+
+# Create a figure for the pie chart
+fig = Figure(figsize=(5, 4), dpi=100)
+ax = fig.add_subplot(111)
+ax.bar(left, height, tick_label = tick_label, width = 0.8, color = ['red', 'green'])
+
+canvas = FigureCanvasTkAgg(fig, master=canvasFrame)  # A tk.DrawingArea.
+canvas.draw()
+canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+toolbar = NavigationToolbar2Tk(canvas, canvasFrame)
+toolbar.update()
+canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+def on_key_press(event):
+    print("you pressed {}".format(event.key))
+    key_press_handler(event, canvas, toolbar)
 
 
-root = tk.Tk()
-ttk.Button(root, text='Calendar', command=example1).pack(padx=10, pady=10)
-ttk.Button(root, text='Calendar with events', command=example2).pack(padx=10, pady=10)
-ttk.Button(root, text='DateEntry', command=example3).pack(padx=10, pady=10)
+canvas.mpl_connect("key_press_event", on_key_press)
+
+def _quit():
+    root.quit()     # stops mainloop
+    root.destroy()  # this is necessary on Windows to prevent
+                    # Fatal Python Error: PyEval_RestoreThread: NULL tstate
+
+
+button = customtkinter.CTkButton(master=root, text="Quit", command=_quit)
+button.pack(side=tkinter.BOTTOM)
+
+current_month = datetime.now().month
+print(current_month)
 
 root.mainloop()
+# If you put root.destroy() here, it will cause an error if the window is
+# closed with the window manager.
+"""

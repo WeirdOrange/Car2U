@@ -222,7 +222,7 @@ def upRenter(login_callback, home_callback):
     email_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))
     email_entry.place(x=380, y=205, width=270, height=30)
 
-    location_label = ctk.CTkLabel(RenterFrame, text="Location:", width=177, height=27, anchor="e", bg_color="#5E32C1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
+    location_label = ctk.CTkLabel(RenterFrame, text="Address:", width=177, height=27, anchor="e", bg_color="#5E32C1", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 20))
     location_label.place(x=190, y=270)
     pywinstyles.set_opacity(location_label,color="#5E32C1")
     location_entry = tk.Entry(RenterFrame, font=('Lucida Console', 10))

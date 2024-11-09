@@ -1,8 +1,9 @@
 from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox, ttk
-from Car2U_UserInfo import get_user_info
-from tkcalendar import Calendar, DateEntry
+from Car2U_UserInfo import get_user_info,set_user_info
+from tkcalendar import Calendar
+from datetime import datetime,date
 from calendar import monthrange
 import pandas as pd
 import customtkinter as ctk 
@@ -25,6 +26,8 @@ def Database(): #creating connection to database and creating table
 # Function to handle login button click
 def open_login(current_window, login_callback):
     current_window.destroy()  # Close the signup window
+    userInfo = ""
+    set_user_info(userInfo)
     login_callback()
 
 # Function to handle profile button click
@@ -52,20 +55,34 @@ def open_bookings(current_window, booking_callback):
     booking_callback()
 
 def accManage(current_window, login_callback,profile_callback):
-    droptabFrame = ctk.CTkFrame(adminHomeFrame,width=160,height=170, bg_color="#E6F6FF",fg_color="#E6F6FF")
-    droptabFrame.place(x=16, y=413)
-    
-    myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
-    myAcc.place(x=24,y=15)
+    global pfpState, droptabFrame
 
-    setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                            bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
-    setting.place(x=45,y=70)
+    if pfpState == 1:
+        droptabFrame = ctk.CTkFrame(current_window,width=160,height=170, bg_color="#E6F6FF",fg_color="#E6F6FF")
+        droptabFrame.place(x=16, y=413)
 
-    logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                            bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-    logout.place(x=42,y=125)
+        if userinfo == "":
+            droptabFrame.configure(height=57)
+            logoin = ctk.CTkButton(master=droptabFrame, text="Log In", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                    bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
+            logoin.place(x=30,y=13)
+
+        else:
+            myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
+            myAcc.place(x=25,y=15)
+
+            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            history.place(x=25,y=70)
+
+            logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
+            logout.place(x=25,y=125)
+        pfpState = 0
+    else:
+        droptabFrame.destroy()
+        pfpState = 1
 
 # Function to support tkcalendar view
 def refresh_CalendarEvent():
@@ -103,17 +120,17 @@ def select_calendar(event):
     
     global selected_date
     selected_date = task_calendar.get_date()
-    print(selected_date)
     setDate = ctk.CTkLabel(cTaskFrame, text=selected_date, anchor='center', width=250, height=28, font=("Segoe UI", 20))
     setDate.place(x=5, y=8)
     selected_month = task_calendar.get_displayed_month()
-    print(selected_month)
 
     # Filter month and year from selection
-    start_month = f"{selected_month[0]}-{selected_month[1]}-01"
+    start_month = f"{selected_month[1]}-{selected_month[0]:02d}-01"
+
     # Find last date of the month
     last_day = monthrange(selected_month[1],selected_month[0])
-    end_month = f"{selected_month[0]}-{selected_month[1]}-{last_day}"
+    end_month = f"{selected_month[1]}-{selected_month[0]:02d}-{last_day[1]:02d}"
+
     try:
         Database()
         conn.row_factory = sqlite3.Row
@@ -132,38 +149,36 @@ def select_calendar(event):
             global carNo,start_date,pickLocate,pickTime,end_date,dropLocate,dropTime,date_range
             carNo = row[0]
             start_date = row[1]
+            pickDate = row[1]
             pickLocate = row[2]
             pickTime = row[3]
             end_date = row[4]
+            dropDate = row[4]
             dropLocate = row[5]
             dropTime = row[6]
             bookingID = row[7]
 
-            onRent_content = f"Pick-Up Time (Client) : {pickTime} || Drop-Off Time (Client) : {dropTime}\nLocation : {pickLocate}"
-            pickdate_content = f"Time : {pickTime} || Location : {pickLocate}"
-            dropdate_content = f"Time : {dropTime} || Location : {dropLocate}"
+            onRent_content = f"Pick-Up Time (Client) : {pickTime} || Drop-Off Time (Client) : {dropTime}\nLocation : {pickLocate}\t\t"
+            pickdate_content = f"Time : {pickTime} || Location : {pickLocate}\t\t"
+            dropdate_content = f"Time : {dropTime} || Location : {dropLocate}\t\t"
             
             # checking if date selected is within the period
             start_date = pd.Timestamp(start_date)
             end_date = pd.Timestamp(end_date)
             date_range = pd.date_range(start=start_date, end=end_date)
-
             
-            if not calendarTreeview.exists('o1'):
-                calendarTreeview.insert('', '0', 'o1', text ='On Rent')
-            if not calendarTreeview.exists('o2'):
-                calendarTreeview.insert('', '1', 'o2', text ='Car Pick-Up')
-            if not calendarTreeview.exists('o3'):
-                calendarTreeview.insert('', '2', 'o3', text ='Car Drop-Off')
-            
-            if selected_date == start_date:
+            if selected_date == pickDate:
+                if not calendarTreeview.exists('o2'):
+                    calendarTreeview.insert('', '1', 'o2', text ='Car Pick-Up')
                 carNoKey = carNo+"pick"
                 if not calendarTreeview.exists(carNoKey):
                     calendarTreeview.insert('', i, carNoKey, text = carNo) # for pickup
                 calendarTreeview.insert(carNoKey, 'end', bookingID, text = onRent_content)
                 calendarTreeview.move(carNoKey, 'o2', 'end')
                 i+=1
-            elif selected_date == end_date:
+            elif selected_date == dropDate:
+                if not calendarTreeview.exists('o3'):
+                    calendarTreeview.insert('', '2', 'o3', text ='Car Drop-Off')
                 carNoKey = carNo+"drop"
                 if not calendarTreeview.exists(carNoKey):
                     calendarTreeview.insert('', i, carNoKey, text = carNo) # for dropoff
@@ -171,6 +186,8 @@ def select_calendar(event):
                 calendarTreeview.move(carNoKey, 'o3', 'end')
                 i+=1
             elif selected_date in date_range: # Check if the selected date is within the booking period
+                if not calendarTreeview.exists('o1'):
+                    calendarTreeview.insert('', '0', 'o1', text ='On Rent')
                 carNoKey = carNo+"renting"
                 if not calendarTreeview.exists(carNoKey):
                     calendarTreeview.insert('', i, carNoKey, text = carNo) # Rejected
@@ -184,14 +201,18 @@ def select_calendar(event):
         conn.close()
     
 
-def adminHome(login_callback,detail_callback,booking_callback):
+def adminHome(login_callback,detail_callback,booking_callback,profile_callback):
     # Create the main application window
     global adminHomeFrame
     adminHomeFrame = Toplevel()
     adminHomeFrame.title("Login")
     adminHomeFrame.geometry("1280x720")
-    #adminHomeFrame.resizable(False, False)
+    adminHomeFrame.resizable(False, False)
     adminHomeFrame.config(bg="white")
+
+    bg_img = ctk.CTkImage(Image.open(relative_to_assets("admin_bg.png")),size=(1280,720))
+    bg_label = ctk.CTkLabel(adminHomeFrame, image=bg_img,text="")
+    bg_label.place(x=0, y=0)
 
     # Linking user data
     global userinfo
@@ -213,9 +234,11 @@ def adminHome(login_callback,detail_callback,booking_callback):
     logo_label.place(x=22, y=10)
     pywinstyles.set_opacity(logo_label,color="#F47749")
     
+    global pfpState
+    pfpState = 1
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_4.png")),size=(100,100))
     pfp_label = ctk.CTkButton(adminHomeFrame, image=pfp_img, text="", bg_color="#FE453B", fg_color="#FE453B",
-                              width=40, height=40, command=lambda:accManage(adminHomeFrame,login_callback))
+                              width=40, height=40, command=lambda:accManage(adminHomeFrame,login_callback,profile_callback))
     pfp_label.place(x=41, y=590)
     pywinstyles.set_opacity(pfp_label,color="#FE453B")
 
@@ -242,8 +265,9 @@ def adminHome(login_callback,detail_callback,booking_callback):
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
     
     rentalName = agencyName
-    name = ctk.CTkLabel(adminHomeFrame, text=rentalName, font=("Segoe UI",36))
+    name = ctk.CTkLabel(adminHomeFrame, text=rentalName, font=("Segoe UI",36), fg_color="#5EC5FF", bg_color="#5EC5FF")
     name.place(x=249, y=20)
+    pywinstyles.set_opacity(name,color="#5EC5FF")
 
     taskFrame = ctk.CTkFrame(adminHomeFrame, width=400,height=300,bg_color="#FFFFFF")
     taskFrame.place(x=220,y=80)
@@ -253,8 +277,10 @@ def adminHome(login_callback,detail_callback,booking_callback):
     task_calendar = Calendar(taskFrame,date_pattern='y-mm-dd',showothermonthdays=False)
     task_calendar.pack(fill="both", expand=True)
     refresh_CalendarEvent()
+    task_calendar.selection_set(date(int(datetime.now().year), int(datetime.now().month), (datetime.now().day)))
+    task_calendar.bind("<<Enter>>",select_calendar)
     task_calendar.bind("<<CalendarSelected>>",select_calendar)
-
+    
     global cTaskFrame
     cTaskFrame = ctk.CTkFrame(adminHomeFrame, width=260, height=300, fg_color="#FFFFFF", border_width=2, border_color="#000000")
     cTaskFrame.place(x=620,y=80)
@@ -263,16 +289,21 @@ def adminHome(login_callback,detail_callback,booking_callback):
     global calendarTreeview
     calendarTreeview = ttk.Treeview(cTaskFrame, show="tree")
     calendarTreeview.place(x=5,y=45,width=250,height=250,bordermode='ignore')
-    calendarTreeview.insert('', '0', 'noBooking', text ='No Bookings Today')
+    calendarTreeview.column('#0',width=500, stretch=True)
+
+    h_scrollbar = ttk.Scrollbar(cTaskFrame, orient="horizontal", command=calendarTreeview.xview)
+    calendarTreeview.configure(xscrollcommand=h_scrollbar.set)
+    h_scrollbar.place(x=5,y=280, width=250, height=10)
+
 
     global notifFrame
-    notifFrame = ctk.CTkFrame(adminHomeFrame, width=325, height=245,fg_color="#FFFFFF", border_width=2, border_color="#000000")
+    notifFrame = ctk.CTkFrame(adminHomeFrame, width=325, height=245,fg_color="#FFFFFF", bg_color="#DEF3FF", border_width=2, border_color="#000000")
     notifFrame.place(x=930,y=80)
     notifs()
 
-    inventoryFrame = ctk.CTkFrame(adminHomeFrame, width=1020, height=300, fg_color="#FFFFFF")
+    inventoryFrame = ctk.CTkFrame(adminHomeFrame, width=1020, height=300, fg_color="#2F59C1")
     inventoryFrame.place(x=220, y=400)
-    inventorybg = ctk.CTkLabel(inventoryFrame,text="", bg_color="#FFFFFF", fg_color="#2F59C1", width=1020, height=300, corner_radius=20)
+    inventorybg = ctk.CTkLabel(inventoryFrame,text="", bg_color="#2F59C1", fg_color="#2F59C1", width=1020, height=300, corner_radius=20)
     inventorybg.place(x=0,y=0)
 
     invenTitle = ctk.CTkLabel(inventoryFrame, text="Inventory", bg_color="#85BCDA", text_color="#CBECFF", font=("Segoe UI Bold",24))
@@ -352,12 +383,13 @@ def notifs():
                             WHERE bookingStatus = 'Pending' AND agencyID = ?""",(userinfo,))
         result = cursor.fetchone()
 
-        if not result:
-            status1 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
-            status1.place(x=240,y=40)
         for row in result:
-            status1 = ctk.CTkLabel(notifFrame, text=f"Pending({row})", width=64, justify="center", font=("Segoe UI",16))
-            status1.place(x=240,y=40)
+            if result == "" or result is None:
+                status1 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+                status1.place(x=230,y=40)
+            else:
+                status1 = ctk.CTkLabel(notifFrame, text=f"Pending({row})", width=64, justify="center", font=("Segoe UI",16))
+                status1.place(x=230,y=40)
 
     except sqlite3.Error as e:
         messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
@@ -373,12 +405,14 @@ def notifs():
                             WHERE bookingStatus = 'Approved' AND agencyID = ?""",(userinfo,))
         result = cursor.fetchone()
 
-        if not result:
-            status2 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
-            status2.place(x=240,y=40)
+        
         for row in result:
-            status2 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
-            status2.place(x=240,y=75)
+            if result == "" or result is None:
+                status2 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+                status2.place(x=230,y=75)
+            else:
+                status2 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
+                status2.place(x=230,y=75)
 
     except sqlite3.Error as e:
         messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
@@ -394,12 +428,13 @@ def notifs():
                             WHERE bookingStatus = 'On Rent' AND agencyID = ?""",(userinfo,))
         result = cursor.fetchone()
 
-        if not result:
-            status3 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
-            status3.place(x=240,y=40)
         for row in result:
-            status3 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
-            status3.place(x=240,y=75)
+            if result == "" or result is None:
+                status3 = ctk.CTkLabel(notifFrame, text="Done", width=64, justify="center", font=("Segoe UI",16))
+                status3.place(x=230,y=110)
+            else:
+                status3 = ctk.CTkLabel(notifFrame, text=f"Pending ({row})", width=64, justify="center", font=("Segoe UI",16))
+                status3.place(x=230,y=110)
 
     except sqlite3.Error as e:
         messagebox.showerror("Error", "Error occurred during registration: {}".format(e))

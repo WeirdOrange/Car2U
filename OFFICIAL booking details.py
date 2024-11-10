@@ -312,8 +312,8 @@ def send_booking_email(booking_id):
         """
 
         # Send email
-        sender_email = "p23015662@student.newinti.edu.my"
-        sender_password = "iicp050929070274"
+        sender_email = "cartwoyouofficial@gmail.com"
+        sender_password = "kcft xbdi orcq awzn"
 
         try:
             # Create email message

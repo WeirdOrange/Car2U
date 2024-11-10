@@ -2,14 +2,14 @@ import sqlite3
 import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
-from Car2U_UserInfo import set_user_info
+from MainCar2U_UserInfo import set_user_info
 from pathlib import Path
 from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
 
 # Set up the asset path 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Login")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Main-Login")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

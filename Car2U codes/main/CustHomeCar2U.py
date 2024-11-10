@@ -2,14 +2,14 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox
 from tkcalendar import DateEntry
-from Car2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info
 import tkinter as tk
 import customtkinter as ctk 
 import pywinstyles
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Home")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Home")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -43,8 +43,13 @@ def open_upRent(current_window, uprent_callback):
 def open_aboutUs(current_window, about_callback):
     current_window.destroy()  # Close the signup window
     about_callback()
+    
+# Function to handle profile button click
+def open_review(current_window, review_callback):
+    current_window.destroy()  # Close the signup window
+    review_callback()
 
-def accManage(current_window, login_callback,profile_callback):
+def accManage(current_window, login_callback,profile_callback,review_callback):
     global pfpState, droptabFrame
 
     if pfpState == 1:
@@ -62,8 +67,8 @@ def accManage(current_window, login_callback,profile_callback):
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
             myAcc.place(x=30,y=23)
 
-            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            history = ctk.CTkButton(master=droptabFrame, text="My Bookings", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_review(current_window, review_callback))
             history.place(x=30,y=80)
 
             setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
@@ -100,7 +105,7 @@ def saveCarPax(pax):
 def getCarPax():
     return chosen_Pax
 
-def homepage(login_callback,uprent_callback,list_callback,profile_callback,about_callback):
+def homepage(login_callback,uprent_callback,list_callback,profile_callback,about_callback,review_callback):
     # Create the main application window
     global homeFrame
     homeFrame = Toplevel()
@@ -130,7 +135,7 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
     
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_4.png")),size=(40,40))
     pfp_label = ctk.CTkButton(homeFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(homeFrame,login_callback,profile_callback))
+                              width=40, height=40, command=lambda:accManage(homeFrame,login_callback,profile_callback,review_callback))
     pfp_label.place(x=1180, y=5)
     pywinstyles.set_opacity(pfp_label,color="#F47749")
 

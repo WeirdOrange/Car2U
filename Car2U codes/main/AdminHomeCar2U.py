@@ -1,7 +1,7 @@
 from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox, ttk
-from Car2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info
 from tkcalendar import Calendar
 from datetime import datetime,date
 from calendar import monthrange

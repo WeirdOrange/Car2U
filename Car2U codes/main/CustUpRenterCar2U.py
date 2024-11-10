@@ -6,9 +6,7 @@ import smtplib
 import ssl
 import easygui
 import random, string
-from Car2U_UserInfo import get_user_info
-from datetime import date
-from dateutil.parser import parse
+from MainCar2U_UserInfo import get_user_info, set_user_info
 from PIL import Image
 from email.message import EmailMessage
 from pathlib import Path
@@ -16,7 +14,7 @@ from tkinter import messagebox, Toplevel
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Upgrade-Renter")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Upgrade-Renter")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -134,6 +132,8 @@ def emailNotif(email_receiver,subject,body):
 # Function to handle login button click
 def open_login(current_window, login_callback):
     current_window.destroy()  # Close the signup window
+    userInfo = ""
+    set_user_info(userInfo)
     login_callback()
     
 def open_home(current_window, home_callback):

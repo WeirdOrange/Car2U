@@ -15,7 +15,7 @@ from tkinter import messagebox, Toplevel
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\SignUp")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Main-SignUp")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -111,7 +111,8 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
                             easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
                         break  # Exit the loop if the user doesn't want to continue
                     else:
-                        break
+                        easygui.msgbox(f"Wrong OTP Value", "The entered OTP is incorrect. Check if you had entered a space?")
+                        continue
                         
         except sqlite3.Error as e:
             messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
@@ -243,7 +244,7 @@ def signupgui(login_callback, home_callback):
     login_label.place(x=500,y=540)
     pywinstyles.set_opacity(login_label,color="#FFAB40")
     login_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(65,27))
-    login_button = ctk.CTkButton(RegisterFrame, text="", image=login_img, font=('Arial Bold', 11), bg_color="#FF7E52", fg_color=("#FE1A0A","white"), width=65,height=27,
+    login_button = ctk.CTkButton(RegisterFrame, text="", image=login_img, font=('Arial Bold', 11), bg_color="#FF7E52", fg_color=("#FF7E52","white"), width=65,height=27,
                                     command=lambda:open_login(RegisterFrame,login_callback))
     login_button.place(x=615, y=540)
     pywinstyles.set_opacity(login_button,color="#FF7E52")

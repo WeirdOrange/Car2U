@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from Car2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info
 from tkinter import Toplevel, ttk, messagebox
 from PIL import Image
 from pathlib import Path

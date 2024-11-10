@@ -2,8 +2,8 @@ import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
-from Car2U_UserInfo import get_user_info,set_user_info
-from HomeCar2U import getCarLocate,getCarPax
+from MainCar2U_UserInfo import get_user_info,set_user_info
+from CustHomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
 from datetime import datetime
 from pathlib import Path
@@ -12,7 +12,7 @@ from tkinter import Toplevel, messagebox
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Selections")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Selections")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -24,7 +24,7 @@ def open_login(current_window, login_callback):
     set_user_info(userInfo)
     login_callback()
 
-# Function to handle selection button click
+# Function to handle home button click
 def open_home(current_window, home_callback):
     current_window.destroy()  # Close the signup window
     home_callback()
@@ -44,6 +44,16 @@ def open_aboutUs(current_window, about_callback):
     current_window.destroy()  # Close the signup window
     about_callback()
 
+# Function to handle selection button click
+def open_bookDetails(current_window, bookdetails_callback):
+    current_window.destroy()  # Close the signup window
+    bookdetails_callback()
+
+# Function to handle profile button click
+def open_review(current_window, review_callback):
+    current_window.destroy()  # Close the signup window
+    review_callback()
+
 def Database(): #creating connection to database and creating table
     global conn, cursor
     conn = sqlite3.connect("car2u.db")
@@ -57,7 +67,7 @@ def focus_frame(frame):
 def unfocus_frame(frame):
     frame.configure(fg_color="#FFFFFF")
 
-def fetchdata():
+def fetchdata(bookdetails_callback):
     global i, result, query
     Database()
     filtering = []
@@ -83,9 +93,9 @@ def fetchdata():
     cursor.execute(query)
     result = cursor.fetchall()
     conn.close()
-    carlist()
+    carlist(bookdetails_callback)
 
-def carlist():
+def carlist(bookdetails_callback):
     x=0
 
     for widget in selection_frame.winfo_children():
@@ -103,6 +113,7 @@ def carlist():
 
         item_frame = ctk.CTkFrame(selection_frame,width=320, height=225, corner_radius=30, fg_color="#FFFFFF",bg_color="#FEFEFE")
         item_frame.bind("<Enter>", lambda event, f=item_frame: focus_frame(f))  # Hovering on frame
+        item_frame.bind("<Button-1>", lambda event: open_bookDetails(bookingFrame, bookdetails_callback))
         item_frame.bind("<Leave>", lambda event, f=item_frame: unfocus_frame(f))
         pywinstyles.set_opacity(item_frame, color="#FEFEFE")
 
@@ -164,49 +175,50 @@ def carlist():
             
         x=x+1
 
-def next():
+def next(bookdetails_callback):
     global i, backBttn, query
     i = i + 6
-    backBttn = ctk.CTkButton(bookingFrame, text="Back", border_color="lime green", border_width=2, fg_color="#0E5A48", width=100, bg_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold", 16), command=lambda:back())
+    backBttn = ctk.CTkButton(bookingFrame, text="Back", border_color="lime green", border_width=2, fg_color="#0E5A48", width=100, bg_color="#FFFFFF", 
+                             font=("Tw Cen MT Condensed Extra Bold", 16), command=lambda:back(bookdetails_callback))
     backBttn.place(x=1000,y=680)
     pywinstyles.set_opacity(nextBttn, color="#FFFFFF")
-    fetchdata()
-def back():
+    fetchdata(bookdetails_callback)
+def back(bookdetails_callback):
     global i, query
     i = i - 6
     if i <= 1:
         backBttn.destroy()
-    fetchdata()
+    fetchdata(bookdetails_callback)
 
-def filter_brand(var, brand_name):
+def filter_brand(var, brand_name,bookdetails_callback):
     global filterBrand
     print(brand_name)
     if var.get() == 1:
         filterBrand.append(f"{str(brand_name)}%")
     else:
         filterBrand.remove(f"{str(brand_name)}%")
-    fetchdata()
+    fetchdata(bookdetails_callback)
     return filterBrand
 
-def filter_capacity(var, capacity):
+def filter_capacity(var, capacity,bookdetails_callback):
     global filterSeats
     if var.get() == True:
         filterSeats.append(f"{str(capacity)}")
     else:
         filterSeats.remove(f"{str(capacity)}")
-    fetchdata()
+    fetchdata(bookdetails_callback)
     return filterSeats
 
-def filter_transmission(var, transmission):
+def filter_transmission(var, transmission,bookdetails_callback):
     global filterTransmission
     if var.get() == True:
         filterTransmission.append(f"{str(transmission)}")
     else:
         filterTransmission.remove(f"{str(transmission)}")
-    fetchdata()
+    fetchdata(bookdetails_callback)
     return filterTransmission
 
-def filters():
+def filters(bookdetails_callback):
     # Brand options
     brand_label = ctk.CTkLabel(filter_frame, text="Brand", font=("Arial", 20))
     brand_label.place(x=10, y=10)
@@ -215,7 +227,7 @@ def filters():
     brands = ["Toyota", "Mazda", "Perodua", "Mercedes"]
     for i, brand in enumerate(brands):
         var = ctk.IntVar()
-        chk = ctk.CTkCheckBox(filter_frame, text=brand, variable=var, font=("Arial", 16),command=lambda v=var, b=brand: filter_brand(v, b))
+        chk = ctk.CTkCheckBox(filter_frame, text=brand, variable=var, font=("Arial", 16),command=lambda v=var, b=brand: filter_brand(v, b,bookdetails_callback))
         chk.place(x=10, y=50 + i * 30)
         brand_vars.append(var)
 
@@ -229,12 +241,12 @@ def filters():
     for i, capacity in enumerate(capacities):
         if pax == capacity:
             var = ctk.IntVar(value=1)
-            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b))
+            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b,bookdetails_callback))
             chk.place(x=10, y=210 + i * 30)
             filterSeats.append(f"{str(pax)}")
         else:
             var = ctk.IntVar()
-            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b))
+            chk = ctk.CTkCheckBox(filter_frame, text=capacity, variable=var, font=("Arial", 16), command=lambda v=var, b=capacity: filter_capacity(v, b,bookdetails_callback))
             chk.place(x=10, y=210 + i * 30)
             capacity_vars.append(var)
 
@@ -246,11 +258,11 @@ def filters():
     transmissions = ["Manual", "Automatic"]
     for i, transmission in enumerate(transmissions):
         var = ctk.IntVar()
-        chk = ctk.CTkCheckBox(filter_frame, text=transmission, variable=var, font=("Arial", 16), command=lambda v=var, b=transmission: filter_transmission(v, b))
+        chk = ctk.CTkCheckBox(filter_frame, text=transmission, variable=var, font=("Arial", 16), command=lambda v=var, b=transmission: filter_transmission(v, b,bookdetails_callback))
         chk.place(x=10, y=340 + i * 30)
         transmission_vars.append(var)
 
-def accManage(current_window, login_callback,profile_callback):
+def accManage(current_window, login_callback,profile_callback,review_callback):
     global pfpState, droptabFrame
 
     if pfpState == 1:
@@ -268,8 +280,8 @@ def accManage(current_window, login_callback,profile_callback):
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
             myAcc.place(x=30,y=23)
 
-            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            history = ctk.CTkButton(master=droptabFrame, text="My Bookings", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_review(current_window, review_callback))
             history.place(x=30,y=80)
 
             setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
@@ -284,7 +296,7 @@ def accManage(current_window, login_callback,profile_callback):
         droptabFrame.destroy()
         pfpState = 1
 
-def booking(login_callback,home_callback,profile_callback,about_callback):
+def booking(login_callback,home_callback,profile_callback,about_callback,bookdetails_callback,review_callback):
     # Create the main application window
     global bookingFrame
     bookingFrame = Toplevel()
@@ -316,7 +328,7 @@ def booking(login_callback,home_callback,profile_callback,about_callback):
     pfpState = 1
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_4.png")),size=(40,40))
     pfp_label = ctk.CTkButton(bookingFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749", width=40, height=40, 
-                                command=lambda:accManage(bookingFrame,login_callback,profile_callback))
+                                command=lambda:accManage(bookingFrame,login_callback,profile_callback,review_callback))
     pfp_label.place(x=1180, y=5)
     pywinstyles.set_opacity(pfp_label,color="#F47749")
 
@@ -408,17 +420,19 @@ def booking(login_callback,home_callback,profile_callback,about_callback):
     filter_frame = ctk.CTkFrame(bookingFrame, corner_radius=0, width=190, height=670, fg_color="white")
     filter_frame.place(x=0, y=60)
 
-    filters()
+    filters(bookdetails_callback)
 
     # Item 
-    global selection_frame, nextBttn
+    global selection_frame, nextBttn, item_frame
     selection_frame = ctk.CTkFrame(bookingFrame, width=1090, height=570,fg_color="white")
     selection_frame.place(x=190,y=150)
     selection_frameimg = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1090,570))
     selection_framebg = ctk.CTkLabel(selection_frame, text="", image=selection_frameimg)
     selection_framebg.place(x=0,y=0)
-    fetchdata()
+    
+    fetchdata(bookdetails_callback)
 
-    nextBttn = ctk.CTkButton(bookingFrame, text="Next", border_color="lime green", border_width=2, fg_color="#0E5A48", width=100, bg_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold", 16), command=lambda:next())
+    nextBttn = ctk.CTkButton(bookingFrame, text="Next", border_color="lime green", border_width=2, fg_color="#0E5A48", width=100, bg_color="#FFFFFF", 
+                             font=("Tw Cen MT Condensed Extra Bold", 16), command=lambda:next(bookdetails_callback))
     nextBttn.place(x=1150,y=680)
     pywinstyles.set_opacity(nextBttn, color="#FFFFFF")

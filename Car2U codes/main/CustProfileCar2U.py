@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from Car2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info
 from tkinter import Toplevel, messagebox, filedialog
 from tkcalendar import Calendar, DateEntry
 from datetime import datetime
@@ -35,8 +35,13 @@ def open_aboutUs(current_window, about_callback):
     current_window.destroy()  # Close the signup window
     about_callback()
 
+# Function to handle profile button click
+def open_review(current_window, review_callback):
+    current_window.destroy()  # Close the signup window
+    review_callback()
+
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Profile")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Profile")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -216,7 +221,7 @@ def info_Update_Checker(returnName,returnEmail,returnContact,returnGender,return
         finally:
             conn.close()
 
-def accManage(current_window, login_callback):
+def accManage(current_window, login_callback,review_callback):
     global pfpState, droptabFrame
 
     if pfpState == 1:
@@ -234,8 +239,8 @@ def accManage(current_window, login_callback):
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile())
             myAcc.place(x=30,y=23)
 
-            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
-                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
+            history = ctk.CTkButton(master=droptabFrame, text="My Bookings", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+                                        bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_review(current_window, review_callback))
             history.place(x=30,y=80)
 
             setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
@@ -293,7 +298,7 @@ def insertBLOB(data):
             print("the sqlite connection is closed") 
             fetch_user_data()
 
-def profile(login_callback,home_callback,list_callback,about_callback):
+def profile(login_callback,home_callback,list_callback,about_callback,review_callback):
     # Create the main application window
     global profileFrame
     profileFrame = Toplevel()
@@ -353,7 +358,7 @@ def profile(login_callback,home_callback,list_callback,about_callback):
     pfpState = 1
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")),size=(40,40))
     pfp_label = ctk.CTkButton(profileFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(profileFrame,login_callback))
+                              width=40, height=40, command=lambda:accManage(profileFrame,login_callback,review_callback))
     pfp_label.place(x=1180, y=5)
     pywinstyles.set_opacity(pfp_label,color="#F47749")
 

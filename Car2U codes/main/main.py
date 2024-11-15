@@ -22,7 +22,10 @@ def open_signup():
     MainSignupCar2U.signupgui(open_login,open_home)
 
 def open_login():
-    MainLoginCar2U.logingui(open_signup,open_home,open_admin_home)
+    MainLoginCar2U.logingui(open_signup,open_home,open_admin_home,returnLogin)
+
+def returnLogin():
+    MainLoginCar2U.logingui(open_signup,open_home,open_admin_home,returnLogin)
 
 def open_upRent():
     CustUpRenterCar2U.upRenter(open_login,open_home)
@@ -40,7 +43,6 @@ def open_profile():
 def open_aboutUs():
     CustAboutUsCar2U.aboutUspage(open_login,open_upRent,open_home,open_listing,open_profile,open_review)
 
-#New
 def open_bookDetails():
     CustOFFICIAL_booking_details.bookingdetails(open_login,open_listing,open_profile,open_review)
 

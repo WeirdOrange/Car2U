@@ -6,6 +6,7 @@ import smtplib
 import ssl
 import easygui
 import random, string
+import hashlib
 from datetime import date
 from dateutil.parser import parse
 from PIL import Image
@@ -35,89 +36,91 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
     dob_day = str(dob_day).zfill(2)
         
     # Validation
-    if not name or not email or not dob_day or not dob_month or not dob_year or not contact or not password or not cpassword:
-        messagebox.showerror("Input Error", "All fields are required!")
-    elif password != cpassword:
-        messagebox.showerror("Input Error", "Password and Confirm Password do not match.")
-    else:
-        while(True):
+    while True:
+        if not name or not email or not dob_day or not dob_month or not dob_year or not contact or not password or not cpassword:
+            messagebox.showerror("Input Error", "All fields are required!")
+        elif password != cpassword:
+            messagebox.showerror("Input Error", "Password and Confirm Password do not match.")
+        else:
+            password = hashlib.sha256(str(password).encode()).hexdigest()
+            while(True):
+                try:
+                    dob = ""
+                    dob = date(int(dob_year),int(dob_month),int(dob_day))
+                    print(dob)
+                    break    # Break pulls you out of the loop
+                
+                except ValueError:  # Handle invalid date input
+                    print("INVALID Date: ", dob_year, dob_month, dob_day)
+                    messagebox.showerror("Input Error", "Invalid Date. Please enter a valid date.")
+                    break  # Optionally break the loop if you want to stop after invalid input
             try:
-                dob = ""
-                dob = date(int(dob_year),int(dob_month),int(dob_day))
-                print(dob)
-                break    # Break pulls you out of the loop
-            
-            except ValueError:  # Handle invalid date input
-                print("INVALID Date: ", dob_year, dob_month, dob_day)
-                messagebox.showerror("Input Error", "Invalid Date. Please enter a valid date.")
-                break  # Optionally break the loop if you want to stop after invalid input
-        try:
-            cursor.execute("SELECT * FROM UserDetails WHERE `email` = ?",(str(email),))
-            if cursor.fetchone() is not None:
-                messagebox.showerror("Error","Email is already Registered!")
-            else:
-                # Sending OTP to user
-                subject = 'Car2U: OTP to verify your identity'
-                body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
-                        \n\nCar2U contact: 016-407 5284 or email via this account"""
-                emailNotif(email,subject,body)
-                conn.close()
-
-                # Validate email    
-                while True:
-                    userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")
-                    
-                    if userotp == otp: # If OTP is enter correctly
-                        Database()
-                        cursor.execute("INSERT INTO UserDetails(email,name,dob,contactNo,password) VALUES (?,?,?,?,?)",
-                                        (str(email),str(name),dob,str(contact),str(password)))
-                        conn.commit()
-                        messagebox.showinfo("Registration Successful", "You have successfully signed up!")
-                        
-                        # Notify user through email as well
-                        subject = 'Registration Completed!'
-                        body = f"""Someone has registered this email account in the Car2U application.
-                            \nName: {name}\nEmail: {email}\nBirth Date: {dob}\nContact No: {contact}
-                            \nIf this is not you, please contact Car2U as soon as possible. 
-                            \nPlease ignore this message if this was you.\n\nCar2U contact: 016-407 5284"""
-                        emailNotif(email,subject,body)
-                        open_login(RegisterFrame,login_callback)
-                        break
-
-                    elif userotp is None:  # If the user clicks "Cancel" (user_input will be None)
-                        # Display the buttonbox with options
-                        choice = easygui.buttonbox("You clicked Cancel. What would you like to do next?", "Options", 
-                                                choices=["Back", "Resend OTP", "Cancel"])
-                        
-                        if choice == "Back":
-                            # Return back to the enterbox (loop continues)
-                            continue  # This goes back to the beginning of the loop
-                        
-                        elif choice == "Resend OTP":
-                            otp = ""
-                            for x in range(5):
-                                otp = otp + str(random.choice(string.ascii_letters))
-                            
-                            easygui.msgbox("Resending OTP.", "Do check your email for an OTP. (Delay might happen)")
-                            
-                            # Sending OTP to user
-                            subject = 'Car2U: OTP to verify your identity'
-                            body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
+                cursor.execute("SELECT * FROM UserDetails WHERE `email` = ?",(str(email),))
+                if cursor.fetchone() is not None:
+                    messagebox.showerror("Error","Email is already Registered!")
+                else:
+                    # Sending OTP to user
+                    subject = 'Car2U: OTP to verify your identity'
+                    body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
                             \n\nCar2U contact: 016-407 5284 or email via this account"""
+                    emailNotif(email,subject,body)
+                    conn.close()
+
+                    # Validate email    
+                    while True:
+                        userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")
+                        
+                        if userotp == otp: # If OTP is enter correctly
+                            Database()
+                            cursor.execute("INSERT INTO UserDetails(email,name,dob,contactNo,password) VALUES (?,?,?,?,?)",
+                                            (str(email),str(name),dob,str(contact),str(password)))
+                            conn.commit()
+                            messagebox.showinfo("Registration Successful", "You have successfully signed up!")
+                            
+                            # Notify user through email as well
+                            subject = 'Registration Completed!'
+                            body = f"""Someone has registered this email account in the Car2U application.
+                                \nName: {name}\nEmail: {email}\nBirth Date: {dob}\nContact No: {contact}
+                                \nIf this is not you, please contact Car2U as soon as possible. 
+                                \nPlease ignore this message if this was you.\n\nCar2U contact: 016-407 5284"""
                             emailNotif(email,subject,body)
+                            open_login(RegisterFrame,login_callback)
+                            break
+
+                        elif userotp is None:  # If the user clicks "Cancel" (user_input will be None)
+                            # Display the buttonbox with options
+                            choice = easygui.buttonbox("You clicked Cancel. What would you like to do next?", "Options", 
+                                                    choices=["Back", "Resend OTP", "Cancel"])
+                            
+                            if choice == "Back":
+                                # Return back to the enterbox (loop continues)
+                                continue  # This goes back to the beginning of the loop
+                            
+                            elif choice == "Resend OTP":
+                                otp = ""
+                                for x in range(5):
+                                    otp = otp + str(random.choice(string.ascii_letters))
+                                
+                                easygui.msgbox("Resending OTP.", "Do check your email for an OTP. (Delay might happen)")
+                                
+                                # Sending OTP to user
+                                subject = 'Car2U: OTP to verify your identity'
+                                body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
+                                \n\nCar2U contact: 016-407 5284 or email via this account"""
+                                emailNotif(email,subject,body)
+                                continue
+                            
+                            elif choice == "Cancel":
+                                easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
+                            break  # Exit the loop if the user doesn't want to continue
+                        else:
+                            easygui.msgbox(f"Wrong OTP Value", "The entered OTP is incorrect. Check if you had entered a space?")
                             continue
-                        
-                        elif choice == "Cancel":
-                            easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
-                        break  # Exit the loop if the user doesn't want to continue
-                    else:
-                        easygui.msgbox(f"Wrong OTP Value", "The entered OTP is incorrect. Check if you had entered a space?")
-                        continue
-                        
-        except sqlite3.Error as e:
-            messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
-        finally:
-            conn.close()
+                            
+            except sqlite3.Error as e:
+                messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+            finally:
+                conn.close()
     
 # Email notification
 def emailNotif(email_receiver,subject,body):
@@ -161,7 +164,6 @@ def signupgui(login_callback, home_callback):
     otp = ""
     for x in range(5):
         otp = otp + str(random.choice(string.ascii_letters))
-    print(otp)
 
     # Load and set background image
     bg_image = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1073,720))
@@ -204,6 +206,10 @@ def signupgui(login_callback, home_callback):
     email_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10))
     email_entry.place(x=410, y=250, width=270, height=30)
 
+    dobInfo = ctk.CTkLabel(RegisterFrame,text="Note: Enter Date of Birth as  DD-MM-YYYY", font=('Lucida Console', 10), bg_color="#FFAB40")
+    dobInfo.place(x=410, y=325)
+    pywinstyles.set_opacity(dobInfo,color="#FFAB40")
+
     dob_label = ctk.CTkLabel(RegisterFrame, text="Date Of Birth\t:", bg_color="#FFAB40", font=('Arial Bold', 16))
     dob_label.place(x=250, y=300)
     pywinstyles.set_opacity(dob_label,color="#FFAB40")
@@ -241,12 +247,12 @@ def signupgui(login_callback, home_callback):
 
     # Log in button
     login_label = ctk.CTkLabel(RegisterFrame, text="Already registered?", bg_color="#FFAB40", font=('Arial Bold', 11))
-    login_label.place(x=500,y=540)
+    login_label.place(x=490,y=540)
     pywinstyles.set_opacity(login_label,color="#FFAB40")
     login_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(65,27))
     login_button = ctk.CTkButton(RegisterFrame, text="", image=login_img, font=('Arial Bold', 11), bg_color="#FF7E52", fg_color=("#FF7E52","white"), width=65,height=27,
                                     command=lambda:open_login(RegisterFrame,login_callback))
-    login_button.place(x=615, y=540)
+    login_button.place(x=605, y=535)
     pywinstyles.set_opacity(login_button,color="#FF7E52")
 
     # Title and subtitle on the right

@@ -2,10 +2,16 @@ import sqlite3
 import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
+import hashlib
+import easygui
+import random, string
+import smtplib
+import ssl
 from MainCar2U_UserInfo import set_user_info
 from pathlib import Path
 from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
+from email.message import EmailMessage
 
 # Set up the asset path 
 OUTPUT_PATH = Path(__file__).parent
@@ -51,13 +57,159 @@ def open_adminHome(current_window, adminHome_callback):
     current_window.destroy()  # Close the login window
     adminHome_callback()
 
-def logingui(signup_callback,home_callback,adminHome_callback):
+def open_return(current_window, returnLogin):
+    current_window.destroy()  # Close the login window
+    returnLogin()
+
+# Email notification
+def emailNotif(email_receiver,subject,body):
+    # Define email sender and receiver
+    email_sender = 'cartwoyouofficial@gmail.com'
+    email_password = 'asjy kqjh eizl wgnu'
+
+    # Set up the email
+    em = EmailMessage()
+    em['From'] = email_sender
+    em['To'] = email_receiver
+    em['Subject'] = subject
+    em.set_content(body)
+
+    # Add SSL (layer of security)
+    context = ssl.create_default_context()
+
+    # Log in and send the email
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
+
+def forgorPssw(loginFrame,returnLogin):
+    global otp
+    name = ""
+    # Validate email    
+    while True:
+        askEmail = easygui.enterbox("Enter Email: ","Finding Email...")
+        if askEmail is not None and askEmail != "":
+            print(askEmail)
+            # Find Email within database
+            Database()
+            cursor.execute("SELECT name FROM UserDetails WHERE `email` = ?",(str(askEmail),))
+            result = cursor.fetchall()
+            conn.close()
+
+            if result is None:
+                # Check if it the user is a Rental Agency
+                Database()
+                cursor.execute("SELECT agencyName FROM RentalAgency WHERE `agencyEmail` = ?",(str(askEmail),))
+                result = cursor.fetchall()
+                conn.close()
+
+                if result is None:
+                    messagebox.showerror("Error","Email has not been registered!") # Email not found
+                    break
+                else:
+                    pass
+            for row in result:
+                name = row[0]
+
+            else:
+                # Sending OTP to user
+                subject = 'Forgot Password Request'
+                body = f"""Hey, {name}\nWe heard that you lost your Car2U password. If this was not you, please ignore this email.
+                            \nIf this was you,\n\nYour OTP is {otp}\n\nNeed Help? Contact us via Car2U support team."""
+                emailNotif(askEmail,subject,body)
+                conn.close()
+                userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")
+                
+                if userotp == otp: # If OTP is enter correctly
+
+                    msg = "Enter your new password"
+                    title = "Changing password..."
+                    fieldNames = ["New Password","Confirm New Password"]
+
+                    while True:
+                        passw = easygui.multenterbox(msg, title, fieldNames)   
+                        if not passw:
+                            break
+                        if passw[0].strip() == "" or passw[0] != passw[1]:
+                            easygui.msgbox("Passwords do not match or are empty. Please try again.")
+                        else:
+                            break
+                    
+                    if passw:
+                        print("Reply was:", passw)
+
+                        newpassw = hashlib.sha256(str(passw[0]).encode()).hexdigest()
+                        
+                        Database()
+                        cursor.execute("SELECT name FROM UserDetails WHERE `email` = ?",(str(askEmail),))
+                        result = cursor.fetchall()
+                        conn.close()
+
+                        if result is None:
+                            Database()
+                            cursor.execute("UPDATE RentalAgency SET agenyPassword = ?", (str(newpassw),))
+                            conn.commit()
+
+                            messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
+                            open_return(loginFrame, returnLogin)
+                        else:
+                            Database()
+                            cursor.execute("UPDATE UserDetails SET password = ?", (str(newpassw),))
+                            conn.commit()
+
+                            messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
+                            open_return(loginFrame, returnLogin)
+                        break
+
+                elif userotp is None:  # If the user clicks "Cancel" (user_input will be None)
+                    # Display the buttonbox with options
+                    choice = easygui.buttonbox("You clicked Cancel. What would you like to do next?", "Options", 
+                                            choices=["Back", "Resend OTP", "Cancel"])
+                    
+                    if choice == "Back":
+                        # Return back to the enterbox (loop continues)
+                        continue  # This goes back to the beginning of the loop
+                    
+                    elif choice == "Resend OTP":
+                        for x in range(5):
+                            otp = otp + str(random.choice(string.ascii_letters))
+                        
+                        easygui.msgbox("Resending OTP.", "Do check your email for an OTP. (Delay might happen)")
+
+                        # Sending OTP to user
+                        subject = 'Car2U: OTP to verify your identity'
+                        body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
+                        \n\nCar2U contact: 016-407 5284 or email via this account"""
+                        emailNotif(askEmail,subject,body)
+                        continue
+                    
+                    elif choice == "Cancel":
+                        easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
+                    break  # Exit the loop if the user doesn't want to continue
+                else:
+                    easygui.msgbox(f"Wrong OTP Value", "The entered OTP is incorrect. Check if you had entered a space?")
+                    continue
+        elif askEmail is None and askEmail == "":
+            messagebox.showerror("Error","Email was not entered!") # Email not found
+            continue
+        else:
+            print("Enterbox closed")
+            break
+        
+def logingui(signup_callback,home_callback,adminHome_callback,returnLogin):
     # Create the main application window
     global loginFrame,email_entry,password_entry
     loginFrame = Toplevel()
     loginFrame.title("Login")
     loginFrame.geometry("1280x720")
     loginFrame.resizable(False, False)
+
+    # For forgot password verification
+    global otp
+    otp = ""
+    for x in range(5):
+        otp = otp + str(random.choice(string.ascii_letters))
+    print(otp)
 
     # Background image
     bg_image = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1073,720))
@@ -118,14 +270,24 @@ def logingui(signup_callback,home_callback,adminHome_callback):
     pywinstyles.set_opacity(login_button,color="#FFA843")
 
     # Create sign-up button
+    signup_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(65,27))
     signup_label = ctk.CTkLabel(loginFrame, text="New User?", bg_color="#FFA843", font=("Arial", 10, "bold"))
     signup_label.place(x=900,y=422)
     pywinstyles.set_opacity(signup_label,color="#FFA843")
-    signup_button = ctk.CTkButton(loginFrame, text="Sign up", font=("Arial", 10, "bold"), width=80,
-                                  bg_color="#FFA843", fg_color=("#FE1A0A","white"),command=lambda:open_signup(loginFrame,signup_callback))
-    signup_button.place(x=968, y=425)
+    signup_button = ctk.CTkButton(loginFrame, text="", image=signup_img, font=("Arial", 10, "bold"), width=80,
+                                  bg_color="#FFA843", fg_color=("#FFA843","white"),command=lambda:open_signup(loginFrame,signup_callback))
+    signup_button.place(x=968, y=420)
     pywinstyles.set_opacity(signup_button,color="#FFA843")
 
+    # Forgot Password
+    forgot = ctk.CTkLabel(loginFrame,text="Forgot Password", width=105, height=15, font=("Arial", 11), text_color="#2F59C1", bg_color="#FFA843", fg_color="#FFA843")
+    forgot.bind('<Enter>', lambda event, label=forgot: label.configure(font=('Arial Bold', 11, 'underline')))
+    forgot.bind("<Button-1>", lambda event: forgorPssw(loginFrame,returnLogin))
+    forgot.bind('<Leave>', lambda event, label=forgot: label.configure(font=('Arial Bold', 11)))
+    forgot.place(x=710, y=422)
+    pywinstyles.set_opacity(forgot,color="#FFA843")
+
+    # Additional Title Texts
     title_label = ctk.CTkLabel(loginFrame, text="Login Your Account", font=("Cooper Black", 36), bg_color="#FFAB40")
     title_label.place(x=340, y=160)
     pywinstyles.set_opacity(title_label,color="#FFAB40")
@@ -143,6 +305,7 @@ def LoginAccess(email,password,home_callback,adminHome_callback):
         messagebox.showerror("Error", "Please complete the required fields!")
         return
     
+    password = hashlib.sha256(str(password).encode()).hexdigest()
     # Check in RentalAgency table
     cursor.execute("SELECT agencyID FROM RentalAgency WHERE `agencyEmail` = ? and `agencyPassword` = ?", (email, password))
     result = cursor.fetchone()

@@ -263,7 +263,7 @@ def adminHome(login_callback,detail_callback,booking_callback,profile_callback):
                                     text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
-    
+
     rentalName = agencyName
     name = ctk.CTkLabel(adminHomeFrame, text=rentalName, font=("Segoe UI",36), fg_color="#5EC5FF", bg_color="#5EC5FF")
     name.place(x=249, y=20)

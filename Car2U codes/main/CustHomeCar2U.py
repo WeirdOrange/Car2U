@@ -196,32 +196,8 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
     promotions_label = ctk.CTkLabel(master=homeFrame, text="Promotions", text_color="#000000", font=("SegoeUI Bold", 24))
     promotions_label.place(x=21, y=261)
 
-    promobg_label = ctk.CTkLabel(master=homeFrame, text="",fg_color="#FFFFFF", width=1280, height=220)
+    promobg_label = ctk.CTkLabel(master=homeFrame, text="No current promotions",fg_color="#D9D9D9", font=("Cooper Black", 36), width=1280, height=160)
     promobg_label.place(x=26,y=300)
-
-    promo1_img = ctk.CTkImage(Image.open(relative_to_assets("image_5.png")),size=(275,150))
-    promo1_label = ctk.CTkLabel(homeFrame, image=promo1_img, text="HAPPY MALAYSIA DAY\n10% OFF\nEVERY BOOKING", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
-    promo1_label.place(x=50, y=300)
-
-    promo2_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")),size=(275,150))
-    promo2_label = ctk.CTkLabel(homeFrame, image=promo2_img, text="FIRST TIME USER\nGET 15% OFF\nYOUR FIRST BOOKING", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
-    promo2_label.place(x=364, y=300)
-
-    promo3_img = ctk.CTkImage(Image.open(relative_to_assets("image_7.png")),size=(275,150))
-    promo3_label = ctk.CTkLabel(homeFrame, image=promo3_img, text="ENJOY 5% OFF\nFOR ANY BOOKINGS\nIN LANGKAWI", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
-    promo3_label.place(x=667, y=300)
-
-    promo4_img = ctk.CTkImage(Image.open(relative_to_assets("image_8.png")),size=(275,150))
-    promo4_label = ctk.CTkLabel(homeFrame, image=promo4_img, text="GET FREE\nCANCELLATION VOUCHER", text_color="#FFFFFF", font=("Tw Cen MT Condensed Extra Bold",24))
-    promo4_label.place(x=970, y=300)
-
-    nextbttn_img = ctk.CTkImage(Image.open(relative_to_assets("button_2.png")),size=(30,30))
-    nextPromo_button = ctk.CTkButton(master=homeFrame, text="", image=nextbttn_img, width=10, height=10, 
-                                     corner_radius=100, fg_color="#4B5B6C", bg_color="#4B5B6C", 
-                                     font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Next Promotion"))
-    nextPromo_button.place(x=1200, y=360)
-    pywinstyles.set_opacity(nextPromo_button,color="#4B5B6C")
-
     
     # Extra Content
     global manual

@@ -82,7 +82,7 @@ cursor = conn.cursor()
 #tables = cursor.fetchall()
 #print("Tables in database:", tables)
 
-# Function to format date as "21August2024"
+# Function to format date as "21 August 2024"
 def format_date(date_str):
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     return date_obj.strftime("%d %B %Y")
@@ -97,8 +97,7 @@ def populate_treeview():
     for row in tree.get_children():
         tree.delete(row)
 
-    # Query to get necessary data from BookingDetails and CarDetails tables
-    cursor.execute('''
+    cursor.execute(''' 
         SELECT CarDetails.registrationNo, CarDetails.model, 
                BookingDetails.dateCreated, BookingDetails.pickupDate, 
                BookingDetails.dropoffDate, BookingDetails.bookingStatus, BookingDetails.bookingID
@@ -106,7 +105,6 @@ def populate_treeview():
         JOIN CarDetails ON BookingDetails.carID = CarDetails.carID
     ''')
 
-    # Insert data into Treeview
     for row in cursor.fetchall():
         tree.insert("", "end", values=row)
 
@@ -120,22 +118,22 @@ def update_stars(rating):
     for i in range(1, 6):
         star_label = star_labels[i - 1]
         if i <= rating:
-            star_label.config(image=yellow_star_img)
+            star_label.config(image=root.yellow_star_img)
         else:
-            star_label.config(image=black_star_img)
+            star_label.config(image=root.black_star_img)
 
 # Function to upload the rating and review
 def upload_review():
     rating = selected_rating.get()
     review_text = review_entry.get("1.0", "end-1c")
     bookingID = selected_bookingID.get()
-    car_id = selected_carID.get()  # Use selected carID
-    user_id = selected_userID.get()  # Use selected userID
-    
+    car_id = selected_carID.get()  
+    user_id = selected_userID.get()  
+
     if rating == 0:
         messagebox.showwarning("Warning", "Please select a rating.")
         return
-    
+
     cursor.execute('''
         INSERT INTO Reviews (ratings, statement, userID, carID, bookingID)
         VALUES (?, ?, ?, ?, ?)
@@ -150,12 +148,12 @@ def upload_review():
 # Function to display detailed info on row selection
 def on_row_selected(event):
     selected_row = tree.focus()
+    
     if selected_row:
-        # Get bookingID of the selected row
+        default_image_label.place_forget()  # Hide the default image
         bookingID = tree.item(selected_row)['values'][6]
         selected_bookingID.set(bookingID)
 
-        # Query to get additional details for the selected bookingID
         cursor.execute('''
             SELECT CarDetails.registrationNo, RentalAgency.agencyName, BookingDetails.bookingStatus,
                    BookingDetails.pickupDate, BookingDetails.pickupTime, 
@@ -170,13 +168,11 @@ def on_row_selected(event):
         
         details = cursor.fetchone()
         if details:
-            # Format dates and times
             pickup_date_formatted = format_date(details[3])
             pickup_time_formatted = format_time(details[4])
             dropoff_date_formatted = format_date(details[6])
             dropoff_time_formatted = format_time(details[7])
 
-            # Display the detailed info
             registrationNo_label.config(text=f"{details[0]}")
             agency_label.config(text=f"{details[1]}")
             status_label.config(text=f"{details[2]}")
@@ -187,157 +183,119 @@ def on_row_selected(event):
             dropoff_time_label.config(text=f"{dropoff_time_formatted}")
             dropoff_location_label.config(text=f"{details[8]}")
 
-            # Set the selected carID and userID
             selected_carID.set(details[9])
             selected_userID.set(details[10])
 
-def reviewgui(login_callback,home_callback,list_callback,profile_callback,about_callback,payment_callback):
-    # Create main window
-    reviewFrame = Toplevel()
-    reviewFrame.title("Your Bookings")
-    reviewFrame.geometry("1280x720")
-    reviewFrame.resizable(False, False)
-    
-    global userInfo
-    userInfo = get_user_info()
+            # Show review UI elements
+            show_review_ui()
 
-    # Load the background image
-    bg_image_path = r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\Your Bookings.png"
-    bg_image = Image.open(bg_image_path)
-    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
-    bg_photo = ImageTk.PhotoImage(bg_image)
+            # Display "To Pay" image and "Pay Now" button if booking is approved
+            if details[2] == "Approved":
+                pay_image_label.place(x=818, y=200)
+                pay_button.place(x=932, y=528)
+            else:
+                pay_image_label.place_forget()
+                pay_button.place_forget()
+    else:
+        default_image_label.place(x=70, y=192)  # Show default image if no row is selected
 
-    """
-    # Create a canvas to hold the background image
-    canvas = tk.Canvas(reviewFrame, width=bg_image.width, height=bg_image.height)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, image=bg_photo, anchor="nw")
-    """
-    # Navigation Tab
-    nav_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\image_2.png"),size=(1280,60))
-    nav_label = ctk.CTkLabel(reviewFrame, image=nav_img, text="", width=1280, height=60)
-    nav_label.place(x=0, y=0)
-
-    logo_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\logo.png"),size=(75,40))
-    logo_label = ctk.CTkLabel(reviewFrame, image=logo_img, text="", bg_color="#F47749", width=95, height=50)
-    logo_label.place(x=5, y=5)
-    pywinstyles.set_opacity(logo_label,color="#F47749")
-    
-    pfp_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\image_1.png"),size=(40,40))
-    pfp_label = ctk.CTkButton(reviewFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(reviewFrame,login_callback,profile_callback))
-    pfp_label.place(x=1203, y=5)
-    pywinstyles.set_opacity(pfp_label,color="#F47749")
-
-    # Relocate buttons
-    home_button = ctk.CTkButton(master=reviewFrame, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", 
-                                text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(reviewFrame,home_callback))
-    home_button.place(x=667, y=14)
-    pywinstyles.set_opacity(home_button,color="#FA5740")
-
-    selections_button = ctk.CTkButton(master=reviewFrame, text="Selections", width=120, fg_color=("#FA5740","#FB543F"), bg_color="#FB543F", 
-                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda:open_listing(reviewFrame,list_callback))
-    selections_button.place(x=783, y=14)
-    pywinstyles.set_opacity(selections_button,color="#FB543F")
-
-    contact_us_button = ctk.CTkButton(master=reviewFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
-                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Contact Us clicked"))
-    contact_us_button.place(x=930, y=14)
-    pywinstyles.set_opacity(contact_us_button,color="#FC503E")
-
-    about_us_button = ctk.CTkButton(master=reviewFrame, text="About Us", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_aboutUs(reviewFrame,about_callback))
-    about_us_button.place(x=1075, y=14)
-    pywinstyles.set_opacity(about_us_button,color="#FC4D3D")
-
-    # Create a canvas to hold the background image
-    canvas = tk.Canvas(reviewFrame, width=bg_image.width, height=bg_image.height)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, image=bg_photo, anchor="nw")
-
-    # Set up the Treeview on the canvas
-    global tree
-    tree = ttk.Treeview(canvas, columns=("Reg No", "Model", "Date Created", "Pickup Date", "Drop-off Date", "Status"), show="headings")
-
-    # Configure headings and column widths
-    tree.heading("Reg No", text="Reg No")
-    tree.column("Reg No", width=100)  # Adjust width as needed
-
-    tree.heading("Model", text="Model")
-    tree.column("Model", width=120)  # Adjust width as needed
-
-    tree.heading("Date Created", text="Date Created")
-    tree.column("Date Created", width=120)  # Adjust width as needed
-
-    tree.heading("Pickup Date", text="Pickup Date")
-    tree.column("Pickup Date", width=120)  # Adjust width as needed
-
-    tree.heading("Drop-off Date", text="Drop-off Date")
-    tree.column("Drop-off Date", width=120)  # Adjust width as needed
-
-    tree.heading("Status", text="Status")
-    tree.column("Status", width=100)  # Adjust width as needed
-
-    # Place the Treeview on the canvas
-    tree.place(x=70, y=192, width=700, height=170)  # Adjust x, y, width, and height as needed
-
-    # Bind the row selection event
-    tree.bind("<ButtonRelease-1>", on_row_selected)
-
-    # Variables to store rating and bookingID
-    global selected_rating,selected_bookingID,selected_carID,selected_userID
-    selected_rating = tk.IntVar()
-    selected_bookingID = tk.IntVar()
-    selected_carID = tk.IntVar()  # New variable for carID
-    selected_userID = tk.IntVar()  # New variable for userID
-
-    # Load star images
-    global black_star_img,yellow_star_img
-    black_star_img = ImageTk.PhotoImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\black star.png").resize((32, 32)))
-    yellow_star_img = ImageTk.PhotoImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review\yellow star.png").resize((32, 32)))
-
-    # Star labels for rating
-    global star_labels
-    star_labels = []
-    for i in range(5):
-        star_label = tk.Label(canvas, image=black_star_img, cursor="hand2", bg="#D9D9D9")
-        star_label.place(x=842 + (i * 48), y=381)
-        star_label.bind("<Button-1>", lambda e, rating=i+1: set_rating(rating))
-        star_labels.append(star_label)
-
-    # Text box for review
-    global review_entry
-    review_entry = tk.Text(canvas, width=39, height=9, bg="white")
+# Function to show review UI elements
+def show_review_ui():
     review_entry.place(x=845, y=426)
-
-    # Upload button
-    upload_button = tk.Button(reviewFrame, text="UPLOAD", bg="#FF865A", command=lambda:upload_review, bd=0, font=("Arial", 14, "bold"), width=8)
     upload_button.place(x=952, y=614)
+    for i, star_label in enumerate(star_labels):
+        star_label.place(x=842 + (i * 48), y=381)
 
-    # Labels to display additional details, placed on the canvas
-    global registrationNo_label, agency_label, status_label,pickup_date_label,pickup_time_label,pickup_location_label,dropoff_date_label,dropoff_time_label,dropoff_location_label
+# Create main window
+root = tk.Tk()
+root.title("Your Bookings")
+root.geometry("1280x720")
 
-    registrationNo_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 17))
-    registrationNo_label.place(x=170, y=463)
-    agency_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 17))
-    agency_label.place(x=170, y=530)
-    status_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 17))
-    status_label.place(x=170, y=595)
-    pickup_date_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    pickup_date_label.place(x=606, y=513)
-    pickup_time_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    pickup_time_label.place(x=535, y=513)
-    pickup_location_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    pickup_location_label.place(x=535, y=484)
-    dropoff_date_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    dropoff_date_label.place(x=606, y=612)
-    dropoff_time_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    dropoff_time_label.place(x=535, y=612)
-    dropoff_location_label = tk.Label(canvas, text="", bg="#D9D9D9", font= ('Arial', 8))
-    dropoff_location_label.place(x=535, y=583)
+# Background image
+bg_image_path = r"C:\Users\chewy\OneDrive\Car rental\Your Bookings.png"
+bg_image = Image.open(bg_image_path).resize((1280, 720), Image.LANCZOS)
+root.bg_photo = ImageTk.PhotoImage(bg_image)
+background_label = tk.Label(root, image=root.bg_photo)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Populate the Treeview with data
-    populate_treeview()
+# Treeview setup
+tree = ttk.Treeview(root, columns=("Reg No", "Model", "Date Created", "Pickup Date", "Drop-off Date", "Status"), show="headings")
+tree.heading("Reg No", text="Reg No")
+tree.column("Reg No", width=100)
+tree.heading("Model", text="Model")
+tree.column("Model", width=120)
+tree.heading("Date Created", text="Date Created")
+tree.column("Date Created", width=120)
+tree.heading("Pickup Date", text="Pickup Date")
+tree.column("Pickup Date", width=120)
+tree.heading("Drop-off Date", text="Drop-off Date")
+tree.column("Drop-off Date", width=120)
+tree.heading("Status", text="Status")
+tree.column("Status", width=100)
+tree.place(x=70, y=192, width=700, height=170)
+tree.bind("<ButtonRelease-1>", on_row_selected)
 
-    paybttn = ctk.CTkButton(reviewFrame,text="Payment",command=lambda:open_payment(reviewFrame,payment_callback))
-    paybttn.place(x=700,y=650)
+# Load and display default image if no row is selected
+default_image_path = r"C:\Users\chewy\OneDrive\Car rental\review n payment frame.png"
+root.default_image = ImageTk.PhotoImage(Image.open(default_image_path).resize((350, 450), Image.LANCZOS))
+default_image_label = tk.Label(root, image=root.default_image, bg="#D9D9D9")
+
+# Place the default image initially
+default_image_label.place(x=818, y=198)
+
+# Star images
+root.black_star_img = ImageTk.PhotoImage(Image.open(r"C:\Users\chewy\OneDrive\Car rental\black star.png").resize((32, 32)))
+root.yellow_star_img = ImageTk.PhotoImage(Image.open(r"C:\Users\chewy\OneDrive\Car rental\yellow star.png").resize((32, 32)))
+
+# Star labels
+selected_rating = tk.IntVar()
+star_labels = []
+for i in range(5):
+    star_label = tk.Label(root, image=root.black_star_img, cursor="hand2", bg="#D9D9D9")
+    star_label.place_forget()  # Hide initially
+    star_label.bind("<Button-1>", lambda e, rating=i+1: set_rating(rating))
+    star_labels.append(star_label)
+
+# Review entry and upload button
+review_entry = tk.Text(root, width=39, height=9, bg="white")
+review_entry.place_forget()  # Hide initially
+
+upload_button = tk.Button(root, text="UPLOAD", bg="#FF865A", command=upload_review, bd=0, font=("Arial", 14, "bold"), width=8)
+upload_button.place_forget()  # Hide initially
+
+# "To pay" image and "Pay Now" button
+pay_image_path = r"C:\Users\chewy\OneDrive\Car rental\To pay.png"
+root.pay_image = ImageTk.PhotoImage(Image.open(pay_image_path).resize((350, 450), Image.LANCZOS))
+pay_image_label = tk.Label(root, image=root.pay_image, bg="#D9D9D9")
+
+pay_button = tk.Button(root, text="PAY NOW", bg="#FF865A", bd=0, font=("Arial", 14, "bold"), width=10, command=lambda: messagebox.showinfo("Payment", "Redirecting to payment..."))
+
+# Labels for booking details
+registrationNo_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 17))
+registrationNo_label.place(x=170, y=463)
+agency_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 17))
+agency_label.place(x=170, y=530)
+status_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 17))
+status_label.place(x=170, y=595)
+pickup_date_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+pickup_date_label.place(x=606, y=513)
+pickup_time_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+pickup_time_label.place(x=535, y=513)
+pickup_location_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+pickup_location_label.place(x=535, y=484)
+dropoff_date_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+dropoff_date_label.place(x=606, y=612)
+dropoff_time_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+dropoff_time_label.place(x=535, y=612)
+dropoff_location_label = tk.Label(root, text="", bg="#D9D9D9", font=('Arial', 8))
+dropoff_location_label.place(x=535, y=583)
+
+# Variables for tracking selected booking details
+selected_bookingID = tk.StringVar()
+selected_carID = tk.StringVar()
+selected_userID = tk.StringVar()
+
+# Populate the Treeview
+populate_treeview()
+
+root.mainloop()

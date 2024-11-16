@@ -54,6 +54,7 @@ def accManage(current_window, login_callback,profile_callback):
         droptabFrame.destroy()
         pfpState = 1
 
+
 # Function to fetch booking, user, and car details using userID and carID
 def fetch_booking_user_car_details(booking_id):
     conn = sqlite3.connect('CAR2U.db')
@@ -73,6 +74,138 @@ def fetch_booking_user_car_details(booking_id):
 
     return details
 
+# Function to upload receipt and save as BLOB in Transactions.receipt
+def upload_receipt(transact_id):
+    # Open file dialog for image selection
+    receipt_path = filedialog.askopenfilename(title="Select Receipt Image", 
+                                              filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
+    if receipt_path:
+        # Convert image to binary for storage
+        with open(receipt_path, 'rb') as file:
+            receipt_blob = file.read()
+        
+        try:
+            conn = sqlite3.connect('CAR2U.db')
+            cursor = conn.cursor()
+            
+            # Update Transactions table with receipt blob
+            cursor.execute('''
+                UPDATE Transactions 
+                SET receipt = ? 
+                WHERE transactID = ?
+            ''', (receipt_blob, transact_id))
+            conn.commit()
+            messagebox.showinfo("Receipt Uploaded", "Receipt has been uploaded successfully!")
+        except sqlite3.Error as e:
+            print("Failed to upload receipt:", e)
+        finally:
+            conn.close()
+    else:
+        messagebox.showinfo("No File Selected", "No receipt image was uploaded.")
+
+# Initialize main Tkinter window
+root = tk.Tk()
+root.title("Payment Page")
+root.geometry("1280x720")
+
+# Load the background image
+bg_image_path = r"C:\Users\chewy\OneDrive\Car rental\Payment Page official.png"
+bg_image = Image.open(bg_image_path)
+bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
+bg_photo = ImageTk.PhotoImage(bg_image)
+
+# Create a canvas to hold the background image
+canvas = tk.Canvas(root, width=bg_image.width, height=bg_image.height)
+canvas.pack(fill="both", expand=True)
+canvas.create_image(0, 0, image=bg_photo, anchor="nw")
+
+# Fetch details with a specific bookingID
+booking_id = 1  # Replace with the actual bookingID or fetch dynamically as needed
+details = fetch_booking_user_car_details(booking_id)
+
+# Function to fetch car price and booking number of days using column index
+def fetch_booking_and_price():
+    conn = sqlite3.connect('CAR2U.db')
+    cursor = conn.cursor()
+
+    # Fetch price from CarDetails and numberOfDays from BookingDetails
+    cursor.execute('''
+        SELECT CarDetails.price, BookingDetails.numberOfDays
+        FROM CarDetails
+        INNER JOIN BookingDetails ON CarDetails.carID = BookingDetails.carID
+        WHERE BookingDetails.bookingID = ?
+        LIMIT 1
+    ''', (1,))  # Assuming booking ID is 1
+
+    # Fetch result as a tuple (price, numberOfDays)
+    data = cursor.fetchone()
+    conn.close()
+
+    return data
+
+# Function to update name, email, and contactNo in UserDetails table
+def update_user_details(name, email, contactNo):
+    conn = sqlite3.connect('CAR2U.db')
+    cursor = conn.cursor()
+
+    # Updating only name, email, and contactNo fields in UserDetails
+    cursor.execute('''
+        UPDATE UserDetails
+        SET name = ?, email = ?, contactNo = ?
+        WHERE userID = ?
+    ''', (name, email, contactNo, 1))  # Replace '1' with dynamic userID as needed
+
+    conn.commit()
+    conn.close()
+
+# Fetch car price and number of days from the database
+booking_and_price_data = fetch_booking_and_price()
+
+if booking_and_price_data:
+    # Use column index to access price and numberOfDays
+    car_price = booking_and_price_data[0]  # First column: price
+    number_of_days = booking_and_price_data[1]  # Second column: numberOfDays
+    
+    # Calculate the total amount
+    total_amount = car_price * number_of_days
+
+# Define positions for both small and large totalAmount displays
+total_amount_position_small = (715, 512)  # Position for smaller text
+total_amount_position_large = (715, 580)  # Position for larger, bold text
+
+# Display totalAmount in small font
+canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
+                   text=f"MYR {total_amount:.2f}", 
+                   font=("Arial", 10), fill="black", anchor="e")
+
+# Display totalAmount in larger bold font
+canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
+                   text=f"MYR {total_amount:.2f}", 
+                   font=("Arial", 23, "bold"), fill="black", anchor="e")
+
+# Display user and booking details in the UI
+entry_name = tk.Entry(root, font=("Arial", 14), bd=0)
+entry_name.insert(0, details[0])  # UserDetails.name
+canvas.create_window(250, 369, window=entry_name, width=200, height=25)
+
+entry_email = tk.Entry(root, font=("Arial", 14), bd=0)
+entry_email.insert(0, details[1])  # UserDetails.email
+canvas.create_window(250, 456, window=entry_email, width=200, height=25)
+
+entry_contactNo = tk.Entry(root, font=("Arial", 14), bd=0)
+entry_contactNo.insert(0, details[2])  # UserDetails.contactNo
+canvas.create_window(250, 543, window=entry_contactNo, width=200, height=25)
+
+# Display car details and booking days
+label_model = tk.Label(root, text=f"{details[3]}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.model
+canvas.create_window(679, 422, window=label_model)
+
+label_price = tk.Label(root, text=f"MYR {float(details[4]):.2f}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.price
+canvas.create_window(681, 452, window=label_price)
+
+label_days = tk.Label(root, text=f"{details[5]} days", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # BookingDetails.numberOfDays
+canvas.create_window(696, 482, window=label_days)
+
 def add_transaction(transaction_method, total_amount, booking_id):
     try:
         conn = sqlite3.connect('CAR2U.db')
@@ -89,12 +222,14 @@ def add_transaction(transaction_method, total_amount, booking_id):
         
         # Commit the transaction
         conn.commit()
-        print("Transaction successfully saved!")  # Confirmation message
+        print("Payment is recorded")  # Confirmation message
         return transact_id  # Return transactID
     except sqlite3.Error as e:
         print("An error occurred:", e)  # Print error if it fails
     finally:
         conn.close()
+
+
 
 def send_confirmation_email(user_email, booking_details):
     # Email configuration
@@ -151,7 +286,7 @@ def send_confirmation_email(user_email, booking_details):
     except Exception as e:
         print("Failed to send email:", e)
 
-# Updated confirm_payment function to include totalAmount in the email
+# Updated confirm_payment function to include receipt upload prompt
 def confirm_payment():
     # Get updated details from entry fields
     updated_name = entry_name.get()
@@ -226,8 +361,6 @@ def confirm_payment():
             # Send confirmation email to the user
             send_confirmation_email(updated_email, booking_details)
 
-        messagebox.showinfo("Complete Payment", "Your payment is confirmed. You will be redirected shortly to the payment page.")
-
         # Redirect to the appropriate payment page
         if selected_payment == "TNG":
             webbrowser.open("https://payment.tngdigital.com.my/sc/bDLnXXwSUR")
@@ -235,6 +368,17 @@ def confirm_payment():
             webbrowser.open("https://www.cimbclicks.com.my/clicks/#/")
         elif selected_payment == "Paypal":
             webbrowser.open("https://www.paypal.com/signin")
+
+        # Show receipt upload prompt
+        messagebox.showinfo("Upload Receipt", "Please upload a receipt image for the transaction.")
+        upload_receipt(transact_id)
+
+# Create a "Confirm Payment" button
+confirm_button = tk.Button(root, text="CONFIRM PAYMENT", font=("Arial", 23, "bold"), bd=0, bg="white", command=confirm_payment)
+canvas.create_window(1005, 630, window=confirm_button, width=310, height=50)
+
+# Track the currently selected payment method
+selected_payment = None
 
 # Define actions for each button with image switching
 def tng_action():
@@ -262,169 +406,43 @@ def highlight_selected(selected_button, clicked_image):
     # Change the selected button to the "clicked" version of the image
     selected_button.config(image=clicked_image)
     
-# Function to update name, email, and contactNo in UserDetails table
-def update_user_details(name, email, contactNo):
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+# Load default and clicked versions of TNG image
+tng_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\tng button.png")
+tng_image = tng_image.resize((290, 52), Image.LANCZOS)
+tng_photo = ImageTk.PhotoImage(tng_image)
 
-    # Updating only name, email, and contactNo fields in UserDetails
-    cursor.execute('''
-        UPDATE UserDetails
-        SET name = ?, email = ?, contactNo = ?
-        WHERE userID = ?
-    ''', (name, email, contactNo, 1))  # Replace '1' with dynamic userID as needed
+tng_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\tng click.png")
+tng_clicked_image = tng_clicked_image.resize((290, 52), Image.LANCZOS)
+tng_clicked_photo = ImageTk.PhotoImage(tng_clicked_image)
 
-    conn.commit()
-    conn.close()
+# Load default and clicked versions of bank image
+bank_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\online banking button.png")
+bank_image = bank_image.resize((290, 52), Image.LANCZOS)
+bank_photo = ImageTk.PhotoImage(bank_image)
 
-def paymentgui(login_callback,profile_callback,review_callback):
-    # Initialize main Tkinter window
-    paymentFrame = Toplevel()
-    paymentFrame.title("Payment Page")
-    paymentFrame.geometry("1280x720")
-    paymentFrame.resizable(False, False)
+bank_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\bank click.png")
+bank_clicked_image = bank_clicked_image.resize((290, 52), Image.LANCZOS)
+bank_clicked_photo = ImageTk.PhotoImage(bank_clicked_image)
 
-    # Load the background image
-    bg_image_path = r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\Payment Page official.png"
-    bg_image = Image.open(bg_image_path)
-    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
-    bg_photo = ImageTk.PhotoImage(bg_image)
+# Load default and clicked versions of card image
+paypal_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\paypal button.png")
+paypal_image = paypal_image.resize((290, 52), Image.LANCZOS)
+paypal_photo = ImageTk.PhotoImage(paypal_image)
 
-    bg = tk.Label(paymentFrame, image=bg_photo, text="",width=1280,height=720)
-    bg.place(x=0,y=0)
+paypal_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\paypal clicked.png")
+paypal_clicked_image = paypal_clicked_image.resize((290, 52), Image.LANCZOS)
+paypal_clicked_photo = ImageTk.PhotoImage(paypal_clicked_image)
 
-    pfp_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details\image_1.png"),size=(40,40))
-    pfp_label = ctk.CTkButton(paymentFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(paymentFrame,login_callback,profile_callback))
-    pfp_label.place(x=1203, y=5)
-    pywinstyles.set_opacity(pfp_label,color="#F47749")
+# Create buttons using the default images
+tng = tk.Button(root, image=tng_photo, command=tng_action, borderwidth=0, bg="white", fg="white")
+bank = tk.Button(root, image=bank_photo, command=bank_action, borderwidth=0, bg="white", fg="white")
+card = tk.Button(root, image=paypal_photo, command=card_action, borderwidth=0, bg="white", fg="white")
 
-    backBttn = ctk.CTkButton(paymentFrame, text="Back to Selection", command=lambda:open_review(paymentFrame,review_callback))
-    backBttn.place(x=50,y=115)
+# Add buttons to the canvas
+canvas.create_window(1005, 342, window=tng)
+canvas.create_window(1005, 410, window=bank)
+canvas.create_window(1005, 482, window=card)
 
-    # Create a canvas to hold the background image
-    canvas = tk.Canvas(paymentFrame, width=bg_image.width, height=bg_image.height)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, image=bg_photo, anchor="nw")
+# Start the Tkinter main loop
+root.mainloop()
 
-    # Fetch details with a specific bookingID
-    global booking_id
-    booking_id = 1  # Replace with the actual bookingID or fetch dynamically as needed
-    details = fetch_booking_user_car_details(booking_id)
-
-    # Function to fetch car price and booking number of days using column index
-    def fetch_booking_and_price():
-        conn = sqlite3.connect('CAR2U.db')
-        cursor = conn.cursor()
-
-        # Fetch price from CarDetails and numberOfDays from BookingDetails
-        cursor.execute('''
-            SELECT CarDetails.price, BookingDetails.numberOfDays
-            FROM CarDetails
-            INNER JOIN BookingDetails ON CarDetails.carID = BookingDetails.carID
-            WHERE BookingDetails.bookingID = ?
-            LIMIT 1
-        ''', (1,))  # Assuming booking ID is 1
-
-        # Fetch result as a tuple (price, numberOfDays)
-        data = cursor.fetchone()
-        conn.close()
-
-        return data
-
-    # Fetch car price and number of days from the database
-    global booking_and_price_data, car_price, number_of_days
-    booking_and_price_data = fetch_booking_and_price()
-
-    if booking_and_price_data:
-        # Use column index to access price and numberOfDays
-        car_price = booking_and_price_data[0]  # First column: price
-        number_of_days = booking_and_price_data[1]  # Second column: numberOfDays
-        
-        # Calculate the total amount
-        total_amount = car_price * number_of_days
-
-    # Define positions for both small and large totalAmount displays
-    total_amount_position_small = (715, 512)  # Position for smaller text
-    total_amount_position_large = (715, 580)  # Position for larger, bold text
-
-    # Display totalAmount in small font
-    canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
-                    text=f"MYR {total_amount:.2f}", 
-                    font=("Arial", 10), fill="black", anchor="e")
-
-    # Display totalAmount in larger bold font
-    canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
-                    text=f"MYR {total_amount:.2f}", 
-                    font=("Arial", 23, "bold"), fill="black", anchor="e")
-
-    # Global variables
-    global entry_name,entry_email,entry_contactNo
-
-    # Display user and booking details in the UI
-    entry_name = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_name.insert(0, details[0])  # UserDetails.name
-    canvas.create_window(250, 369, window=entry_name, width=200, height=25)
-
-    entry_email = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_email.insert(0, details[1])  # UserDetails.email
-    canvas.create_window(250, 456, window=entry_email, width=200, height=25)
-
-    entry_contactNo = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_contactNo.insert(0, details[2])  # UserDetails.contactNo
-    canvas.create_window(250, 543, window=entry_contactNo, width=200, height=25)
-
-    # Display car details and booking days
-    label_model = tk.Label(paymentFrame, text=f"{details[3]}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.model
-    canvas.create_window(679, 422, window=label_model)
-
-    label_price = tk.Label(paymentFrame, text=f"MYR {float(details[4]):.2f}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.price
-    canvas.create_window(681, 452, window=label_price)
-
-    label_days = tk.Label(paymentFrame, text=f"{details[5]} days", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # BookingDetails.numberOfDays
-    canvas.create_window(696, 482, window=label_days)
-
-    # Create a "Confirm Payment" button
-    confirm_button = tk.Button(paymentFrame, text="CONFIRM PAYMENT", font=("Arial", 23, "bold"), bd=0, bg="white", command=confirm_payment)
-    canvas.create_window(1005, 630, window=confirm_button, width=310, height=50)
-
-    # Track the currently selected payment method
-    selected_payment = None
-
-    global tng, tng_photo, tng_clicked_photo, bank, bank_photo, bank_clicked_photo, card, paypal_photo, paypal_clicked_photo
-    # Load default and clicked versions of TNG image
-    tng_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\tng button.png")
-    tng_image = tng_image.resize((290, 52), Image.Resampling.LANCZOS)
-    tng_photo = ImageTk.PhotoImage(tng_image)
-
-    tng_clicked_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\tng click.png")
-    tng_clicked_image = tng_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
-    tng_clicked_photo = ImageTk.PhotoImage(tng_clicked_image)
-
-    # Load default and clicked versions of bank image
-    bank_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\online banking button.png")
-    bank_image = bank_image.resize((290, 52), Image.Resampling.LANCZOS)
-    bank_photo = ImageTk.PhotoImage(bank_image)
-
-    bank_clicked_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\bank click.png")
-    bank_clicked_image = bank_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
-    bank_clicked_photo = ImageTk.PhotoImage(bank_clicked_image)
-
-    # Load default and clicked versions of card image
-    paypal_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\paypal button.png")
-    paypal_image = paypal_image.resize((290, 52), Image.Resampling.LANCZOS)
-    paypal_photo = ImageTk.PhotoImage(paypal_image)
-
-    paypal_clicked_image = Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment\paypal clicked.png")
-    paypal_clicked_image = paypal_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
-    paypal_clicked_photo = ImageTk.PhotoImage(paypal_clicked_image)
-
-    # Create buttons using the default images
-    tng = tk.Button(paymentFrame, image=tng_photo, command=lambda: tng_action, borderwidth=0, bg="white", fg="white")
-    bank = tk.Button(paymentFrame, image=bank_photo, command=lambda: bank_action, borderwidth=0, bg="white", fg="white")
-    card = tk.Button(paymentFrame, image=paypal_photo, command=lambda: card_action, borderwidth=0, bg="white", fg="white")
-
-    # Add buttons to the canvas
-    canvas.create_window(1005, 342, window=tng)
-    canvas.create_window(1005, 410, window=bank)
-    canvas.create_window(1005, 482, window=card)

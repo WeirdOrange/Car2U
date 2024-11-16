@@ -4,11 +4,19 @@ import customtkinter as ctk
 import pywinstyles
 import webbrowser  # Import webbrowser module
 import smtplib
-from tkinter import messagebox, Toplevel
+from tkinter import messagebox, Toplevel, filedialog
+from pathlib import Path
 from PIL import Image, ImageTk
 from MainCar2U_UserInfo import get_user_info,set_user_info
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+# Set up the asset path
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Payment")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
@@ -109,7 +117,7 @@ root.title("Payment Page")
 root.geometry("1280x720")
 
 # Load the background image
-bg_image_path = r"C:\Users\chewy\OneDrive\Car rental\Payment Page official.png"
+bg_image_path = relative_to_assets("Payment Page official.png")
 bg_image = Image.open(bg_image_path)
 bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
@@ -407,30 +415,30 @@ def highlight_selected(selected_button, clicked_image):
     selected_button.config(image=clicked_image)
     
 # Load default and clicked versions of TNG image
-tng_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\tng button.png")
-tng_image = tng_image.resize((290, 52), Image.LANCZOS)
+tng_image = Image.open(relative_to_assets("tng button.png"))
+tng_image = tng_image.resize((290, 52), Image.Resampling.LANCZOS)
 tng_photo = ImageTk.PhotoImage(tng_image)
 
-tng_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\tng click.png")
-tng_clicked_image = tng_clicked_image.resize((290, 52), Image.LANCZOS)
+tng_clicked_image = Image.open(relative_to_assets("tng click.png"))
+tng_clicked_image = tng_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
 tng_clicked_photo = ImageTk.PhotoImage(tng_clicked_image)
 
 # Load default and clicked versions of bank image
-bank_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\online banking button.png")
-bank_image = bank_image.resize((290, 52), Image.LANCZOS)
+bank_image = Image.open(relative_to_assets("online banking button.png"))
+bank_image = bank_image.resize((290, 52), Image.Resampling.LANCZOS)
 bank_photo = ImageTk.PhotoImage(bank_image)
 
-bank_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\bank click.png")
-bank_clicked_image = bank_clicked_image.resize((290, 52), Image.LANCZOS)
+bank_clicked_image = Image.open(relative_to_assets("bank click.png"))
+bank_clicked_image = bank_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
 bank_clicked_photo = ImageTk.PhotoImage(bank_clicked_image)
 
 # Load default and clicked versions of card image
-paypal_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\paypal button.png")
-paypal_image = paypal_image.resize((290, 52), Image.LANCZOS)
+paypal_image = Image.open(relative_to_assets("paypal button.png"))
+paypal_image = paypal_image.resize((290, 52), Image.Resampling.LANCZOS)
 paypal_photo = ImageTk.PhotoImage(paypal_image)
 
-paypal_clicked_image = Image.open(r"C:\Users\chewy\OneDrive\Car rental\paypal clicked.png")
-paypal_clicked_image = paypal_clicked_image.resize((290, 52), Image.LANCZOS)
+paypal_clicked_image = Image.open(relative_to_assets("paypal clicked.png"))
+paypal_clicked_image = paypal_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
 paypal_clicked_photo = ImageTk.PhotoImage(paypal_clicked_image)
 
 # Create buttons using the default images

@@ -26,12 +26,12 @@ def client_handler(client):
     # Server will listen for client message that will
     # Contain the username
     while 1:
-        oldUsername = client.recv(2048).decode('utf-8')
-        oldUsername = str(oldUsername)
-        username = oldUsername[0] + "*" * (len(oldUsername) - 2) + oldUsername[-1] 
+        username = client.recv(2048).decode('utf-8')
 
         if username != '':
             active_clients.append((username, client))
+            username = str(username)
+            newUsername = username[0] + "*" * (len(username) - 2) + username[-1] 
             prompt_message = "SERVER~" + f"{username} added to the chat"
             send_messages_to_all(prompt_message)
             break
@@ -69,12 +69,19 @@ def main():
         threading.Thread(target=client_handler, args=(client, )).start()
 
 # Function to send a direct message to a chosen user
-def send_direct_message(target_username, message):
+def send_direct_message(username,target_username, message):
+    print(active_clients)
+    print(username)
+    print(message)
+
     for user in active_clients:
+        print(user)
+        if user[0] == username:
+            send_message_to_client(user[1], message)
         if user[0] == target_username:
             send_message_to_client(user[1], message)
-            return
     print(f"User {target_username} not found or not connected.")
+    return
 
 # Modified listen_for_messages function to handle direct messages
 def listen_for_messages(client, username):
@@ -86,7 +93,7 @@ def listen_for_messages(client, username):
                     # Example message format: "@target_username message"
                     target_username, msg_content = message[1:].split(' ', 1)
                     final_msg = f"{username} (direct)~{msg_content}"
-                    send_direct_message(target_username, final_msg)
+                    send_direct_message(username,target_username, final_msg)
                 except ValueError:
                     error_msg = "SERVER~Invalid direct message format. Use '@username message'."
                     send_message_to_client(client, error_msg)

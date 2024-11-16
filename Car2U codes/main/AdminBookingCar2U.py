@@ -1,10 +1,15 @@
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
+import smtplib
+import ssl
+from easygui import buttonbox
+from email.message import EmailMessage
 from MainCar2U_UserInfo import get_user_info,set_user_info
-from tkinter import Toplevel, ttk, messagebox
-from PIL import Image
+from tkinter import Toplevel, ttk, messagebox, PhotoImage
+from PIL import Image, ImageTk
 from pathlib import Path
+from io import BytesIO
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
@@ -48,7 +53,6 @@ def open_Cdetail(current_window, detail_callback):
     current_window.destroy()  # Close the signup window
     detail_callback()
 
-
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
 
@@ -78,6 +82,35 @@ def accManage(current_window, login_callback,profile_callback):
     else:
         droptabFrame.destroy()
         pfpState = 1
+   
+def convert_data(data):
+    global pfp_image
+    img_byte = BytesIO(data)
+    img = Image.open(img_byte)
+    img = img.resize((240,240), Image.Resampling.LANCZOS)
+    pfp_img = ImageTk.PhotoImage(img)
+    return pfp_img
+    
+# Email notification
+def emailNotif(email_receiver,subject,body):
+    # Define email sender and receiver
+    email_sender = 'cartwoyouofficial@gmail.com'
+    email_password = 'asjy kqjh eizl wgnu'
+
+    # Set up the email
+    em = EmailMessage()
+    em['From'] = email_sender
+    em['To'] = email_receiver
+    em['Subject'] = subject
+    em.set_content(body)
+
+    # Add SSL (layer of security)
+    context = ssl.create_default_context()
+
+    # Log in and send the email
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, email_receiver, em.as_string())
 
 # Function to refresh treeview
 def refresh_Pending_treeview():
@@ -202,18 +235,21 @@ def select_item(event):
             Database()
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute('''SELECT C.model,C.registrationNo,B.bookingRemark,CONCAT(CAST(B.pickupDate AS CHAR),' till ', CAST(B.dropoffDate AS CHAR)) AS period,U.name,U.email,U.contactNo,B.bookingStatus,B.totalAmount,pickupLocation,dropoffLocation,pickupTime,dropoffTime,bookingID
-                                FROM BookingDetails B
-                                INNER JOIN CarDetails C ON B.carID = C.carID
-                                INNER JOIN UserDetails U ON B.userID = U.userID
-                                WHERE bookingID = ?''', (bookingID,))
+            cursor.execute('''SELECT C.model,C.registrationNo,B.bookingRemark,CONCAT(CAST(B.pickupDate AS CHAR),' till ', CAST(B.dropoffDate AS CHAR)) AS period,
+                            U.name,U.email,U.contactNo,B.bookingStatus,B.totalAmount,pickupLocation,dropoffLocation,pickupTime,dropoffTime,B.bookingID,C.seatingCapacity,
+                            T.transactID, T.receipt
+                            FROM BookingDetails B
+                            INNER JOIN CarDetails C ON B.carID = C.carID
+                            INNER JOIN UserDetails U ON B.userID = U.userID
+                            INNER JOIN Transactions T ON B.bookingID = T.bookingID
+                            WHERE B.bookingID = ?''', (bookingID,))
             car_data = cursor.fetchall()
         
             for widget in detailsFrame.winfo_children():
                 if isinstance(widget, (ctk.CTkFrame,ctk.CTkButton)):
                     widget.destroy()
             # Car Content
-            global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime
+            global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG
             for row in car_data:
                 model = row[0]
                 carNo = row[1]
@@ -232,6 +268,16 @@ def select_item(event):
                 pickTime = row[11]
                 dropTime = row[12]
                 bookingID = row[13]
+                seats = row[14]
+                payStatus = row[15]
+                if payStatus == None:
+                    payStatus = "Pending"
+                else:
+                    payStatus = "Done"
+                receipt = row[16]
+                if receipt != None:
+                    receiptIMG = convert_data(receipt)
+                
             refresh_detail()
 
         except sqlite3.Error as e:
@@ -239,27 +285,35 @@ def select_item(event):
         finally:
             conn.close()
 
-        return model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime
+        return model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG
+
+def showReceipt():
+    output = buttonbox(image=receiptIMG)
 
 # Function to refresh booking details selected
 def refresh_detail():
-    global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime
+    for widget in detailsFrame.winfo_children():
+        if isinstance(widget, (ctk.CTkFrame,ctk.CTkLabel,ctk.CTkButton)):
+            widget.destroy()
+            
+    detail_title = ctk.CTkLabel(detailsFrame, text="Booking Details", font=("Segoe UI Bold",24))
+    detail_title.place(x=280,y=5)
+
+    global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG
     # Placeholder for car image
     car_image = ctk.CTkLabel(detailsFrame, text="Car Photo", width=200, height=100, fg_color="#D9D9D9", bg_color="#D9D9D9")
     car_image.place(x=50, y=45)
 
-    statusTitle = ctk.CTkLabel(detailsFrame,text="Payment Status:",width=140,height=21,anchor='center', font=("Segoe UI",16))
+    statusTitle = ctk.CTkLabel(detailsFrame,text="Booking Status:",width=140,height=21,anchor='center', font=("Segoe UI Bold",16))
     statusTitle.place(x=300,y=45)
     statusFrame = ctk.CTkFrame(detailsFrame,width=140, height=30)
     statusFrame.place(x=300,y=70)
-    statusContent = ctk.CTkLabel(statusFrame, text=str(status), font=("Segoe UI",12))
-    statusContent.place(x=5,y=0)
     
-    costTitle = ctk.CTkLabel(detailsFrame,text="Total Cost:",width=95,height=21,anchor='center', font=("Segoe UI",16))
+    costTitle = ctk.CTkLabel(detailsFrame,text="Total Cost:",width=95,height=21,anchor='center', font=("Segoe UI Bold",16))
     costTitle.place(x=450,y=45)
     costFrame = ctk.CTkFrame(detailsFrame,width=95, height=30)
     costFrame.place(x=460,y=70)
-    costContent = ctk.CTkLabel(costFrame, text="RM "+str(price), font=("Segoe UI",12))
+    costContent = ctk.CTkLabel(costFrame, text="RM "+str(price), font=("Segoe UI Bold",12))
     costContent.place(x=5,y=0)
 
     car_label = {"Model:":155,"Car No:":185,"Add Ons:":215,"Period:":255}
@@ -333,6 +387,11 @@ def refresh_detail():
     remarkFrameContent.place(x=300,y=325)
 
     if status == "Pending":
+        
+        statusContent = ctk.CTkLabel(statusFrame,width=140, height=30, text=str(status), font=("Segoe UI Bold",12), anchor="center")
+        statusContent.place(x=5,y=0)
+        statusFrame.configure(fg_color="#FFBE71")
+        
         acceptBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Accept", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:approveBooking(remarkFrameContent.get()))
         acceptBttn.place(x=250, y=415)
@@ -341,10 +400,29 @@ def refresh_detail():
                                 command=lambda:rejectBooking(remarkFrameContent.get()))
         rejectBttn.place(x=390, y=415)
     elif status == "Rejected" or status == "Cancelled":
+        statusContent = ctk.CTkLabel(statusFrame,width=140, height=30, text=str(status), font=("Segoe UI Bold",12), fg_color="#FE453B", anchor="center")
+        statusContent.place(x=5,y=0)
+        statusFrame.configure(fg_color="#FFBE71")
+
         editBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Edit Remark", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:rejectBooking(remarkFrameContent.get()))
         editBttn.place(x=250, y=415)
     elif status == "Approved":
+        statusContent = ctk.CTkLabel(statusFrame,width=140, height=30, text=str(status), font=("Segoe UI Bold",12), fg_color="#46D1CA", anchor="center")
+        statusContent.place(x=5,y=0)
+        statusFrame.configure(fg_color="#FFBE71")
+
+        paymentTitle = ctk.CTkLabel(detailsFrame, text="Payment Status:", width=126, font=("Segoe UI",16))
+        paymentTitle.place(x=566,y=45)
+
+        if payStatus == "Pending":
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#FFA843", width=65, height=30, anchor="center", corner_radius=10)
+        else:
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#5DC122", width=65, height=30, anchor="center", corner_radius=10)
+            receiptButton = ctk.CTkButton(detailsFrame, text="View Receipt", width=80, height=30,command=lambda:showReceipt())
+            receiptButton.place(x=640,y=70)
+        paymentStatus.place(x=570,y=70)
+
         editBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Edit Remark", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:approveBooking(remarkFrameContent.get()))
         editBttn.place(x=250, y=415)
@@ -352,7 +430,25 @@ def refresh_detail():
         rentedBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="On Rent", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:onRent(remarkFrameContent.get()))
         rentedBttn.place(x=390, y=415)
+        
+        rejectBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Reject", text_color="#FFFFFF", fg_color="#FE453B", font=("Segoe UI Bold",16),
+                                command=lambda:rejectBooking(remarkFrameContent.get()))
+        rejectBttn.place(x=530, y=415)
     elif status == "On Rent":
+        statusContent = ctk.CTkLabel(statusFrame,width=140, height=30, text=str(status), font=("Segoe UI Bold",12), fg_color="#80F67C", anchor="center")
+        statusContent.place(x=5,y=0)
+        statusFrame.configure(fg_color="#FFBE71")
+
+        paymentTitle = ctk.CTkLabel(detailsFrame, text="Payment Status:", width=126, font=("Segoe UI",16))
+        paymentTitle.place(x=566,y=45)
+
+        if payStatus == "Pending":
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#FFA843", width=65, height=30, anchor="center", corner_radius=10)
+        else:
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#5DC122", width=65, height=30, anchor="center", corner_radius=10)
+            receiptButton = ctk.CTkButton(detailsFrame, text="View Receipt", width=80, height=30,command=lambda:showReceipt())
+            receiptButton.place(x=640,y=70)
+        
         editBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Edit Remark", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:onRent(remarkFrameContent.get()))
         editBttn.place(x=250, y=415)
@@ -361,6 +457,20 @@ def refresh_detail():
                                 command=lambda:rentDone(remarkFrameContent.get()))
         rentedBttn.place(x=390,y=415)
     else:
+        
+        statusContent = ctk.CTkLabel(statusFrame,width=140, height=30, text=str(status), font=("Segoe UI Bold",12), fg_color="#00C140", anchor="center")
+        statusContent.place(x=5,y=0)
+
+        paymentTitle = ctk.CTkLabel(detailsFrame, text="Payment Status:", width=126, font=("Segoe UI",16))
+        paymentTitle.place(x=566,y=45)
+
+        if payStatus == "Pending":
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#FFA843", width=65, height=30, anchor="center", corner_radius=10)
+        else:
+            paymentStatus = ctk.CTkLabel(detailsFrame,text=payStatus, bg_color="#FFFFFF", fg_color="#5DC122", width=65, height=30, anchor="center", corner_radius=10)
+            receiptButton = ctk.CTkButton(detailsFrame, text="View Receipt", width=80, height=30,command=lambda:showReceipt())
+            receiptButton.place(x=640,y=70)
+        
         editBttn = ctk.CTkButton(detailsFrame,width=110,height=35, text="Edit Remark", text_color="#FFFFFF", fg_color="#5DC122", font=("Segoe UI Bold",16),
                                 command=lambda:rentDone(remarkFrameContent.get()))
         editBttn.place(x=250, y=415)
@@ -375,6 +485,10 @@ def approveBooking(remark):
                             WHERE bookingID = ?''', (remark,bookingID,))
         conn.commit()
         messagebox.showinfo("Booking Approved", "You have approved the booking. Remember to mark your calendar!")
+
+        subject = "Car Rental Booking Approved"
+        body = str(f"Hi {custName},\nGreat News! Your reservation booking to rent the {model}, {carNo}, has been approved!\nPlease proceed to Payment from booking history and pay for the rental.\n\nReminder: Do pay for the car rental a day before the car rental date, the booking will be automatically rejected if booking is not paid")
+        emailNotif(email,subject,body)
         refresh_currentTreeview()
         select_item
 
@@ -395,6 +509,10 @@ def rejectBooking(remark):
                                 WHERE bookingID = ?''', (remark,bookingID,))
             conn.commit()
             messagebox.showinfo("Booking Rejected", "Oh! It seems you have rejected the booking. If this was a mistake, please contact Car2U service.")
+            
+            subject = "Car Rental Booking Rejected"
+            body = f"Hi {custName},\nWe are sorry to say that your reservation booking to rent the {model}, {carNo}, has been rejected. Late payment or sudden maintenance required for the car may had happened, do contact the rental agency to have a better understanding of what happened."
+            emailNotif(email,subject,body)
             refresh_currentTreeview()
             refresh_history_treeview()
             select_item
@@ -582,7 +700,7 @@ def carBooking(login_callback,home_callback,detail_callback,profile_callback):
     pickTime = "Time"
     dropTime = "Time "
 
-    refresh_detail()
+    #refresh_detail()
 
     #Current History Section
     current_label = ctk.CTkLabel(aBookingFrame, text="Current Bookings", bg_color="#F47749", width=230, anchor='center', font=("Segoe UI Bold",24))

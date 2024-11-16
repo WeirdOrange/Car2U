@@ -3,8 +3,15 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 import sqlite3
 from pathlib import Path
-import io
+from io import BytesIO
+from pathlib import Path
 
+# Set up the asset path
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Admin-Upload-Car")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 # Connect to the database and create the tables if they don't exist
 def connect_db():
@@ -46,11 +53,14 @@ def connect_db():
     conn.commit()
     return conn
 
-# Function to convert image to BLOB
-def convert_image_to_blob(image_path):
-    with open(image_path, 'rb') as file:
-        return file.read()
-
+def convert_data(data):
+    global pfp_image
+    img_byte = BytesIO(data)
+    img = Image.open(img_byte)
+    img = img.resize((240,240), Image.Resampling.LANCZOS)
+    car_img = ImageTk.PhotoImage(img)
+    return car_img
+            
 # Function to save data to the database
 def save_data():
     agencyName = selected_agency.get()
@@ -71,7 +81,7 @@ def save_data():
         messagebox.showerror("No Image", "Please upload an image.")
         return
 
-    carImage = convert_image_to_blob(upload_label.image_path)  # Convert image to BLOB
+    carImage = upload_image()
 
     # Get agencyID from agency name
     conn = connect_db()
@@ -151,6 +161,7 @@ def delete_data():
 
 # Function to update existing car data
 def update_data():
+    global blobData
     selected_item = treeview.selection()
     if selected_item:
         carID = treeview.item(selected_item, 'values')[0]
@@ -169,11 +180,11 @@ def update_data():
             messagebox.showerror("Invalid Input", "Please enter a valid number for the price.")
             return
 
-        if not hasattr(upload_label, 'image_path'):
+        if not hasattr(blobData, 'image_path'):
             messagebox.showerror("No Image", "Please upload an image.")
             return
 
-        carImage = convert_image_to_blob(upload_label.image_path)  # Convert image to BLOB
+        carImage = upload_image(blobData)  # Convert image to BLOB
 
         # Get agencyID from agency name
         conn = connect_db()
@@ -203,27 +214,17 @@ def update_data():
 
 # Function to handle image upload
 def upload_image():
+    global blobData
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
     if file_path:
         try:
-            img = Image.open(file_path)
-            img = img.resize((250, 300), Image.LANCZOS)
-            img_photo = ImageTk.PhotoImage(img)
-            upload_label.config(image=img_photo, text="")
-            upload_label.image = img_photo
-            upload_label.image_path = file_path  # Store the path in the label widget
+             # Convert binary format to images
+            with open(file_path, 'rb') as file: 
+                blobData = file.read()
+                upload_label.config(image=file_path)
+            return blobData
         except Exception as e:
             messagebox.showerror("Error", f"Failed to upload image: {e}")
-
-
-
-# Set up the asset path
-OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Admin-Home")
-
-def relative_to_assets(path: str) -> Path:
-    return ASSETS_PATH / Path(path)
-
 
 # Create main window
 root = tk.Tk()
@@ -231,9 +232,9 @@ root.title("Car Upload Page")
 root.geometry("1280x720")
 
 # Load the background image
-bg_image_path = r"C:\Users\chewy\OneDrive\Car rental\Car Lisintg Form.png"
+bg_image_path = relative_to_assets("Car Lisintg Form.png")
 bg_image = Image.open(bg_image_path)
-bg_image = bg_image.resize((1280, 720), Image.LANCZOS)
+bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
 bg_photo = ImageTk.PhotoImage(bg_image)
 
 # Set the background image
@@ -337,11 +338,8 @@ def on_treeview_select(event):
 
         if car_image_path and car_image_path[0]:
             try:
-                img = Image.open(car_image_path[0])
-                img = img.resize((250, 180), Image.LANCZOS)
-                img_photo = ImageTk.PhotoImage(img)
-                upload_label.config(image=img_photo, text="")
-                upload_label.image = img_photo  # Keep a reference to avoid garbage collection
+                img = convert_data(car_image_path[0])
+                upload_label.config(image=img, text="")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load image: {e}")
         else:

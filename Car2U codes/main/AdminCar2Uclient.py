@@ -5,7 +5,7 @@ import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, messagebox, ttk
 from pathlib import Path
 from PIL import Image
 
@@ -27,9 +27,13 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Ca
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
-# Creating a socket object
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+def Database(): #creating connection to database and creating table
+    global conn, cursor
+    conn = sqlite3.connect("car2u.db")
+    # Enable access to columns by name
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
 def add_message(message):
     message_box.config(state=tk.NORMAL)
     message_box.insert(tk.END, message + '\n')
@@ -43,7 +47,17 @@ def connect():
     except:
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
 
-    username = username_textbox.get()
+    #global userinfo
+    #userinfo = get_user_info()
+    #print(f"Home: {userinfo}")
+    Database()
+    #cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = ?""",(userinfo,))
+    cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = 1""")
+    agencyName = cursor.fetchone()[0]
+    conn.close()
+    print(agencyName)
+
+    username = agencyName # Enter username to server
     if username != '':
         client.sendall(username.encode())
     else:
@@ -66,6 +80,25 @@ def send_message():
         message_textbox.delete(0, len(message))
     else:
         messagebox.showerror("Empty message", "Message cannot be empty")
+
+def refresh_chatlist():
+    Database()
+    cursor.execute("""SELECT C.userID,U.name FROM ChatConnect C INNER JOIN UserDetails U ON U.userID = C.userID WHERE C.agencyID = 1""")
+    result = cursor.fetchall()
+    conn.close()
+
+    for i,row in enumerate(result):
+        custid = row[0]
+        custName = row[1]
+
+        custFrame = ctk.CTkFrame(selectCustFrame, width=270, height=50,bg_color="#191F48",fg_color="#191F48")
+        custFrame.grid(row=i, column=1, sticky="ne",pady=5)
+        choiceLabel = ctk.CTkButton(custFrame,text=custName, width=270, height=45, bg_color="#191F48", fg_color="#FFD6A6", corner_radius=10, 
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20))
+        choiceLabel.place(x=0,y=0)
+
+# Creating a socket object
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 chatpage = ctk.CTk()
 chatpage.geometry("1280x720")
@@ -120,20 +153,29 @@ pywinstyles.set_opacity(chat_button,color="#FC4D3D")
 selectFrame = ctk.CTkFrame(chatpage, width=320,height=665, bg_color="#0D112B", fg_color="#0D112B")
 selectFrame.place(x=230,y=25)
 
+customerTitle = ctk.CTkLabel(selectFrame, text="Customer", width=320, height=35, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 32), text_color="#FFFFFF")
+customerTitle.place(x=0,y=0)
+
+searchFrame = ctk.CTkFrame(selectFrame, width=310, height=40, bg_color="#4E6573", fg_color="#4E6573")
+searchFrame.place(x=5,y=60)
+
+selectCustFrame = ctk.CTkScrollableFrame(selectFrame, width=290,height=545, bg_color="#191F48", fg_color="#191F48")
+selectCustFrame.place(x=5,y=110)
+
 # Chatting Frame
 chatFrame = ctk.CTkFrame(chatpage, width=700,height=665, bg_color="#2E3773", fg_color="#2E3773")
 chatFrame.place(x=550,y=25)
 
-top_frame = ctk.CTkFrame(chatFrame, width=600, height=30, bg_color="#2E3773", fg_color="#2E3773")
+top_frame = ctk.CTkFrame(chatFrame, width=600, height=50, bg_color="#2E3773", fg_color="#2E3773")
 top_frame.place(x=0,y=0)
 
-middle_frame = ctk.CTkFrame(chatFrame, width=610, height=480, bg_color="#0D112B", fg_color="#0D112B")
-middle_frame.place(x=0,y=30)
+middle_frame = ctk.CTkFrame(chatFrame, width=610, height=460, bg_color="#0D112B", fg_color="#0D112B")
+middle_frame.place(x=0,y=50)
 
-bottom_frame = ctk.CTkFrame(chatFrame, width=610, height=70, bg_color="#2E3773", fg_color="#2E3773")
-bottom_frame.place(x=0,y=630)
+bottom_frame = ctk.CTkFrame(chatFrame, width=620, height=60, bg_color="#2E3773", fg_color="#2E3773")
+bottom_frame.place(x=0,y=620)
 
-username_label = ctk.CTkLabel(top_frame, text="Enter username:", font=FONT, bg_color="#2E3773", fg_color="#2E3773", text_color="#FFFFFF")
+username_label = ctk.CTkLabel(top_frame, text=f"Name:", font=FONT, bg_color="#2E3773", fg_color="#2E3773", text_color="#FFFFFF")
 username_label.pack(side="left", padx=10)
 
 username_textbox = tk.Entry(top_frame, font=FONT, bg=MEDIUM_GREY, fg=WHITE, width=46)
@@ -146,16 +188,19 @@ message_textbox = tk.Entry(bottom_frame, font=FONT, bg=MEDIUM_GREY, fg=WHITE, wi
 message_textbox.pack(side="left", padx=10)
 
 message_button = tk.Button(bottom_frame, text="Send", font=BUTTON_FONT, bg=OCEAN_BLUE, fg=WHITE, command=send_message)
+message_button.bind('<Return>',send_message)
 message_button.pack(side="left", padx=10,fill="both")
 
-message_box = scrolledtext.ScrolledText(middle_frame, font=SMALL_FONT, bg=MEDIUM_GREY, fg=WHITE, width=95, height=39)
+message_box = scrolledtext.ScrolledText(middle_frame, font=SMALL_FONT, bg=MEDIUM_GREY, fg=WHITE, width=100, height=39)
 message_box.config(state=tk.DISABLED)
 message_box.pack(side="top",fill="both")
+refresh_chatlist()
 
 def listen_for_messages_from_server(client):
     while 1:
         message = client.recv(2048).decode('utf-8')
         if message != '':
+            global username
             username = message.split("~")[0]
             content = message.split('~')[1]
 

@@ -3,9 +3,17 @@ import customtkinter as ctk
 import pywinstyles
 import sqlite3
 from tkinter import ttk, messagebox, Toplevel
+from pathlib import Path
 from PIL import Image, ImageTk
 from MainCar2U_UserInfo import get_user_info,set_user_info
 from datetime import datetime
+
+
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Review")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
@@ -211,9 +219,14 @@ root = tk.Tk()
 root.title("Your Bookings")
 root.geometry("1280x720")
 
+global userInfo
+#userInfo = get_user_info()
+userInfo = ""
+print(f"Review : {userInfo}")
+
 # Background image
-bg_image_path = r"C:\Users\chewy\OneDrive\Car rental\Your Bookings.png"
-bg_image = Image.open(bg_image_path).resize((1280, 720), Image.LANCZOS)
+bg_image_path = relative_to_assets("Your Bookings.png")
+bg_image = Image.open(bg_image_path).resize((1280, 720), Image.Resampling.LANCZOS)
 root.bg_photo = ImageTk.PhotoImage(bg_image)
 background_label = tk.Label(root, image=root.bg_photo)
 background_label.place(x=0, y=0, relwidth=1, relheight=1)
@@ -236,16 +249,16 @@ tree.place(x=70, y=192, width=700, height=170)
 tree.bind("<ButtonRelease-1>", on_row_selected)
 
 # Load and display default image if no row is selected
-default_image_path = r"C:\Users\chewy\OneDrive\Car rental\review n payment frame.png"
-root.default_image = ImageTk.PhotoImage(Image.open(default_image_path).resize((350, 450), Image.LANCZOS))
+default_image_path = relative_to_assets("review n payment frame.png")
+root.default_image = ImageTk.PhotoImage(Image.open(default_image_path).resize((350, 450), Image.Resampling.LANCZOS))
 default_image_label = tk.Label(root, image=root.default_image, bg="#D9D9D9")
 
 # Place the default image initially
 default_image_label.place(x=818, y=198)
 
 # Star images
-root.black_star_img = ImageTk.PhotoImage(Image.open(r"C:\Users\chewy\OneDrive\Car rental\black star.png").resize((32, 32)))
-root.yellow_star_img = ImageTk.PhotoImage(Image.open(r"C:\Users\chewy\OneDrive\Car rental\yellow star.png").resize((32, 32)))
+root.black_star_img = ImageTk.PhotoImage(Image.open((relative_to_assets("black star.png"))).resize((32, 32)))
+root.yellow_star_img = ImageTk.PhotoImage(Image.open(relative_to_assets("yellow star.png")).resize((32, 32)))
 
 # Star labels
 selected_rating = tk.IntVar()
@@ -264,8 +277,8 @@ upload_button = tk.Button(root, text="UPLOAD", bg="#FF865A", command=upload_revi
 upload_button.place_forget()  # Hide initially
 
 # "To pay" image and "Pay Now" button
-pay_image_path = r"C:\Users\chewy\OneDrive\Car rental\To pay.png"
-root.pay_image = ImageTk.PhotoImage(Image.open(pay_image_path).resize((350, 450), Image.LANCZOS))
+pay_image_path = relative_to_assets("To pay.png")
+root.pay_image = ImageTk.PhotoImage(Image.open(pay_image_path).resize((350, 450), Image.Resampling.LANCZOS))
 pay_image_label = tk.Label(root, image=root.pay_image, bg="#D9D9D9")
 
 pay_button = tk.Button(root, text="PAY NOW", bg="#FF865A", bd=0, font=("Arial", 14, "bold"), width=10, command=lambda: messagebox.showinfo("Payment", "Redirecting to payment..."))

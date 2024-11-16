@@ -181,6 +181,7 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
     bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
     bg_photo = ImageTk.PhotoImage(bg_image)
 
+    """
     pfp_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details\image_1.png"),size=(40,40))
     pfp_label = ctk.CTkButton(detailsFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
                               width=40, height=40, command=lambda:accManage(detailsFrame,login_callback,profile_callback,review_callback))
@@ -189,6 +190,7 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
 
     backBttn = ctk.CTkButton(detailsFrame, text="Back to Selection", command=lambda:open_listing(detailsFrame,list_callback))
     backBttn.place(x=50,y=115)
+    """
 
     # Create a canvas to hold the background image
     canvas = tk.Canvas(detailsFrame, width=bg_image.width, height=bg_image.height)

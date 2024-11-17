@@ -7,8 +7,9 @@ from CustHomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
 from datetime import datetime
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageTk
 from tkinter import Toplevel, messagebox
+from io import BytesIO
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
@@ -46,8 +47,11 @@ def open_aboutUs(current_window, about_callback):
 
 # Function to handle selection button click
 def open_bookDetails(current_window, bookdetails_callback):
-    current_window.destroy()  # Close the signup window
-    bookdetails_callback()
+    if userInfo == "":
+        messagebox.showinfo("Please Log In","Oops! You are required to Log In before you can continue.")
+    else:
+        current_window.destroy()  # Close the signup window
+        bookdetails_callback()
 
 # Function to handle profile button click
 def open_review(current_window, review_callback):
@@ -60,6 +64,14 @@ def Database(): #creating connection to database and creating table
     # Enable access to columns by name
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
+        
+def convert_data(data):
+    global pfp_img
+    img_byte = BytesIO(data)
+    img = Image.open(img_byte)
+    img = img.resize((250,125), Image.Resampling.LANCZOS)
+    pfp_img = ImageTk.PhotoImage(img)
+    return pfp_img
 
 # Hover over Items
 def focus_frame(frame):
@@ -139,9 +151,9 @@ def carlist(bookdetails_callback):
         seaters_car = row[5]
         transmission_car = row[6]
         price_car = row[7]
+        carImage = convert_data(row[8])
 
-        car1_img =  ctk.CTkImage(Image.open(relative_to_assets("image_28.png")),size=(250,125))
-        car1_label = ctk.CTkLabel(item_frame, image=car1_img, bg_color="#FFFFFF", text="")
+        car1_label = ctk.CTkLabel(item_frame, image=carImage, bg_color="#FFFFFF", text="")
         car1_label.place(x=35, y=5)
         pywinstyles.set_opacity(car1_label, color="#FFFFFF")
         

@@ -89,9 +89,9 @@ def accManage(current_window, login_callback):
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile())
             myAcc.place(x=25,y=15)
 
-            history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
+            setting = ctk.CTkButton(master=droptabFrame, text="Setting", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20))
-            history.place(x=25,y=70)
+            setting.place(x=25,y=70)
 
             logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), anchor='center', width=110,
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))

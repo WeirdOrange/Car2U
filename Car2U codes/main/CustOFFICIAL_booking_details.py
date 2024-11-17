@@ -3,12 +3,21 @@ import tkinter as tk
 import customtkinter as ctk
 import smtplib
 import pywinstyles
+from pathlib import Path
 from tkinter import messagebox, Toplevel
 from datetime import datetime
 from PIL import Image, ImageTk
 from MainCar2U_UserInfo import get_user_info,set_user_info
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from io import BytesIO
+
+# Set up the asset path
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
@@ -59,6 +68,13 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
         droptabFrame.destroy()
         pfpState = 1
 
+def convert_data(data):
+    global car_img
+    img_byte = BytesIO(data)
+    img = Image.open(img_byte)
+    img = img.resize((240,240), Image.Resampling.LANCZOS)
+    car_img = ImageTk.PhotoImage(img)
+    return car_img
 
 # Function to connect and fetch data from the database
 def fetch_car_and_agency_data():
@@ -176,25 +192,14 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
     detailsFrame.resizable(False, False)
 
     # Load the background image
-    bg_image_path = r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details\Booking Details.png"
+    bg_image_path = relative_to_assets("Booking Details.png")
     bg_image = Image.open(bg_image_path)
     bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
     bg_photo = ImageTk.PhotoImage(bg_image)
 
-    """
-    pfp_img = ctk.CTkImage(Image.open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details\image_1.png"),size=(40,40))
-    pfp_label = ctk.CTkButton(detailsFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(detailsFrame,login_callback,profile_callback,review_callback))
-    pfp_label.place(x=1203, y=5)
-    pywinstyles.set_opacity(pfp_label,color="#F47749")
-
-    backBttn = ctk.CTkButton(detailsFrame, text="Back to Selection", command=lambda:open_listing(detailsFrame,list_callback))
-    backBttn.place(x=50,y=115)
-    """
-
     # Create a canvas to hold the background image
     canvas = tk.Canvas(detailsFrame, width=bg_image.width, height=bg_image.height)
-    canvas.pack(fill="both", expand=True)
+    canvas.place(x=0,y=0)
     canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
 
@@ -253,9 +258,7 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
     # Load and display carImage
     car_image_path = car_data[10]  # Assuming carImage is stored as a file path
     try:
-        car_img = Image.open(car_image_path)
-        car_img = car_img.resize((360, 230))  # Resize as necessary
-        car_photo = ImageTk.PhotoImage(car_img)
+        car_photo = convert_data(car_image_path)
         canvas.create_image(110, 180, image=car_photo, anchor="nw")  # Adjust position as needed
         detailsFrame.car_photo = car_photo  # Prevent garbage collection
     except Exception as e:
@@ -337,14 +340,19 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
                     text=f"MYR {total_amount:.2f}", 
                     font=("Arial", 23, "bold"), fill="black", anchor="e")
 
-    """
-        button is not showing because ur using canvas and pack, canvas filled the entire detailsFrame. so if you want request booking button to show on top,
-        put it in another frame maybe.
-    """
     # Create the "Make Payment" button and place it on the canvas
     request_booking_button = tk.Button(detailsFrame, text="REQUEST BOOKING", font=("Arial", 19, "bold"), bd=0, width=17, bg="#FF865A", fg="black", 
                                        command=lambda:request_booking(review_callback))
     request_booking_button.place(x=513, y=645)
+
+    pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(40,40))
+    pfp_label = ctk.CTkButton(detailsFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
+                              width=40, height=40, command=lambda:accManage(detailsFrame,login_callback,profile_callback,review_callback))
+    pfp_label.place(x=1203, y=5)
+    pywinstyles.set_opacity(pfp_label,color="#F47749")
+
+    backBttn = ctk.CTkButton(detailsFrame, text="Back to Selection", command=lambda:open_listing(detailsFrame,list_callback))
+    backBttn.place(x=50,y=115)
 
 
 def send_booking_email(booking_id):

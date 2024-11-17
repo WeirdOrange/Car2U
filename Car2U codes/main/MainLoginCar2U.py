@@ -147,14 +147,14 @@ def forgorPssw(loginFrame,returnLogin):
 
                         if result is None:
                             Database()
-                            cursor.execute("UPDATE RentalAgency SET agenyPassword = ?", (str(newpassw),))
+                            cursor.execute("UPDATE RentalAgency SET agenyPassword = ? WHERE email = ?", (str(newpassw),str(askEmail)))
                             conn.commit()
 
                             messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
                             open_return(loginFrame, returnLogin)
                         else:
                             Database()
-                            cursor.execute("UPDATE UserDetails SET password = ?", (str(newpassw),))
+                            cursor.execute("UPDATE UserDetails SET password = ? WHERE agencyEmail = ?", (str(newpassw),str(askEmail)))
                             conn.commit()
 
                             messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")

@@ -1,3 +1,24 @@
+import sqlite3
+import hashlib
+
+def Database(): #creating connection to database and creating table
+    global conn, cursor
+    conn = sqlite3.connect("car2u.db")
+    cursor = conn.cursor()
+
+password = ["adriana12345","faiz12345","pravin12345","ivan","soong","ivan"]
+
+Database()
+for i,row in enumerate(password):
+    passwords = hashlib.sha256(str(row).encode()).hexdigest()
+    i+=1
+    if i >3:
+        i+=3
+    print("userID: ",i,"password: ",row)
+    cursor.execute("""UPDATE UserDetails SET password = ? WHERE userID = ?""",(passwords,i))
+    conn.commit()
+
+"""
 import tkinter
 import customtkinter
 
@@ -21,7 +42,6 @@ plt.title('Matplotlib Pie Chart with Exploded Slice - how2matplotlib.com')
 plt.axis('equal')
 plt.show()
 
-"""
 root = customtkinter.CTk()
 root.geometry("1280x720")
 root.title("Embedding in Tk")

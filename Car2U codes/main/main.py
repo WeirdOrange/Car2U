@@ -11,7 +11,7 @@ import CustOFFICIAL_payment_page
 import CustOFFICIAL_review_page
 
 import AdminHomeCar2U
-import AdminOFFICIAL_upload_car
+import AdminOfficialUploadCar2U
 import AdminBookingCar2U
 import AdminProfileCar2U
 
@@ -47,10 +47,10 @@ def open_bookDetails():
     CustOFFICIAL_booking_details.bookingdetails(open_login,open_listing,open_profile,open_review)
 
 def open_payment():
-    CustOFFICIAL_payment_page.paymentgui(open_login,open_profile,open_review)
+    CustOFFICIAL_payment_page.paymentGUI(open_login,open_home,open_listing,open_aboutUs,open_profile,open_review)
 
 def open_review():
-    CustOFFICIAL_review_page.reviewgui(open_login,open_home,open_listing,open_profile,open_aboutUs,open_payment)
+    CustOFFICIAL_review_page.reviewGUI(open_login,open_home,open_listing,open_profile,open_aboutUs,open_payment)
 
 
 # Admin Callbacks
@@ -58,7 +58,7 @@ def open_admin_home():
     AdminHomeCar2U.adminHome(open_login,open_car_details,open_admin_Booking,open_admin_Profile)
 
 def open_car_details():
-    AdminOFFICIAL_upload_car.carDetails(open_login,open_admin_home,open_admin_Booking,open_admin_Profile)
+    AdminOfficialUploadCar2U.uploadGUI(open_login,open_admin_home,open_admin_Booking,open_admin_Profile)
 
 def open_admin_Booking():
     AdminBookingCar2U.carBooking(open_login,open_admin_home,open_car_details,open_admin_Profile)

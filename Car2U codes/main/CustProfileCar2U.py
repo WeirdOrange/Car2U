@@ -9,6 +9,12 @@ from pathlib import Path
 from PIL import Image, ImageTk
 from io import BytesIO
 
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Profile")
+
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
+
 # Function to handle login button click
 def open_login(current_window, login_callback):
     current_window.destroy()  # Close the signup window
@@ -39,12 +45,6 @@ def open_aboutUs(current_window, about_callback):
 def open_review(current_window, review_callback):
     current_window.destroy()  # Close the signup window
     review_callback()
-
-OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Profile")
-
-def relative_to_assets(path: str) -> Path:
-    return ASSETS_PATH / Path(path)
 
 def Database(): #creating connection to database and creating table
     global conn, cursor
@@ -267,9 +267,8 @@ def convertToBinaryData():
         except Exception as e:
             messagebox.showerror("Error", f"Failed to upload image: {e}")
             
-
 def convert_data(data):
-    global pfp_image
+    global pfp_img
     img_byte = BytesIO(data)
     img = Image.open(img_byte)
     img = img.resize((240,240), Image.Resampling.LANCZOS)

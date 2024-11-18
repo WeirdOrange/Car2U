@@ -85,6 +85,8 @@ def emailNotif(email_receiver,subject,body):
 def forgorPssw(loginFrame,returnLogin):
     global otp
     name = ""
+    for x in range(5):
+        otp = otp + str(random.choice(string.ascii_letters))
     # Validate email    
     while True:
         askEmail = easygui.enterbox("Enter Email: ","Finding Email...")
@@ -110,8 +112,12 @@ def forgorPssw(loginFrame,returnLogin):
                     pass
             for row in result:
                 name = row[0]
+                print(name)
 
             else:
+                for row in result:
+                    name = row[0]
+                    print(name)
                 # Sending OTP to user
                 subject = 'Forgot Password Request'
                 body = f"""Hey, {name}\nWe heard that you lost your Car2U password. If this was not you, please ignore this email.
@@ -122,7 +128,7 @@ def forgorPssw(loginFrame,returnLogin):
                 
                 if userotp == otp: # If OTP is enter correctly
 
-                    msg = "Enter your new password"
+                    msg = "Enter your new password (A minimum of 8 letters are required)"
                     title = "Changing password..."
                     fieldNames = ["New Password","Confirm New Password"]
 
@@ -130,7 +136,10 @@ def forgorPssw(loginFrame,returnLogin):
                         passw = easygui.multenterbox(msg, title, fieldNames)   
                         if not passw:
                             break
-                        if passw[0].strip() == "" or passw[0] != passw[1]:
+                        if len(str(passw[0])) < 8:
+                            easygui.msgbox("Passwords are required to have at least 8 letters. Please try again.")
+
+                        elif passw[0].strip() == "" or passw[0] != passw[1]:
                             easygui.msgbox("Passwords do not match or are empty. Please try again.")
                         else:
                             break
@@ -141,25 +150,45 @@ def forgorPssw(loginFrame,returnLogin):
                         newpassw = hashlib.sha256(str(passw[0]).encode()).hexdigest()
                         
                         Database()
-                        cursor.execute("SELECT name FROM UserDetails WHERE `email` = ?",(str(askEmail),))
+                        cursor.execute("SELECT name FROM UserDetails WHERE email = ?",(str(askEmail),))
                         result = cursor.fetchall()
                         conn.close()
 
                         if result is None:
-                            Database()
-                            cursor.execute("UPDATE RentalAgency SET agenyPassword = ? WHERE email = ?", (str(newpassw),str(askEmail)))
-                            conn.commit()
+                            try:
+                                Database()
+                                cursor.execute("UPDATE RentalAgency SET agenyPassword = ? WHERE agencyEmail = ?", (str(newpassw),str(askEmail)))
+                                conn.commit()
+                                print("Admin Change done:", passw)
 
-                            messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
-                            open_return(loginFrame, returnLogin)
+                                messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
+                                open_return(loginFrame, returnLogin)
+                                return False
+                            
+                            except sqlite3.Error as e:
+                                messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+                                continue
+                            finally:
+                                conn.close()
+                                return False
                         else:
-                            Database()
-                            cursor.execute("UPDATE UserDetails SET password = ? WHERE agencyEmail = ?", (str(newpassw),str(askEmail)))
-                            conn.commit()
+                            for row in result:
+                                print(row)
+                            try:
+                                Database()
+                                cursor.execute("UPDATE UserDetails SET password = ? WHERE email = ?", (str(newpassw),str(askEmail)))
+                                conn.commit()
+                                print("User Change done:", passw)
 
-                            messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
-                            open_return(loginFrame, returnLogin)
-                        break
+                                messagebox.showinfo("Password Change Successful", "You have changed your password, you can log into Car2U once more!")
+                                open_return(loginFrame, returnLogin)
+                                return False
+                            except sqlite3.Error as e:
+                                messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+                                continue
+                            finally:
+                                conn.close()
+                                return False
 
                 elif userotp is None:  # If the user clicks "Cancel" (user_input will be None)
                     # Display the buttonbox with options
@@ -207,9 +236,6 @@ def logingui(signup_callback,home_callback,adminHome_callback,returnLogin):
     # For forgot password verification
     global otp
     otp = ""
-    for x in range(5):
-        otp = otp + str(random.choice(string.ascii_letters))
-    print(otp)
 
     # Background image
     bg_image = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1073,720))

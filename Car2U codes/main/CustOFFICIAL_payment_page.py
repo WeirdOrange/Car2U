@@ -7,7 +7,7 @@ import smtplib
 from tkinter import messagebox, Toplevel, filedialog
 from pathlib import Path
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,get_BookingInfo
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -36,8 +36,9 @@ def open_listing(current_window, list_callback):
     list_callback()
 
 # Function to handle profile button click
-def open_profile():
-    messagebox.showinfo("Oops.","You are on the profile page")
+def open_profile(current_window, profile_callback):
+    current_window.destroy()  # Close the signup window
+    profile_callback()
 
 # Function to handle about us button click
 def open_aboutUs(current_window, about_callback):
@@ -70,7 +71,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
 
         logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-        logout.place(x=30,y=184)
+        logout.place(x=30,y=195)
         pfpState = 0
     else:
         droptabFrame.destroy()
@@ -80,6 +81,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
 # Function to fetch booking, user, and car details using userID and carID
 def fetch_booking_user_car_details(booking_id):
     conn = sqlite3.connect('CAR2U.db')
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     # Query to join BookingDetails, UserDetails, and CarDetails based on bookingID
@@ -137,7 +139,7 @@ def fetch_booking_and_price():
         INNER JOIN BookingDetails ON CarDetails.carID = BookingDetails.carID
         WHERE BookingDetails.bookingID = ?
         LIMIT 1
-    ''', (1,))  # Assuming booking ID is 1
+    ''', (booking_id,))  
 
     # Fetch result as a tuple (price, numberOfDays)
     data = cursor.fetchone()
@@ -155,7 +157,7 @@ def update_user_details(name, email, contactNo):
         UPDATE UserDetails
         SET name = ?, email = ?, contactNo = ?
         WHERE userID = ?
-    ''', (name, email, contactNo, 1))  # Replace '1' with dynamic userID as needed
+    ''', (name, email, contactNo, userInfo))
 
     conn.commit()
     conn.close()
@@ -242,7 +244,7 @@ def send_confirmation_email(user_email, booking_details):
 def confirm_payment():
     # Get updated details from entry fields
     updated_name = entry_name.get()
-    updated_email = entry_email.get()
+    updated_email = entry_email.cget()
     updated_contactNo = entry_contactNo.get()
 
     # Update user details in the database
@@ -344,143 +346,148 @@ def card_action():
 # Function to highlight the selected button by changing the image and resetting others
 def highlight_selected(selected_button, clicked_image):
     # Reset the images for all buttons to default
-    tng.config(image=tng_photo)
-    bank.config(image=bank_photo)
-    card.config(image=paypal_photo)
+    tng.configure(image=tng_photo)
+    bank.configure(image=bank_photo)
+    card.configure(image=paypal_photo)
 
     # Change the selected button to the "clicked" version of the image
-    selected_button.config(image=clicked_image)
-    
-def paymentGUI(login_callback,home_callback,listing_callback,aboutUs_callback,profile_callback,review_callback):
-    # Initialize main Tkinter window
-    paymentFrame = Toplevel()
+    selected_button.configure(image=clicked_image)
+
+def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback, profile_callback, review_callback):
+    # Initialize main CustomTkinter window
+    paymentFrame = ctk.CTkToplevel()
     paymentFrame.title("Payment Page")
     paymentFrame.geometry("1280x720")
+    
+    # Fetch details with a specific bookingID
+    global booking_id, userInfo
+    booking_id = get_BookingInfo()
+    print(booking_id)
+    userInfo = get_user_info()
 
-    # Load the background image
-    bg_image_path = relative_to_assets("Payment Page official.png")
-    bg_image = Image.open(bg_image_path)
-    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
-    bg_photo = ImageTk.PhotoImage(bg_image)
+    # Load and set the background image
+    bg_photo = ctk.CTkImage(Image.open(relative_to_assets("Payment Page official.png")), size=(1280, 720))
+    bg_label = ctk.CTkLabel(paymentFrame, width=1280, height=720, text="", image=bg_photo)
+    bg_label.place(x=0, y=0)
 
-    # Create a canvas to hold the background image
-    canvas = tk.Canvas(paymentFrame, width=bg_image.width, height=bg_image.height)
-    canvas.pack(fill="both", expand=True)
-    canvas.create_image(0, 0, image=bg_photo, anchor="nw")
-
-    # Navigation Bar within the canvas frame
-    header = ctk.CTkFrame(canvas, width=1280, height=60, fg_color="#FFFFFF")
-    header.pack(fill="x")  # Expands the width of the header across the frame
+    # Navigation Bar
+    header = ctk.CTkFrame(paymentFrame, width=1280, height=60, fg_color="#FFFFFF")
+    header.place(x=0, y=0)
 
     navbg_img = ctk.CTkImage(Image.open(relative_to_assets("nav.png")), size=(1280, 60))
-    navbg_label = ctk.CTkLabel(header, image=navbg_img, text="", width=1280, height=60)
+    navbg_label = ctk.CTkLabel(header, image=navbg_img, text="")
     navbg_label.place(x=0, y=0)
 
-    # Relocating buttons within the canvas frame
-    home_button = ctk.CTkButton(master=header, text="Home", width=120, fg_color=("#F95C41", "#FA5740"), bg_color="#FA5740",
-                                text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),
-                                command=lambda: print("Home clicked"))
+    # Navigation buttons
+    home_button = ctk.CTkButton(
+        header, text="Home", width=120, bg_color="#FA5740", fg_color="#FA5740", text_color="#000000", 
+        font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(paymentFrame, home_callback))
     home_button.place(x=627, y=14)
-    pywinstyles.set_opacity(home_button, color="#FA5740")
+    pywinstyles.set_opacity(home_button,color="#F47749")
 
-    selections_button = ctk.CTkButton(master=header, text="Selections", width=120, fg_color=("#FA5740", "#FB543F"), bg_color="#FB543F",
-                                        text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),
-                                        command=lambda: print("Selections clicked"))
+    selections_button = ctk.CTkButton(
+        header, text="Selections", width=120, bg_color="#FB543F", fg_color="#FB543F", text_color="#000000",
+        font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_listing(paymentFrame, listing_callback)
+    )
     selections_button.place(x=763, y=14)
-    pywinstyles.set_opacity(selections_button, color="#FB543F")
+    pywinstyles.set_opacity(selections_button,color="#F47749")
 
-    contact_us_button = ctk.CTkButton(master=header, text="Contact Us", width=120, fg_color=("#FB543F", "#FC503E"), bg_color="#FC503E",
-                                        text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),
-                                        command=lambda: print("Contact Us clicked"))
+    contact_us_button = ctk.CTkButton(
+        header, text="Contact Us", width=120, bg_color="#FC503E", fg_color="#FC503E", text_color="#000000",
+        font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Contact Us clicked")
+    )
     contact_us_button.place(x=910, y=14)
-    pywinstyles.set_opacity(contact_us_button, color="#FC503E")
+    pywinstyles.set_opacity(contact_us_button,color="#F47749")
 
-    about_us_button = ctk.CTkButton(master=header, text="About Us", width=120, fg_color=("#FC503E", "#FC4D3D"), bg_color="#FC4D3D",
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20),
-                                    command=lambda: print("About Us clicked"))
+    about_us_button = ctk.CTkButton(
+        header, text="About Us", width=120, bg_color="#FC4D3D", fg_color="#FC4D3D", text_color="#000000",
+        font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_aboutUs(paymentFrame, aboutUs_callback))
     about_us_button.place(x=1055, y=14)
-    pywinstyles.set_opacity(about_us_button, color="#FC4D3D")
+    pywinstyles.set_opacity(about_us_button,color="#F47749")
 
+    # Logo
     logo_img = ctk.CTkImage(Image.open(relative_to_assets("logo.png")), size=(75, 40))
-    logo_label = ctk.CTkLabel(header, image=logo_img, text="", bg_color="#F47749", width=95, height=50)
+    logo_label = ctk.CTkLabel(header, image=logo_img, text="", bg_color="#F47749", fg_color="#F47749", width=95, height=50)
     logo_label.place(x=5, y=5)
-    pywinstyles.set_opacity(logo_label, color="#F47749")
+    pywinstyles.set_opacity(logo_label,color="#F47749")
 
-    global pfpState
-    pfpState = 1
+    # Profile Picture Button
     pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_6.png")), size=(40, 40))
-    pfp_label = ctk.CTkButton(header, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                                width=40, height=40, command=lambda: accManage(paymentFrame, login_callback,profile_callback,review_callback))
-    pfp_label.place(x=1180, y=5)
-    pywinstyles.set_opacity(pfp_label, color="#F47749")
+    pfp_button = ctk.CTkButton(header, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749", width=40, height=40,
+                                command=lambda: accManage(paymentFrame, login_callback, profile_callback, review_callback))
+    pfp_button.place(x=1180, y=5)
+    pywinstyles.set_opacity(pfp_button,color="#F47749")
 
-    # Back to Review
-    backBttn = ctk.CTkButton(canvas, text="< Payment", bg_color="#D4D6D4", fg_color="#D4D6D4", text_color="#000000", width=200, height=40, 
-                            font=("Tw Cen MT Condensed Extra Bold", 30), command=lambda: open_review(paymentFrame,review_callback))
-    canvas.create_window(130, 150, window=backBttn, width=200, height=40)
-
-    # Fetch details with a specific bookingID
-    global booking_id
-    booking_id = 1  # Replace with the actual bookingID or fetch dynamically as needed
+    # Back to Review button
+    back_button = ctk.CTkButton(
+        paymentFrame, text="< Payment", fg_color="#D4D6D4", bg_color="#D4D6D4", text_color="#000000", 
+        width=200, height=40, font=("Tw Cen MT Condensed Extra Bold", 34), 
+        command=lambda: open_review(paymentFrame, review_callback)
+    )
+    back_button.place(x=20, y=125)
+    pywinstyles.set_opacity(back_button,color="#D4D6D4")
+    
     details = fetch_booking_user_car_details(booking_id)
 
     # Fetch car price and number of days from the database
-    global booking_and_price_data
+    global booking_and_price_data,car_price,number_of_days
     booking_and_price_data = fetch_booking_and_price()
 
+    # Display total amount
     if booking_and_price_data:
-        # Use column index to access price and numberOfDays
-        global car_price, number_of_days
-        car_price = booking_and_price_data[0]  # First column: price
-        number_of_days = booking_and_price_data[1]  # Second column: numberOfDays
-        
-        # Calculate the total amount
-        global total_amount
+        car_price, number_of_days = booking_and_price_data
         total_amount = car_price * number_of_days
 
-    # Define positions for both small and large totalAmount displays
-    total_amount_position_small = (715, 512)  # Position for smaller text
-    total_amount_position_large = (715, 580)  # Position for larger, bold text
+        carPrice = ctk.CTkLabel(paymentFrame,text=f"MYR {car_price}", font=("Tw Cen MT", 14), text_color="black", width=90, height=20, anchor="e", 
+                                   bg_color="#FFFFFF",fg_color="#FFFFFF")
+        carPrice.place(x=627,y=434)
+        pywinstyles.set_opacity(carPrice,color="#FFFFFF")
 
-    # Display totalAmount in small font
-    canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
-                    text=f"MYR {total_amount:.2f}", 
-                    font=("Arial", 10), fill="black", anchor="e")
+        numDays = ctk.CTkLabel(paymentFrame, text=f"{number_of_days} days", font=("Tw Cen MT", 14), text_color="black", width=90, height=20, anchor="e", 
+                                   bg_color="#FFFFFF",fg_color="#FFFFFF")
+        numDays.place(x=627,y=469)
+        pywinstyles.set_opacity(numDays,color="#FFFFFF")
 
-    # Display totalAmount in larger bold font
-    canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
-                    text=f"MYR {total_amount:.2f}", 
-                    font=("Arial", 23, "bold"), fill="black", anchor="e")
+        # Small and bold font totals
+        total_label_small = ctk.CTkLabel(
+            paymentFrame, text=f"MYR {total_amount:.2f}", font=("Tw Cen MT", 14), text_color="black", width=90, height=20, anchor="e", 
+                                   bg_color="#FFFFFF",fg_color="#FFFFFF"
+        )
+        total_label_small.place(x=627, y=503)
+        pywinstyles.set_opacity(total_label_small,color="#FFFFFF")
 
-    # Display user and booking details in the UI
-    global entry_name
-    entry_name = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_name.insert(0, details[0])  # UserDetails.name
-    canvas.create_window(250, 369, window=entry_name, width=200, height=25)
+        total_label_large = ctk.CTkLabel(
+            paymentFrame, text=f"MYR {total_amount:.2f}", font=("Tw Cen MT Bold", 23), text_color="black", 
+                                   bg_color="#FFFFFF",fg_color="#FFFFFF"
+        )
+        total_label_large.place(x=560, y=540)
+        pywinstyles.set_opacity(total_label_large,color="#FFFFFF")
 
-    global entry_email
-    entry_email = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_email.insert(0, details[1])  # UserDetails.email
-    canvas.create_window(250, 456, window=entry_email, width=200, height=25)
+    # User and Booking Details
+    global entry_name,entry_email,entry_contactNo
+    if details:
+        entry_name = ctk.CTkEntry(paymentFrame, font=("Sono", 14), text_color="black", placeholder_text="Name", width=266, height=40)
+        entry_name.insert(0, details[0])
+        entry_name.place(x=130, y=348)
 
-    global entry_contactNo
-    entry_contactNo = tk.Entry(paymentFrame, font=("Arial", 14), bd=0)
-    entry_contactNo.insert(0, details[2])  # UserDetails.contactNo
-    canvas.create_window(250, 543, window=entry_contactNo, width=200, height=25)
+        entry_email = ctk.CTkLabel(paymentFrame, font=("Sono", 14), text_color="black", text=details[1], width=266, height=40)
+        entry_email.place(x=130, y=435)
 
-    # Display car details and booking days
-    label_model = tk.Label(paymentFrame, text=f"{details[3]}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.model
-    canvas.create_window(679, 422, window=label_model)
+        entry_contactNo = ctk.CTkEntry(paymentFrame, font=("Sono", 14), text_color="black", placeholder_text="Contact", width=266, height=40)
+        entry_contactNo.insert(0, details[2])
+        entry_contactNo.place(x=130, y=522)
+        
+        label_model = ctk.CTkLabel(paymentFrame, text=f"{details[3]}", font=("Tw Cen MT", 14), text_color="black", width=90, height=20, anchor="e", 
+                                   bg_color="#FFFFFF",fg_color="#FFFFFF")
+        label_model.place(x=627, y=399)
+        pywinstyles.set_opacity(label_model,color="#FFFFFF")
 
-    label_price = tk.Label(paymentFrame, text=f"MYR {float(details[4]):.2f}", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # CarDetails.price
-    canvas.create_window(681, 452, window=label_price)
-
-    label_days = tk.Label(paymentFrame, text=f"{details[5]} days", font=("Arial", 10), anchor="e", bg="#DEF3FF")  # BookingDetails.numberOfDays
-    canvas.create_window(696, 482, window=label_days)
-
-    # Create a "Confirm Payment" button
-    confirm_button = tk.Button(paymentFrame, text="CONFIRM PAYMENT", font=("Arial", 23, "bold"), bd=0, bg="white", command=confirm_payment)
-    canvas.create_window(1005, 630, window=confirm_button, width=310, height=50)
+    # Confirm Payment Button
+    confirm_button = ctk.CTkButton(
+        paymentFrame, text="CONFIRM PAYMENT", font=("Arial Bold", 23), fg_color="white", text_color="black", width=360, height=50, 
+        command= lambda: confirm_payment()
+    )
+    confirm_button.place(x=825, y=604)
 
     # Track the currently selected payment method
     selected_payment = None
@@ -488,38 +495,41 @@ def paymentGUI(login_callback,home_callback,listing_callback,aboutUs_callback,pr
     # Load default and clicked versions of TNG image
     global tng_photo,bank_photo,paypal_photo,tng_clicked_photo,bank_clicked_photo,paypal_clicked_photo
     tng_image = Image.open(relative_to_assets("tng button.png"))
-    tng_image = tng_image.resize((290, 52), Image.Resampling.LANCZOS)
+    tng_image = tng_image.resize((360, 65), Image.Resampling.LANCZOS)
     tng_photo = ImageTk.PhotoImage(tng_image)
 
     tng_clicked_image = Image.open(relative_to_assets("tng click.png"))
-    tng_clicked_image = tng_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
+    tng_clicked_image = tng_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
     tng_clicked_photo = ImageTk.PhotoImage(tng_clicked_image)
 
     # Load default and clicked versions of bank image
     bank_image = Image.open(relative_to_assets("online banking button.png"))
-    bank_image = bank_image.resize((290, 52), Image.Resampling.LANCZOS)
+    bank_image = bank_image.resize((360, 65), Image.Resampling.LANCZOS)
     bank_photo = ImageTk.PhotoImage(bank_image)
 
     bank_clicked_image = Image.open(relative_to_assets("bank click.png"))
-    bank_clicked_image = bank_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
+    bank_clicked_image = bank_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
     bank_clicked_photo = ImageTk.PhotoImage(bank_clicked_image)
 
     # Load default and clicked versions of card image
     paypal_image = Image.open(relative_to_assets("paypal button.png"))
-    paypal_image = paypal_image.resize((290, 52), Image.Resampling.LANCZOS)
+    paypal_image = paypal_image.resize((360, 65), Image.Resampling.LANCZOS)
     paypal_photo = ImageTk.PhotoImage(paypal_image)
 
     paypal_clicked_image = Image.open(relative_to_assets("paypal clicked.png"))
-    paypal_clicked_image = paypal_clicked_image.resize((290, 52), Image.Resampling.LANCZOS)
+    paypal_clicked_image = paypal_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
     paypal_clicked_photo = ImageTk.PhotoImage(paypal_clicked_image)
 
-    # Create buttons using the default images
-    global tng, bank, card
-    tng = tk.Button(paymentFrame, image=tng_photo, command=tng_action, borderwidth=0, bg="white", fg="white")
-    bank = tk.Button(paymentFrame, image=bank_photo, command=bank_action, borderwidth=0, bg="white", fg="white")
-    card = tk.Button(paymentFrame, image=paypal_photo, command=card_action, borderwidth=0, bg="white", fg="white")
+    # Payment Method Buttons
+    global tng,bank,card
+    tng = ctk.CTkButton(paymentFrame, image=tng_photo, text="", command=tng_action, bg_color="#FFFFFF")
+    tng.place(x=854, y=312)
+    pywinstyles.set_opacity(tng,color="#FFFFFF")
 
-    # Add buttons to the canvas
-    canvas.create_window(1005, 342, window=tng)
-    canvas.create_window(1005, 410, window=bank)
-    canvas.create_window(1005, 482, window=card)
+    bank = ctk.CTkButton(paymentFrame, image=bank_photo, text="", command=bank_action, bg_color="#FFFFFF")
+    bank.place(x=854, y=382)
+    pywinstyles.set_opacity(bank,color="#FFFFFF")
+
+    card = ctk.CTkButton(paymentFrame, image=paypal_photo, text="", command=card_action, bg_color="#FFFFFF")
+    card.place(x=854, y=452)
+    pywinstyles.set_opacity(card,color="#FFFFFF")

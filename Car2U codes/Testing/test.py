@@ -1,3 +1,7 @@
+
+word = "safv124@(*)"
+print(len(word))
+"""
 import sqlite3
 import hashlib
 
@@ -15,9 +19,9 @@ for i,row in enumerate(password):
     if i >3:
         i+=3
     print("userID: ",i,"password: ",row)
-    cursor.execute("""UPDATE UserDetails SET password = ? WHERE userID = ?""",(passwords,i))
+    cursor.execute("UPDATE UserDetails SET password = ? WHERE userID = ?",(passwords,i))
     conn.commit()
-
+"""
 """
 import tkinter
 import customtkinter

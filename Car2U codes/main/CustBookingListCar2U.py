@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info, set_CarID
 from CustHomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
 from datetime import datetime
@@ -46,10 +46,12 @@ def open_aboutUs(current_window, about_callback):
     about_callback()
 
 # Function to handle selection button click
-def open_bookDetails(current_window, bookdetails_callback):
+def open_bookDetails(current_window, bookdetails_callback, carid):
     if userInfo == "":
         messagebox.showinfo("Please Log In","Oops! You are required to Log In before you can continue.")
     else:
+        set_CarID(carid)
+        
         current_window.destroy()  # Close the signup window
         bookdetails_callback()
 
@@ -69,8 +71,7 @@ def convert_data(data):
     global pfp_img
     img_byte = BytesIO(data)
     img = Image.open(img_byte)
-    img = img.resize((250,125), Image.Resampling.LANCZOS)
-    pfp_img = ImageTk.PhotoImage(img)
+    pfp_img = ctk.CTkImage(img,size=(250,125))
     return pfp_img
 
 # Hover over Items
@@ -123,9 +124,17 @@ def carlist(bookdetails_callback):
         else:
             pass
 
+        #Fetching data from database
+        carid = row[0]
+        name_car = row[2]
+        seaters_car = row[5]
+        transmission_car = row[6]
+        price_car = row[7]
+        carImage = convert_data(row[8])
+
         item_frame = ctk.CTkFrame(selection_frame,width=320, height=225, corner_radius=30, fg_color="#FFFFFF",bg_color="#FEFEFE")
         item_frame.bind("<Enter>", lambda event, f=item_frame: focus_frame(f))  # Hovering on frame
-        item_frame.bind("<Button-1>", lambda event: open_bookDetails(bookingFrame, bookdetails_callback))
+        item_frame.bind("<Button-1>", lambda event: open_bookDetails(bookingFrame, bookdetails_callback, carid))
         item_frame.bind("<Leave>", lambda event, f=item_frame: unfocus_frame(f))
         pywinstyles.set_opacity(item_frame, color="#FEFEFE")
 
@@ -146,13 +155,6 @@ def carlist(bookdetails_callback):
         else:
             print("No more data")
             
-        #Fetching data from database
-        name_car = row[2]
-        seaters_car = row[5]
-        transmission_car = row[6]
-        price_car = row[7]
-        carImage = convert_data(row[8])
-
         car1_label = ctk.CTkLabel(item_frame, image=carImage, bg_color="#FFFFFF", text="")
         car1_label.place(x=35, y=5)
         pywinstyles.set_opacity(car1_label, color="#FFFFFF")
@@ -302,7 +304,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
 
             logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-            logout.place(x=30,y=184)
+            logout.place(x=30,y=195)
         pfpState = 0
     else:
         droptabFrame.destroy()

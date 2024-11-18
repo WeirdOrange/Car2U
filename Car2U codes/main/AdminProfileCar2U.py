@@ -203,12 +203,12 @@ def save_selected_as_pdf(title,rating,bookings,total):
     c.line(40, y_position, width-40, y_position) 
 
     y_position = y_position - 50
-    c.drawString(40, y_position, "Rental Earnings")
+    c.drawString(40, y_position, "Rental Revenues")
 
     y_position = y_position - 10
     c.line(40, y_position, width-40, y_position) 
     
-    bookingsfield = ["Car No.","Numbers of days booked","Earnings"]
+    bookingsfield = ["Car No.","Numbers of days booked","Revenues"]
 
     x_position = 60
     y_position = y_position-20
@@ -532,7 +532,7 @@ def adminProfile(login_callback,home_callback,detail_callback,booking_callback):
     pywinstyles.set_opacity(statsTitle,color="#F7F7F7")
     monthlyLabel = ctk.CTkLabel(monthlyFrame, text="Monthly Report", width=430, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 20))
     monthlyLabel.place(x=5, y=10)
-    monthlyEarns = ctk.CTkLabel(monthlyFrame, text="Earnings: ", width=100, anchor="e", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
+    monthlyEarns = ctk.CTkLabel(monthlyFrame, text="Revenue: ", width=100, anchor="e", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
     monthlyEarns.place(x=50,y=300)
     mPrintBttn = ctk.CTkButton(monthlyFrame, text="Print", width=75, height=30, corner_radius=20, fg_color="#F95F43", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#FFFFFF",
                                command=lambda: save_and_print_selected_booking(saveMonth,mthRating,mthRenting,mthprofits))
@@ -549,7 +549,7 @@ def adminProfile(login_callback,home_callback,detail_callback,booking_callback):
     pywinstyles.set_opacity(statsTitle,color="#F7F7F7")
     yearlyLabel = ctk.CTkLabel(yearlyFrame, text="Yearly Report", width=115, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 20))
     yearlyLabel.place(x=315, y=40)
-    yearlyEarns = ctk.CTkLabel(yearlyFrame, text="Total Earnings: ", width=100, anchor="e", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
+    yearlyEarns = ctk.CTkLabel(yearlyFrame, text="Total Revenue: ", width=100, anchor="e", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
     yearlyEarns.place(x=322,y=80)
     yPrintBttn = ctk.CTkButton(yearlyFrame, text="Print", width=75, height=30, corner_radius=20, fg_color="#F95F43", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#FFFFFF",
                                command=lambda: save_and_print_selected_booking(yrTitle,yrRating,yrRenting,yrProfit))

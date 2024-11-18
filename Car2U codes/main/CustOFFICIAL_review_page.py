@@ -2,10 +2,11 @@ import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
+import easygui
 from tkinter import ttk, messagebox, Toplevel
 from pathlib import Path
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,set_BookingID
 from datetime import datetime
 
 
@@ -43,8 +44,9 @@ def open_aboutUs(current_window, about_callback):
     about_callback()
 
 # Function to handle about us button click
-def open_payment(current_window, payment_callback):
+def open_payment(current_window, payment_callback,bookingID):
     messagebox.showinfo("Payment", "Redirecting to payment...")
+    set_BookingID(bookingID)
     current_window.destroy()  # Close the signup window
     payment_callback()
 
@@ -73,7 +75,7 @@ def accManage(current_window, login_callback,profile_callback):
 
         logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-        logout.place(x=30,y=184)
+        logout.place(x=30,y=195)
         pfpState = 0
     else:
         droptabFrame.destroy()
@@ -90,31 +92,33 @@ def Database():
 #tables = cursor.fetchall()
 #print("Tables in database:", tables)
 
-# Function to format date as "21 August 2024"
-def format_date(date_str):
-    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-    return date_obj.strftime("%d %B %Y")
-
-# Function to format time as "10.00am"
-def format_time(time_str):
-    time_obj = datetime.strptime(time_str, "%H:%M:%S")
-    return time_obj.strftime("%I.%M%p").lower()
-
 # Function to populate Treeview
 def populate_treeview():
     for row in tree.get_children():
         tree.delete(row)
 
-    Database()
-    cursor.execute(''' SELECT CarDetails.registrationNo, CarDetails.model, 
-                        BookingDetails.dateCreated, BookingDetails.pickupDate, 
-                        BookingDetails.dropoffDate, BookingDetails.bookingStatus, BookingDetails.bookingID
-                        FROM BookingDetails
-                        JOIN CarDetails ON BookingDetails.carID = CarDetails.carID''')
+    try:
+        Database()
+        cursor.execute(''' SELECT CarDetails.registrationNo, CarDetails.model, 
+                            BookingDetails.dateCreated, BookingDetails.pickupDate, 
+                            BookingDetails.dropoffDate, BookingDetails.bookingStatus, BookingDetails.bookingID
+                            FROM BookingDetails
+                            JOIN CarDetails ON BookingDetails.carID = CarDetails.carID
+                            WHERE userID = ? ORDER BY BookingDetails.pickupDate''', (userInfo,))
+        result = cursor.fetchall()
+        conn.commit()
 
-    for row in cursor.fetchall():
-        tree.insert("", "end", values=row)
-    conn.close()
+        if result is not None:
+            for row in result:
+                tree.insert("", "end", values=row)
+        else:
+            tree.insert("","end", values=("No Data Yet", "No Data Yet", "No Data Yet", "No Data Yet", "No Data Yet", "No Data Yet"))
+    
+    except sqlite3.Error as e: 
+        print("Error", "Error occurred during registration: {}".format(e))
+    finally: 
+        if conn:
+            conn.close() 
 
 # Function to set the rating based on clicked star
 def set_rating(rating):
@@ -126,9 +130,9 @@ def update_stars(rating):
     for i in range(1, 6):
         star_label = star_labels[i - 1]
         if i <= rating:
-            star_label.config(image=reviewFrame.yellow_star_img)
+            star_label.configure(image=reviewFrame.yellow_star_img)
         else:
-            star_label.config(image=reviewFrame.black_star_img)
+            star_label.configure(image=reviewFrame.black_star_img)
 
 # Function to upload the rating and review
 def upload_review():
@@ -155,8 +159,32 @@ def upload_review():
     update_stars(0)
     review_entry.delete("1.0", "end")
 
+def cancel_Request():
+    bookingID = selected_bookingID.get()
+    while True:
+        cancel = easygui.buttonbox("You clicked Cancel Request. Are you sure about this action?", "Options", 
+                                    choices=["Cancel Booking Request", "Back"])
+          
+        if cancel == "Cancel Booking Request":
+            Database()
+            cursor.execute('''
+                UPDATE BookingDetails
+                SET bookingStatus = "Cancelled"
+                WHERE bookingID = ?
+            ''', (bookingID))
+            
+            conn.commit()
+            conn.close()
+            easygui.msgbox(f"Booking Request Terminated", "Your booking request has been cancelled.")
+        elif cancel == "Back":
+            break
+
 # Function to display detailed info on row selection
-def on_row_selected(event):
+def on_row_selected(payment_callback,event):
+    for widget in defaultFrame.winfo_children():
+        if isinstance(widget, (tk.Button,ctk.CTkImage,ctk.CTkLabel,ctk.CTkTextbox)):
+            widget.destroy()
+
     selected_row = tree.focus()
     
     if selected_row:
@@ -180,43 +208,95 @@ def on_row_selected(event):
         details = cursor.fetchone()
         conn.close()
         if details:
-            pickup_date_formatted = format_date(details[3])
-            pickup_time_formatted = format_time(details[4])
-            dropoff_date_formatted = format_date(details[6])
-            dropoff_time_formatted = format_time(details[7])
 
             registrationNo_label.config(text=f"{details[0]}")
             agency_label.config(text=f"{details[1]}")
             status_label.config(text=f"{details[2]}")
-            pickup_date_label.config(text=f"{pickup_date_formatted}")
-            pickup_time_label.config(text=f"{pickup_time_formatted}")
+            pickup_date_label.config(text=f"{details[3]}")
+            pickup_time_label.config(text=f"{details[4]}")
             pickup_location_label.config(text=f"{details[5]}")
-            dropoff_date_label.config(text=f"{dropoff_date_formatted}")
-            dropoff_time_label.config(text=f"{dropoff_time_formatted}")
+            dropoff_date_label.config(text=f"{details[6]}")
+            dropoff_time_label.config(text=f"{details[7]}")
             dropoff_location_label.config(text=f"{details[8]}")
 
             selected_carID.set(details[9])
             selected_userID.set(details[10])
 
-            # Show review UI elements
-            show_review_ui()
+            defaultFrame.place(x=811,y=194)
 
             # Display "To Pay" image and "Pay Now" button if booking is approved
-            if details[2] == "Approved":
-                pay_image_label.place(x=818, y=200)
-                pay_button.place(x=932, y=528)
-            else:
-                pay_image_label.place_forget()
-                pay_button.place_forget()
+            if details[2] == "Approved": # To Pay
+                # Force frame to update
+                defaultFrame.update_idletasks()
+
+                # "To pay" image and "Pay Now" button
+                global pay_image_label
+                pay_image = ctk.CTkImage(Image.open(relative_to_assets("To pay.png")), size=(377,464))
+                pay_image_label = ctk.CTkLabel(defaultFrame, text="", image=pay_image, bg_color="#D9D9D9")
+
+                global pay_button
+                pay_button = tk.Button(defaultFrame, text="PAY NOW", bg="#FF865A", bd=0, font=("Arial Bold", 16), 
+                                    fg="#000000", command=lambda: open_payment(reviewFrame, payment_callback,bookingID),)
+
+                pay_image_label.place(x=0, y=0)
+                pay_button.place(x=140, y=345)
+                
+            elif details[2] == "Pending": # Waiting for Approval
+                # Force frame to update
+                defaultFrame.update_idletasks()
+
+                global pending_image_label
+                pending_image = ctk.CTkImage(Image.open(relative_to_assets("Awaits.png")),size=(377,464))
+                pending_image_label = ctk.CTkLabel(defaultFrame, text="", image=pending_image, bg_color="#D9D9D9")
+
+                global contact_button
+                contact_button = tk.Button(defaultFrame, text="Contact Renter", bg="#FFB195", font=("Arial Bold", 12), bd=0,
+                                    fg="#000000", command=lambda: print("A"))
+                global cancel_button
+                cancel_button = tk.Button(defaultFrame, text="Cancel Request", bg="#FF865A", font=("Arial Bold", 14), bd=0,
+                                    fg="#000000", command=lambda: cancel_Request())
+                
+                pending_image_label.place(x=0, y=0)
+                contact_button.place(x=126,y=347)
+                cancel_button.place(x=110, y=400)
+            else: # ALLOWED to Rate
+                # Force frame to update
+                defaultFrame.lift()
+                defaultFrame.update_idletasks()
+                
+                global review_image_label
+                review_image = ctk.CTkImage(Image.open(relative_to_assets("To Review.png")),size=(377,464))
+                review_image_label = ctk.CTkLabel(defaultFrame, text="", image=review_image, bg_color="#D9D9D9")
+
+                # Review entry and upload button
+                global review_entry
+                review_entry = ctk.CTkTextbox(defaultFrame, width=318, height=143, bg_color="white")
+
+                global upload_button
+                upload_button = ctk.CTkButton(defaultFrame, text="UPLOAD", bg_color="#FF865A", fg_color="#FF865A",
+                                            command=lambda:upload_review(), font=("Arial Bold", 14))
+                    
+                # Star images
+                reviewFrame.black_star_img = ctk.CTkImage(Image.open((relative_to_assets("black star.png"))).resize((32, 32)))
+                reviewFrame.yellow_star_img = ctk.CTkImage(Image.open(relative_to_assets("yellow star.png")).resize((32, 32)))
+
+                # Star labels
+                global selected_rating, star_labels
+                selected_rating = tk.IntVar()
+                star_labels = []
+                for i in range(5):
+                    star_label = ctk.CTkLabel(defaultFrame, text="", image=reviewFrame.black_star_img, cursor="hand2", bg_color="#D9D9D9")
+                    star_label.bind("<Button-1>", lambda e, rating=i+1: set_rating(rating))
+                    star_labels.append(star_label)
+                
+                # Show review UI elements
+                review_image_label.place(x=0,y=0)
+                review_entry.place(x=33, y=232)
+                upload_button.place(x=120, y=410)
+                for i, star_label in enumerate(star_labels):
+                    star_label.place(x=33 + (i * 48), y=188)
     else:
         default_image_label.place(x=70, y=192)  # Show default image if no row is selected
-
-# Function to show review UI elements
-def show_review_ui():
-    review_entry.place(x=845, y=426)
-    upload_button.place(x=952, y=614)
-    for i, star_label in enumerate(star_labels):
-        star_label.place(x=842 + (i * 48), y=381)
 
 def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,aboutUs_callback,payment_callback):
     # Create main window
@@ -226,8 +306,7 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
     reviewFrame.geometry("1280x720")
 
     global userInfo
-    #userInfo = get_user_info()
-    userInfo = ""
+    userInfo = get_user_info()
     print(f"Review : {userInfo}")
 
     # Background image
@@ -299,10 +378,10 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
     tree.heading("Status", text="Status")
     tree.column("Status", width=100)
     tree.place(x=70, y=192, width=700, height=170)
-    tree.bind("<ButtonRelease-1>", on_row_selected)
+    tree.bind("<ButtonRelease-1>",lambda event: on_row_selected(payment_callback,event))
 
     # Load and display default image if no row is selected
-    global default_image_label
+    global default_image_label, defaultFrame
     default_image_path = relative_to_assets("review n payment frame.png")
     reviewFrame.default_image = ImageTk.PhotoImage(Image.open(default_image_path).resize((350, 450), Image.Resampling.LANCZOS))
     default_image_label = tk.Label(reviewFrame, image=reviewFrame.default_image, bg="#D9D9D9")
@@ -310,38 +389,8 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
     # Place the default image initially
     default_image_label.place(x=818, y=198)
 
-    # Star images
-    reviewFrame.black_star_img = ImageTk.PhotoImage(Image.open((relative_to_assets("black star.png"))).resize((32, 32)))
-    reviewFrame.yellow_star_img = ImageTk.PhotoImage(Image.open(relative_to_assets("yellow star.png")).resize((32, 32)))
-
-    # Star labels
-    global selected_rating, star_labels
-    selected_rating = tk.IntVar()
-    star_labels = []
-    for i in range(5):
-        star_label = tk.Label(reviewFrame, image=reviewFrame.black_star_img, cursor="hand2", bg="#D9D9D9")
-        star_label.place_forget()  # Hide initially
-        star_label.bind("<Button-1>", lambda e, rating=i+1: set_rating(rating))
-        star_labels.append(star_label)
-
-    # Review entry and upload button
-    global review_entry
-    review_entry = tk.Text(reviewFrame, width=39, height=9, bg="white")
-    review_entry.place_forget()  # Hide initially
-
-    global upload_button
-    upload_button = tk.Button(reviewFrame, text="UPLOAD", bg="#FF865A", command=upload_review, bd=0, font=("Arial", 14, "bold"), width=8)
-    upload_button.place_forget()  # Hide initially
-
-    # "To pay" image and "Pay Now" button
-    global pay_image_label
-    pay_image_path = relative_to_assets("To pay.png")
-    reviewFrame.pay_image = ImageTk.PhotoImage(Image.open(pay_image_path).resize((350, 450), Image.Resampling.LANCZOS))
-    pay_image_label = tk.Label(reviewFrame, image=reviewFrame.pay_image, bg="#D9D9D9")
-
-    global pay_button
-    pay_button = tk.Button(reviewFrame, text="PAY NOW", bg="#FF865A", bd=0, font=("Arial", 14, "bold"), width=10, 
-                           command=lambda: open_payment(reviewFrame, payment_callback))
+    defaultFrame = ctk.CTkFrame(reviewFrame, width=377, height=464, corner_radius=20)
+    defaultFrame.place(x=811,y=194)
 
     # Labels for booking details
     global registrationNo_label,agency_label,status_label,pickup_date_label,pickup_time_label,pickup_location_label,dropoff_date_label,dropoff_time_label,dropoff_location_label

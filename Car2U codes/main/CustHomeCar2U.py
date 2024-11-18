@@ -77,7 +77,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
 
             logout = ctk.CTkButton(master=droptabFrame, text="Log Out", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                         bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_login(current_window, login_callback))
-            logout.place(x=30,y=184)
+            logout.place(x=30,y=195)
         pfpState = 0
     else:
         droptabFrame.destroy()

@@ -41,6 +41,8 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
             messagebox.showerror("Input Error", "All fields are required!")
         elif password != cpassword:
             messagebox.showerror("Input Error", "Password and Confirm Password do not match.")
+        elif len(str(password[0])) < 8:
+            messagebox.showerror("Invalid Password","Passwords are required to have at least 8 letters. Please try again.")
         else:
             password = hashlib.sha256(str(password).encode()).hexdigest()
             while(True):
@@ -237,6 +239,10 @@ def signupgui(login_callback, home_callback):
     pywinstyles.set_opacity(cpassW_label,color="#FFAB40")
     cpassW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10), show="*")
     cpassW_entry.place(x=410, y=450, width=270, height=30)
+
+    passInfo = ctk.CTkLabel(RegisterFrame,text="Note: Passwords are required to have at least 8 letters.", font=('Lucida Console', 10), bg_color="#FFAB40")
+    passInfo.place(x=410, y=325)
+    pywinstyles.set_opacity(dobInfo,color="#FFAB40")
 
     # Sign-up button
     sign_up_button = ctk.CTkButton(RegisterFrame, text="Sign Up", font=('Arial Bold', 16), width=270, height=30, 

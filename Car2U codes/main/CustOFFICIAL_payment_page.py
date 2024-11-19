@@ -61,7 +61,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
         myAcc.place(x=30,y=23)
 
-        history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+        history = ctk.CTkButton(master=droptabFrame, text="My Bookings", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_review(current_window, review_callback))
         history.place(x=30,y=80)
 
@@ -244,11 +244,10 @@ def send_confirmation_email(user_email, booking_details):
 def confirm_payment():
     # Get updated details from entry fields
     updated_name = entry_name.get()
-    updated_email = entry_email.cget()
     updated_contactNo = entry_contactNo.get()
 
     # Update user details in the database
-    update_user_details(updated_name, updated_email, updated_contactNo)
+    update_user_details(updated_name, entry_email, updated_contactNo)
 
     # Calculate total amount if booking and price data are available
     if booking_and_price_data:
@@ -313,7 +312,7 @@ def confirm_payment():
             }
 
             # Send confirmation email to the user
-            send_confirmation_email(updated_email, booking_details)
+            send_confirmation_email(entry_email, booking_details)
 
         # Redirect to the appropriate payment page
         if selected_payment == "TNG":
@@ -358,12 +357,14 @@ def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback
     paymentFrame = ctk.CTkToplevel()
     paymentFrame.title("Payment Page")
     paymentFrame.geometry("1280x720")
+    paymentFrame.resizable(False,False)
     
     # Fetch details with a specific bookingID
-    global booking_id, userInfo
+    global booking_id, userInfo, pfpState
     booking_id = get_BookingInfo()
     print(booking_id)
     userInfo = get_user_info()
+    pfpState = 1
 
     # Load and set the background image
     bg_photo = ctk.CTkImage(Image.open(relative_to_assets("Payment Page official.png")), size=(1280, 720))
@@ -524,12 +525,9 @@ def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback
     global tng,bank,card
     tng = ctk.CTkButton(paymentFrame, image=tng_photo, text="", command=tng_action, bg_color="#FFFFFF")
     tng.place(x=854, y=312)
-    pywinstyles.set_opacity(tng,color="#FFFFFF")
 
     bank = ctk.CTkButton(paymentFrame, image=bank_photo, text="", command=bank_action, bg_color="#FFFFFF")
     bank.place(x=854, y=382)
-    pywinstyles.set_opacity(bank,color="#FFFFFF")
 
     card = ctk.CTkButton(paymentFrame, image=paypal_photo, text="", command=card_action, bg_color="#FFFFFF")
     card.place(x=854, y=452)
-    pywinstyles.set_opacity(card,color="#FFFFFF")

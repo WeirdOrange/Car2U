@@ -65,7 +65,7 @@ def accManage(current_window, login_callback,profile_callback):
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
         myAcc.place(x=30,y=23)
 
-        history = ctk.CTkButton(master=droptabFrame, text="History", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
+        history = ctk.CTkButton(master=droptabFrame, text="My Bookings", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_review())
         history.place(x=30,y=80)
 
@@ -304,6 +304,7 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
     reviewFrame = Toplevel()
     reviewFrame.title("Your Bookings")
     reviewFrame.geometry("1280x720")
+    reviewFrame.resizable(False, False)
 
     global userInfo
     userInfo = get_user_info()

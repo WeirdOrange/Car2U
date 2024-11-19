@@ -344,6 +344,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback):
     uploadFrame = tk.Tk()
     uploadFrame.title("Car Upload Page")
     uploadFrame.geometry("1280x720")
+    uploadFrame.resizable(False,False)
 
     # Load the background image
     bg_image_path = relative_to_assets("Car Lisintg Form.png")

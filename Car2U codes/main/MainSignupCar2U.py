@@ -43,7 +43,8 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
         elif password != cpassword:
             messagebox.showerror("Input Error", "Password and Confirm Password do not match.")
             break
-        elif len(str(password[0])) < 8:
+        elif len(password) < 8:
+            print(password,len(password))
             messagebox.showerror("Invalid Password","Passwords are required to have at least 8 letters. Please try again.")
             break
         else:
@@ -117,7 +118,7 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
                             
                             elif choice == "Cancel":
                                 easygui.msgbox(f"Registration Terminated", "Press the 'Sign Up' button again to register")
-                            break  # Exit the loop if the user doesn't want to continue
+                                break  # Exit the loop if the user doesn't want to continue
                         else:
                             easygui.msgbox(f"Wrong OTP Value", "The entered OTP is incorrect. Check if you had entered a space?")
                             continue
@@ -244,7 +245,7 @@ def signupgui(login_callback, home_callback):
     cpassW_entry = tk.Entry(RegisterFrame, font=('Lucida Console', 10), show="*")
     cpassW_entry.place(x=410, y=450, width=270, height=30)
 
-    passInfo = ctk.CTkLabel(RegisterFrame,text="Note: Passwords are required to have at least 8 letters.", font=('Lucida Console', 10), bg_color="#FF9749")
+    passInfo = ctk.CTkLabel(RegisterFrame,text="Note: Passwords are required to have at least 8 characters.", font=('Lucida Console', 10), bg_color="#FF9749")
     passInfo.place(x=410, y=475)
     pywinstyles.set_opacity(passInfo,color="#FF9749")
 

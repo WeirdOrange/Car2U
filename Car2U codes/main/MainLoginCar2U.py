@@ -317,9 +317,9 @@ def logingui(signup_callback,home_callback,adminHome_callback,returnLogin):
     title_label = ctk.CTkLabel(loginFrame, text="Login Your Account", font=("Cooper Black", 36), bg_color="#FFAB40")
     title_label.place(x=340, y=160)
     pywinstyles.set_opacity(title_label,color="#FFAB40")
-    subtitle_label = ctk.CTkLabel(loginFrame,text="Glad to have you with us.",font=("Eras Bold ITC",24),bg_color="#FFAB40")
+    subtitle_label = ctk.CTkLabel(loginFrame,text="Glad to have you with us.",font=("Eras Bold ITC",24),bg_color="#BE9391")
     subtitle_label.place(x=800,y=80)
-    pywinstyles.set_opacity(subtitle_label,color="#FFAB40")
+    pywinstyles.set_opacity(subtitle_label,color="#BE9391")
 
 # Function to handle login button click
 def LoginAccess(email,password,home_callback,adminHome_callback):

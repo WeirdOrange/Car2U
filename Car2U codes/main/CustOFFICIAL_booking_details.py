@@ -5,9 +5,10 @@ import smtplib
 import pywinstyles
 from pathlib import Path
 from tkinter import messagebox, Toplevel
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from PIL import Image, ImageTk
 from MainCar2U_UserInfo import get_user_info,set_user_info,get_Car_info
+from CustBookingListCar2U import getPickLocate,getDropLocate,getPickDate,getDropDate
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from tkcalendar import DateEntry
@@ -28,7 +29,7 @@ def open_login(current_window, login_callback):
     login_callback()
 
 # Function to handle selection button click
-def open_listing(current_window, list_callback):
+def open_listing(current_window, list_callback):    
     current_window.destroy()  # Close the signup window
     list_callback()
 
@@ -47,7 +48,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
 
     if pfpState == 1:
         droptabFrame = ctk.CTkFrame(current_window,width=190,height=240, bg_color="#E6F6FF",fg_color="#E6F6FF")
-        droptabFrame.place(x=1090, y=60)
+        droptabFrame.place(x=1090, y=95)
 
         myAcc = ctk.CTkButton(master=droptabFrame, text="My Account", text_color="#000000", fg_color=("#E6F6FF","#D9D9D9"), 
                                     bg_color="#E6F6FF", font=("SegoeUI Bold", 20), command=lambda:open_profile(current_window, profile_callback))
@@ -77,7 +78,7 @@ def convert_data(data):
     car_img = ImageTk.PhotoImage(img)
     return car_img
 
-def fetch_booking_data(selected_date):
+def fetch_booking_data(selected_Pdate,selected_Ddate):
     conn = sqlite3.connect('CAR2U.db')
     cursor = conn.cursor()
 
@@ -87,7 +88,7 @@ def fetch_booking_data(selected_date):
                dropoffDate, dropoffTime, dropoffLocation, numberOfDays
         FROM BookingDetails
         WHERE carID = ? and (pickupDate = ? or dropoffDate = ?)
-    ''', (carID,selected_date,selected_date))
+    ''', (carID,selected_Pdate,selected_Ddate))
 
     booking_data = cursor.fetchone()
     conn.close()
@@ -111,7 +112,7 @@ def fetch_booking_data(selected_date):
                     dropoffDate, dropoffTime, dropoffLocation, numberOfDays
             FROM BookingDetails
             WHERE carID = ? and pickupDate = ?
-        ''', (carID,selected_date))
+        ''', (carID,selected_Pdate))
 
         booking_data = cursor.fetchone()
         conn.close()
@@ -120,26 +121,33 @@ def fetch_booking_data(selected_date):
             messagebox.showinfo("Oh-No!","Drop-Off Date is currently unavailable...") 
         else:
             messagebox.showinfo("Oh-No!","Pick-Up Date is currently unavailable...") 
+    
+    return result
 
 # Function to connect and fetch data from the database
 def fetch_car_and_agency_data():
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect('CAR2U.db')
+        cursor = conn.cursor()
 
-    # Fetch car and agency data with a JOIN on the RentalAgency table
-    cursor.execute('''
-        SELECT CarDetails.registrationNo, CarDetails.model, CarDetails.colour, 
-               CarDetails.fuelType, CarDetails.seatingCapacity, 
-               CarDetails.transmissionType, CarDetails.price
-               RentalAgency.agencyName, RentalAgency.agencyLocation, 
-               RentalAgency.agencyContactNo, CarDetails.carImage
-        FROM CarDetails
-        INNER JOIN RentalAgency ON CarDetails.agencyID = RentalAgency.agencyID
-        WHERE carID = ?
-    ''',(carID,))
+        # Fetch car and agency data with a JOIN on the RentalAgency table
+        cursor.execute('''
+            SELECT CarDetails.registrationNo, CarDetails.model, CarDetails.colour, 
+                    CarDetails.fuelType, CarDetails.seatingCapacity, 
+                    CarDetails.transmissionType, CarDetails.price,
+                    RentalAgency.agencyName, RentalAgency.agencyLocation, 
+                    RentalAgency.agencyContactNo, CarDetails.carImage
+            FROM CarDetails
+            INNER JOIN RentalAgency ON CarDetails.agencyID = RentalAgency.agencyID
+            WHERE carID = ?
+        ''',(carID,))
 
-    car_data = cursor.fetchone()
-    conn.close()
+        car_data = cursor.fetchone()
+        conn.close()
+    except sqlite3.Error as e:
+        messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+    finally:
+        conn.close()
 
     return car_data
 
@@ -165,9 +173,55 @@ def format_datetime(date_str, time_str):
     
     return formatted_date, formatted_time
 
+def review_data(review_callback):
+    global datePickup, timePickup, locatePickup, dateDropoff, timeDropoff, locateDropoff
+    try:
+        datePickup = pickupDate.get_date()
+        timePickup = time_mapping.get(selectedTime.get()).time()
+        locatePickup = pickupLocation.get()
+        dateDropoff = dropoffDate.get_date()
+        timeDropoff = time_mapping2.get(selectedTime2.get()).time()
+        locateDropoff = dropoffLocation.get()
+        
+    except Exception as e:
+        messagebox.showerror("Error", "Please make sure every Details are inserted.")
+        return 0
+
+    result = fetch_booking_data(datePickup,dateDropoff)
+    if not datePickup or not timePickup or not locatePickup or not dateDropoff or not timeDropoff or not locateDropoff:
+        messagebox.showinfo("Input Error", "Please make sure every Details are inserted.")
+        
+    elif result == "Rejected":
+        #Check whether is pickup date unavailable or drop off date unavailable
+        conn = sqlite3.connect('CAR2U.db')
+        cursor = conn.cursor()
+
+        # Fetch booking data from BookingDetails table
+        cursor.execute('''
+            SELECT pickupDate, pickupTime, pickupLocation, 
+                    dropoffDate, dropoffTime, dropoffLocation, numberOfDays
+            FROM BookingDetails
+            WHERE carID = ? and pickupDate = ?
+        ''', (carID,pickupDate))
+
+        booking_data = cursor.fetchone()
+        conn.close()
+
+        if booking_data is None:
+            messagebox.showinfo("Oh-No!","Drop-Off Date is currently unavailable...") 
+            return 0
+        else:
+            messagebox.showinfo("Oh-No!","Pick-Up Date is currently unavailable...") 
+            return 0
+
+    else: # IF the values are inputted correctly
+        print("Everything checks out")
+        request_booking(review_callback)
+
 # Call this function after confirming the booking request
 def request_booking(review_callback):
     try:
+        print(carID,userInfo,datePickup.strftime("%Y-%m-%d"),timePickup.strftime("%H:%M:%S"),str(locatePickup),dateDropoff.strftime("%Y-%m-%d"),timeDropoff.strftime("%H:%M:%S"),str(locateDropoff),float(total_amount))
         conn = sqlite3.connect('CAR2U.db')
         cursor = conn.cursor()
 
@@ -175,39 +229,51 @@ def request_booking(review_callback):
         cursor.execute('''
             INSERT into BookingDetails (carID,userID,pickupDate,pickupTime,pickupLocation,dropoffDate,dropoffTime,
                                         dropoffLocation,totalAmount,bookingStatus)
-            VALUES(?,?,?,?,?,?,?,?,?,?)
-        ''', (carID,userInfo,"Pending", ))
+            VALUES(?,?,?,?,?,?,?,?,?,"Pending")
+        ''', (carID,userInfo,datePickup.strftime("%Y-%m-%d"),timePickup.strftime("%H:%M:%S"),str(locatePickup),dateDropoff.strftime("%Y-%m-%d"),timeDropoff.strftime("%H:%M:%S"),str(locateDropoff),float(total_amount)))
 
         conn.commit()  # Save (commit) the changes to the database
         conn.close()
 
         # Send confirmation email
-        send_booking_email(1)
+        send_booking_email()
 
         # Show a message box confirming the payment
         messagebox.showinfo("Booking Request Made", "Thank you for choosing Car2U! Check your email for booking details.")
         open_review(detailsFrame,review_callback)
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
+        return 0
 
 # Function to fetch car price and booking number of days using column index
 def fetch_booking_and_price():
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+    pickDate = pickupDate.get_date()
+    dropDate = dropoffDate.get_date()
+    number_of_days = (dropDate - pickDate).days
+    if number_of_days < 0:
+        number_of_days = 0
+    print(number_of_days)
+    
+    # Calculate the total amount
+    global total_amount
+    total_amount = carPrice * (number_of_days + 1)
 
-    # Fetch price from CarDetails and numberOfDays from BookingDetails
-    cursor.execute('''
-        SELECT CarDetails.price, BookingDetails.numberOfDays
-        FROM CarDetails
-        INNER JOIN BookingDetails ON CarDetails.carID = BookingDetails.carID
-        WHERE BookingDetails.bookingID = ?
-    ''', (1,))  # Assuming booking ID is 1
+    # Define positions for both small and large totalAmount displays
+    total_amount_position_small = (1212, 497)  # Position for smaller text
+    total_amount_position_large = (1225, 560)  # Position for larger, bold text
 
-    # Fetch result as a tuple (price, numberOfDays)
-    data = cursor.fetchone()
-    conn.close()
+    global smallAmount, bigAmount
+    canvas.delete(smallAmount)
+    canvas.delete(bigAmount)
+    # Display totalAmount in small font
+    smallAmount = canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
+                    text=f"MYR {total_amount:.2f}", 
+                    font=("Arial", 10), fill="black", anchor="e")
 
-    return data
+    # Display totalAmount in larger bold font
+    bigAmount = canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
+                    text=f"MYR {total_amount:.2f}", 
+                    font=("Arial", 23, "bold"), fill="black", anchor="e")
 
 def bookingdetails(login_callback,list_callback,profile_callback,review_callback):
     # Create main window
@@ -219,7 +285,8 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
 
     global carID, userInfo
     carID = get_Car_info()
-    userInfo = get_user_info
+    print("car: ",carID)
+    userInfo = get_user_info()
 
     # Load the background image
     global bg_photo
@@ -228,26 +295,17 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
     bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
     bg_photo = ImageTk.PhotoImage(bg_image)
     detailsFrame.bg_photo = bg_photo
-
-    title = ctk.CTkLabel(detailsFrame, text="Booking Details", font=("Sintony", 30))
-    title.place(x=120, y=115)
-
-    pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(40,40))
-    pfp_label = ctk.CTkButton(detailsFrame, image=pfp_img, text="", bg_color="#F47749", fg_color="#F47749",
-                              width=40, height=40, command=lambda:accManage(detailsFrame,login_callback,profile_callback,review_callback))
-    pfp_label.place(x=1203, y=5)
-    pywinstyles.set_opacity(pfp_label,color="#F47749")
-
-    backBttn = ctk.CTkButton(detailsFrame, text="Back to Selection", command=lambda:open_listing(detailsFrame,list_callback))
-    backBttn.place(x=50,y=115)
-
+    
     # Create a canvas to hold the background image
+    global canvas
     canvas = tk.Canvas(detailsFrame, width=bg_image.width, height=bg_image.height)
     canvas.place(x=0,y=0)
     canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
     # Fetch car and agency data from the database
     car_data = fetch_car_and_agency_data()
+    global carPrice
+    carPrice = car_data[6]
 
     if car_data:
         # Define positions for each label
@@ -309,158 +367,211 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
 
     # Define positions for booking details labels
     positions = {
-        "pickupDate": (760, 325),
-        "pickupTime": (687, 325),
-        "pickupLocation": (692, 271),
-        "dropoffDate": (765, 555),
-        "dropoffTime": (692, 555),
-        "dropoffLocation": (692, 501),
+        "pickupDate": (785, 315),
+        "pickupTime": (682, 310),
+        "pickupLocation": (682, 260),
+        "dropoffDate": (785, 545),
+        "dropoffTime": (682, 540),
+        "dropoffLocation": (682, 490),
         "numberOfDays": (781, 411),
     }
 
-    global locations
+    # Fetch previous informations
+    plocation = getPickLocate()
+    pDate = getPickDate()
+    dlocation = getDropLocate()
+    dDate = getDropDate()
+
+    global locations, pickupDate, dropoffDate
     locations = ["Choose A Location","Penang International Airport","Penang Komtar","Penang Sentral",
                  "Kuala Lumpur International Airport","Kuala Lumpur Sentral","Kuala Lumpur City Centre",
                  "Sultan Azlan Shah Airport","Bus Terminal Amanjaya Ipoh","Ipoh Railway Station",
                  "INTI INTERNATION COLLEGE PENANG"]
-    time = ["10.00am","12.00am","3.00am","5.00am"]
+    time = ["10.00am","12.00am","3.00pm","5.00pm"]
+    time2 = ["10.00am","12.00am","3.00pm","5.00pm"]
     timeVar = [datetime.strptime('10:00:00', "%H:%M:%S"),datetime.strptime('12:00:00', "%H:%M:%S"),datetime.strptime('15:00:00', "%H:%M:%S"),datetime.strptime('17:00:00', "%H:%M:%S")]
+    timeVar2 = [datetime.strptime('10:00:00', "%H:%M:%S"),datetime.strptime('12:00:00', "%H:%M:%S"),datetime.strptime('15:00:00', "%H:%M:%S"),datetime.strptime('17:00:00', "%H:%M:%S")]
     
-    pickupDate = DateEntry(detailsFrame, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10))
-    pickupDate.place(x=["pickupDate"][0],y=["pickupDate"][1])
-    
-    pickupTime = ctk.CTkComboBox(master=detailsFrame, width=175, state="readonly", values=time, variable=timeVar, fg_color="#bbbbbb", font=("Skranji", 12))
-    pickupTime.place(x=["pickupTime"][0],y=["pickupTime"][1])
+    # Create a mapping from displayed time to datetime objects
+    global time_mapping, time_mapping2, selectedTime, selectedTime2, pickupLocation, dropoffLocation
+    time_mapping = dict(zip(time, timeVar))
+    time_mapping2 = dict(zip(time2, timeVar2))
 
-    pickupLocation = ctk.CTkComboBox(master=detailsFrame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
-    pickupLocation.place(x=["pickupLocation"][0],y=["pickupLocation"][1])
-    
+    selectedTime = ctk.StringVar()
+    selectedTime2 = ctk.StringVar()
+
     today = datetime.today()
-    dropoffDate = DateEntry(detailsFrame, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10), mindate=today)
-    dropoffDate.place(x=["pickupDate"][0],y=["pickupDate"][1])
+    pickupDate = DateEntry(detailsFrame, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10), mindate=today, date_pattern='yyyy/MM/dd')
+    pickupDate.bind("<<DateEntrySelected>>", lambda event: fetch_booking_and_price())
+    pickupDate.place(x=positions["pickupDate"][0],y=positions["pickupDate"][1])
+    if pDate != None:
+        pickupDate.set_date(pDate)
+    else:
+        pickupDate.set_date(today)
     
-    dropoffTime = ctk.CTkComboBox(master=detailsFrame, width=175, state="readonly", values=time, variable=timeVar, fg_color="#bbbbbb", font=("Skranji", 12))
-    dropoffTime.place(x=["pickupTime"][0],y=["pickupTime"][1])
+    pickupTime = ctk.CTkComboBox(master=detailsFrame, width=90, state="readonly", values=time, variable=selectedTime, fg_color="#FFFFFF", font=("Skranji", 12))
+    pickupTime.place(x=positions["pickupTime"][0],y=positions["pickupTime"][1])
 
-    dropoffLocation = ctk.CTkComboBox(master=detailsFrame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
-    dropoffLocation.place(x=["pickupLocation"][0],y=["pickupLocation"][1])
-
-    checkDate = ctk.CTkButton(detailsFrame, text="Check Date", width=120, height=25, command=lambda:fetch_booking_data())
-    checkDate.place(x=695, y=575)
-
-    # Fetch car price and number of days from the database
-    booking_and_price_data = fetch_booking_and_price()
-
-    if booking_and_price_data:
-        # Use column index to access price and numberOfDays
-        car_price = booking_and_price_data[0]  # First column: price
-        number_of_days = booking_and_price_data[1]  # Second column: numberOfDays
+    pickupLocation = ctk.CTkComboBox(master=detailsFrame, width=200, state="readonly", values=locations, fg_color="#FFFFFF", font=("Skranji", 12))
+    pickupLocation.place(x=positions["pickupLocation"][0],y=positions["pickupLocation"][1])
+    if plocation != None:
+        pickupLocation.set(plocation)
         
-        # Calculate the total amount
-        total_amount = car_price * number_of_days
+    dropoffDate = DateEntry(detailsFrame, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10), mindate=today, date_pattern='yyyy/MM/dd')
+    dropoffDate.place(x=positions["dropoffDate"][0],y=positions["dropoffDate"][1])
+    dropoffDate.bind("<<DateEntrySelected>>", lambda event: fetch_booking_and_price())
+    if dDate != None:
+        dropoffDate.set_date(dDate)
+    else:
+        dropoffDate.set_date(today)
+    
+    dropoffTime = ctk.CTkComboBox(master=detailsFrame, width=90, state="readonly", values=time2, variable=selectedTime2, fg_color="#FFFFFF", font=("Skranji", 12))
+    dropoffTime.place(x=positions["dropoffTime"][0],y=positions["dropoffTime"][1])
+
+    dropoffLocation = ctk.CTkComboBox(master=detailsFrame, width=200, state="readonly", values=locations, fg_color="#FFFFFF", font=("Skranji", 12))
+    dropoffLocation.place(x=positions["dropoffLocation"][0],y=positions["dropoffLocation"][1])
+    if dlocation != None:
+        dropoffLocation.set(dlocation)
+
+    dateInfo = ctk.CTkLabel(detailsFrame, text="* check whether the date is available", bg_color="#FFFFFF", fg_color="#FFFFFF", font=("Tw Cen MT",12))
+    dateInfo.place(x=680, y=595)
+    pywinstyles.set_opacity(dateInfo, color="#FFFFFF")
+    checkDate = ctk.CTkButton(detailsFrame, text="Check Date", width=120, height=25, command=lambda:fetch_booking_data(pickupDate.get_date(),dropoffDate.get_date()))
+    checkDate.place(x=695, y=578)
+
+    if pDate != None and dDate != None:
+        number_of_days = (dDate-pDate).days
+    else:
+        number_of_days = 0
+    # Calculate the total amount
+    global total_amount
+    total_amount = carPrice * (number_of_days + 1)
 
     # Define positions for both small and large totalAmount displays
     total_amount_position_small = (1212, 497)  # Position for smaller text
     total_amount_position_large = (1225, 560)  # Position for larger, bold text
 
+    global smallAmount, bigAmount
     # Display totalAmount in small font
-    canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
+    smallAmount = canvas.create_text(total_amount_position_small[0], total_amount_position_small[1], 
                     text=f"MYR {total_amount:.2f}", 
                     font=("Arial", 10), fill="black", anchor="e")
 
     # Display totalAmount in larger bold font
-    canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
+    bigAmount = canvas.create_text(total_amount_position_large[0], total_amount_position_large[1], 
                     text=f"MYR {total_amount:.2f}", 
                     font=("Arial", 23, "bold"), fill="black", anchor="e")
 
+    # Back to Booking List button
+    back_button = ctk.CTkButton(
+        detailsFrame, text="< Booking Details", fg_color="#FFFFFF", bg_color="#FFFFFF", text_color="#000000", 
+        width=200, height=40, font=("Tw Cen MT Condensed Extra Bold", 34), 
+        command=lambda: open_listing(detailsFrame, list_callback)
+    )
+    back_button.place(x=20, y=125)
+
+    global pfpState
+    pfpState = 1
+
+    pfp_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(50,50))
+    pfp_label = ctk.CTkButton(detailsFrame, image=pfp_img, text="", bg_color="#AC2A4B", fg_color="#AC2A4B",
+                              width=50, height=50, command=lambda:accManage(detailsFrame,login_callback,profile_callback,review_callback))
+    pfp_label.place(x=1203, y=20)
+    pywinstyles.set_opacity(pfp_label,color="#AC2A4B")
+    
     # Create the "Make Payment" button and place it on the canvas
     request_booking_button = tk.Button(detailsFrame, text="REQUEST BOOKING", font=("Arial", 19, "bold"), bd=0, width=17, bg="#FF865A", fg="black", 
-                                       command=lambda:request_booking(review_callback))
+                                       command=lambda:review_data(review_callback))
     request_booking_button.place(x=513, y=645)
 
 
-def send_booking_email(booking_id):
-    # Fetch user and booking details based on booking_id
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+def send_booking_email():
+    try:
+        # Fetch user and booking details based on booking_id
+        conn = sqlite3.connect('CAR2U.db')
+        cursor = conn.cursor()
 
-    cursor.execute('''
-        SELECT BookingDetails.bookingID, BookingDetails.pickupLocation, BookingDetails.pickupDate, BookingDetails.pickupTime,
-               BookingDetails.dropoffLocation, BookingDetails.dropoffDate, BookingDetails.dropoffTime,
-               CarDetails.registrationNo, CarDetails.model, CarDetails.colour, CarDetails.fuelType, 
-               CarDetails.seatingCapacity, CarDetails.transmissionType, CarDetails.price,
-               RentalAgency.agencyName, RentalAgency.agencyLocation, RentalAgency.agencyContactNo,
-               UserDetails.email
-        FROM BookingDetails
-        INNER JOIN CarDetails ON BookingDetails.carID = CarDetails.carID
-        INNER JOIN RentalAgency ON CarDetails.agencyID = RentalAgency.agencyID
-        INNER JOIN UserDetails ON BookingDetails.userID = UserDetails.userID
-        WHERE BookingDetails.bookingID = ?
-    ''', (booking_id,))
+        cursor.execute('''
+            SELECT BookingDetails.bookingID, BookingDetails.pickupLocation, BookingDetails.pickupDate, BookingDetails.pickupTime,
+                BookingDetails.dropoffLocation, BookingDetails.dropoffDate, BookingDetails.dropoffTime,
+                CarDetails.registrationNo, CarDetails.model, CarDetails.colour, CarDetails.fuelType, 
+                CarDetails.seatingCapacity, CarDetails.transmissionType, CarDetails.price,
+                RentalAgency.agencyName, RentalAgency.agencyLocation, RentalAgency.agencyContactNo,
+                UserDetails.email
+            FROM BookingDetails
+            INNER JOIN CarDetails ON BookingDetails.carID = CarDetails.carID
+            INNER JOIN RentalAgency ON CarDetails.agencyID = RentalAgency.agencyID
+            INNER JOIN UserDetails ON BookingDetails.userID = UserDetails.userID
+            WHERE BookingDetails.userID = ?
+			ORDER BY BookingDetails.dateCreated DESC, BookingDetails.bookingID DESC
+			LIMIT 1
+        ''', (userInfo,))
 
-    data = cursor.fetchone()
-    conn.close()
+        data = cursor.fetchone()
+        conn.close()
 
-    if data:
-        # Unpack data
-        (bookingID, pickupLocation, pickupDate, pickupTime, dropoffLocation, dropoffDate, dropoffTime, 
-         registrationNo, model, colour, fuelType, seatingCapacity, transmissionType, 
-         price, agencyName, agencyLocation, agencyContactNo, user_email) = data
+        if data:
+            # Unpack data
+            (bookingID, pickupLocation, pickupDate, pickupTime, dropoffLocation, dropoffDate, dropoffTime, 
+            registrationNo, model, colour, fuelType, seatingCapacity, transmissionType, 
+            price, agencyName, agencyLocation, agencyContactNo, user_email) = data
 
-        # Email content
-        subject = "Car Rental Booking Details Confirmation"
-        body = f"""
-        Dear Customer,
-        Your booking request have been made. Here are your booking details: 
-        Booking ID: {bookingID}
+            # Email content
+            subject = "Car Rental Booking Details Confirmation"
+            body = f"""
+            Dear Customer,
+            Your booking request have been made. Here are your booking details: 
+            Booking ID: {bookingID}
 
-        Car Details:
-        Registration No: {registrationNo}
-        Model: {model}
-        Colour: {colour}
-        Fuel Type: {fuelType}
-        Seating Capacity: {seatingCapacity}
-        Transmission Type: {transmissionType}
-        Price per day: MYR {price:.2f}
+            Car Details:
+            Registration No: {registrationNo}
+            Model: {model}
+            Colour: {colour}
+            Fuel Type: {fuelType}
+            Seating Capacity: {seatingCapacity}
+            Transmission Type: {transmissionType}
+            Price per day: MYR {price:.2f}
 
-        Pickup & Dropoff Details:
-        Pickup: {pickupLocation}, {pickupDate}, {pickupTime}
-        Dropoff: {dropoffLocation}, {dropoffDate}, {dropoffTime}
-  
-        Agency Details:
-        Name: {agencyName}
-        Location: {agencyLocation}
-        Contact: {agencyContactNo}
+            Pickup & Dropoff Details:
+            Pickup: {pickupLocation}, {pickupDate}, {pickupTime}
+            Dropoff: {dropoffLocation}, {dropoffDate}, {dropoffTime}
+    
+            Agency Details:
+            Name: {agencyName}
+            Location: {agencyLocation}
+            Contact: {agencyContactNo}
 
 
-        Your booking request wil be processed within 2 business days. An email will be sent upon approval to proceed with payment. 
-        Thank you for choosing Car2U. We hope you have a pleasant experience with us.
-        
-        Best regards,
-        Car2U Team
-        """
+            Your booking request wil be processed within 2 business days. An email will be sent upon approval to proceed with payment. 
+            Thank you for choosing Car2U. We hope you have a pleasant experience with us.
+            
+            Best regards,
+            Car2U Team
+            """
 
-        # Send email
-        sender_email = "cartwoyouofficial@gmail.com"
-        sender_password = "kcft xbdi orcq awzn"
+            # Send email
+            sender_email = "cartwoyouofficial@gmail.com"
+            sender_password = "kcft xbdi orcq awzn"
 
-        try:
-            # Create email message
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = user_email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(body, 'plain'))
+            try:
+                # Create email message
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = user_email
+                msg['Subject'] = subject
+                msg.attach(MIMEText(body, 'plain'))
 
-            # Setup server connection
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-            server.quit()
+                # Setup server connection
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.send_message(msg)
+                server.quit()
 
-            print("Email sent successfully.")
-        except Exception as e:
-            print(f"Failed to send email: {e}")
-    else:
-        print("No booking data found.")
+                print("Email sent successfully.")
+            except Exception as e:
+                print(f"Failed to send email: {e}")
+        else:
+            print("No booking data found.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")

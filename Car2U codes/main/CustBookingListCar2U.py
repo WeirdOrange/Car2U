@@ -5,7 +5,7 @@ import sqlite3
 from MainCar2U_UserInfo import get_user_info,set_user_info, set_CarID
 from CustHomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from PIL import Image, ImageTk
 from tkinter import Toplevel, messagebox
@@ -45,13 +45,48 @@ def open_aboutUs(current_window, about_callback):
     current_window.destroy()  # Close the signup window
     about_callback()
 
+def savePickLocate(location):
+    global chosenPick_Location
+    if location is None or location not in locations:
+        chosenPick_Location = ""
+    else:
+        chosenPick_Location = str(location)
+
+def getPickLocate():
+    return chosenPick_Location
+
+def getPickDate():
+    return chosenPick_Date
+
+def saveDropLocate(location):
+    global chosenDrop_Location
+    if location is None or location not in locations:
+        chosenDrop_Location = ""
+    else:
+        chosenDrop_Location = str(location)
+
+def getDropLocate():
+    return chosenDrop_Location
+
+def getDropDate():
+    return chosenDrop_Date
+
 # Function to handle selection button click
 def open_bookDetails(current_window, bookdetails_callback, carid):
+    # Save chosen information
+    global chosenPick_Date, chosenDrop_Date
+    if pickup_entry.get() != None:
+        savePickLocate(pickup_entry.get())
+    if dropoff_entry.get() != None:
+        saveDropLocate(dropoff_entry.get())
+    chosenPick_Date = pickup_date.get_date()
+    chosenDrop_Date = dropoff_date.get_date()
+
     if userInfo == "":
         messagebox.showinfo("Please Log In","Oops! You are required to Log In before you can continue.")
     else:
+        print("Chose CarID: ",carid)
         set_CarID(carid)
-        
         current_window.destroy()  # Close the signup window
         bookdetails_callback()
 
@@ -134,7 +169,7 @@ def carlist(bookdetails_callback):
 
         item_frame = ctk.CTkFrame(selection_frame,width=320, height=225, corner_radius=30, fg_color="#FFFFFF",bg_color="#FEFEFE")
         item_frame.bind("<Enter>", lambda event, f=item_frame: focus_frame(f))  # Hovering on frame
-        item_frame.bind("<Button-1>", lambda event: open_bookDetails(bookingFrame, bookdetails_callback, carid))
+        item_frame.bind("<Button-1>", lambda event, carid=carid: open_bookDetails(bookingFrame, bookdetails_callback, carid))
         item_frame.bind("<Leave>", lambda event, f=item_frame: unfocus_frame(f))
         pywinstyles.set_opacity(item_frame, color="#FEFEFE")
 
@@ -327,6 +362,12 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
     i = 0
     userInfo = get_user_info()
     print(f"About Us : {userInfo}")
+    # Initialize global variables with default values
+    global chosenPick_Location,chosenDrop_Location,chosenPick_Date,chosenDrop_Date
+    chosenPick_Location = ""
+    chosenDrop_Location = ""
+    chosenPick_Date = None
+    chosenDrop_Date = None
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("image_2.png")),size=(1280,60))
@@ -397,9 +438,11 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
                  "Sultan Azlan Shah Airport","Bus Terminal Amanjaya Ipoh","Ipoh Railway Station",
                  "INTI INTERNATION COLLEGE PENANG"]
     
+    global pickup_entry,pickup_date
+    today = datetime.today()
     pickup_entry = ctk.CTkComboBox(master=location_frame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
     pickup_entry.place(x=85, y=50)
-    pickup_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10))
+    pickup_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10), mindate=today)
     pickup_date.place(x=345, y=50)
 
     # Drop-off entry
@@ -415,9 +458,11 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
     dropoff_text.place(x=565,y=5)
     pywinstyles.set_opacity(dropoff_text,color="#D7D7D7")
 
+    global dropoff_entry,dropoff_date
+    tmr = today + timedelta(days=1)
     dropoff_entry = ctk.CTkComboBox(master=location_frame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
     dropoff_entry.place(x=620, y=50)
-    dropoff_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10))
+    dropoff_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10), mindate=tmr)
     dropoff_date.place(x=880, y=50)
 
     # If user had already chosen location from home page

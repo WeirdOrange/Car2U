@@ -1,6 +1,24 @@
+from datetime import datetime
+import customtkinter as ctk
 
-word = "safv124@(*)"
-print(len(word))
+root = ctk.CTk()
+root.geometry("1280x720")
+root.title("Embedding in Tk")
+
+time = ["10.00am","12.00am","3.00am","5.00am"]
+timeVar = [datetime.strptime('10:00:00', "%H:%M:%S"),datetime.strptime('12:00:00', "%H:%M:%S"),datetime.strptime('15:00:00', "%H:%M:%S"),datetime.strptime('17:00:00', "%H:%M:%S")]
+
+# Create a mapping from displayed time to datetime objects
+time_mapping = dict(zip(time, timeVar))
+
+selectedTime = ctk.StringVar()
+pickupTime = ctk.CTkComboBox(master=root, width=90, state="readonly", values=time, variable=selectedTime, fg_color="#FFFFFF", font=("Skranji", 12))
+pickupTime.place(x=0,y=0)
+button = ctk.CTkButton(root, text="Press me", command=lambda:printStuff())
+button.place(x=10,y=50)
+def printStuff():
+    print(time_mapping.get(selectedTime.get()).time())
+root.mainloop()
 """
 import sqlite3
 import hashlib

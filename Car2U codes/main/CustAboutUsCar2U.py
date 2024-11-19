@@ -50,6 +50,11 @@ def open_review(current_window, review_callback):
     current_window.destroy()  # Close the signup window
     review_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def accManage(current_window, login_callback,profile_callback,review_callback):
     global pfpState, droptabFrame
 
@@ -84,7 +89,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
         droptabFrame.destroy()
         pfpState = 1
 
-def aboutUspage(login_callback,uprent_callback,home_callback,list_callback,profile_callback,review_callback):
+def aboutUspage(login_callback,uprent_callback,home_callback,list_callback,profile_callback,review_callback,chat_callback):
     # Create the main application window
     global aboutFrame
     aboutFrame = Toplevel()
@@ -124,7 +129,7 @@ def aboutUspage(login_callback,uprent_callback,home_callback,list_callback,profi
     pywinstyles.set_opacity(selections_button,color="#FB543F")
 
     contact_us_button = ctk.CTkButton(master=aboutFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
-                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("Contact Us clicked"))
+                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(aboutFrame, chat_callback))
     contact_us_button.place(x=930, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 

@@ -45,6 +45,11 @@ def open_aboutUs(current_window, about_callback):
     current_window.destroy()  # Close the signup window
     about_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def savePickLocate(location):
     global chosenPick_Location
     if location is None or location not in locations:
@@ -345,7 +350,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
         droptabFrame.destroy()
         pfpState = 1
 
-def booking(login_callback,home_callback,profile_callback,about_callback,bookdetails_callback,review_callback):
+def booking(login_callback,home_callback,profile_callback,about_callback,bookdetails_callback,review_callback,chat_callback):
     # Create the main application window
     global bookingFrame
     bookingFrame = Toplevel()
@@ -401,7 +406,7 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
 
     contact_us_button = ctk.CTkButton(master=bookingFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
                                       text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
-                                      command=lambda: print("Contact Us clicked"))
+                                      command=lambda: open_chat(bookingFrame, chat_callback))
     contact_us_button.place(x=910, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 

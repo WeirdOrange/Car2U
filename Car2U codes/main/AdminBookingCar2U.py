@@ -24,34 +24,34 @@ def Database(): #creating connection to database and creating table
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     userInfo = ""
     set_user_info(userInfo)
     login_callback()
 
 # Function to handle selection button click
-def open_home(current_window, list_callback):
-    current_window.destroy()  # Close the signup window
-    list_callback()
+def open_home(current_window, home_callback):
+    current_window.destroy()  # Close the window
+    home_callback()
 
 # Function to handle bookings button click
 def open_bookings():
     messagebox.showinfo("You are on the Home page")
 
-# Function to handle selection button click
-def open_history(current_window, list_callback):
-    current_window.destroy()  # Close the signup window
-    list_callback()
-
 # Function to handle profile button click
 def open_profile(current_window, profile_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     profile_callback()
 
 # Function to handle car details button click
 def open_Cdetail(current_window, detail_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     detail_callback()
+
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
 
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
@@ -561,7 +561,7 @@ def rentDone(remark):
     finally:
         conn.close()
 
-def carBooking(login_callback,home_callback,detail_callback,profile_callback):
+def carBooking(login_callback,home_callback,detail_callback,profile_callback,chat_callback):
     # Create the main application window
     global aBookingFrame
     aBookingFrame = Toplevel()
@@ -614,7 +614,7 @@ def carBooking(login_callback,home_callback,detail_callback,profile_callback):
     pywinstyles.set_opacity(inventory_button,color="#FC503E")
 
     chat_button = ctk.CTkButton(master=aBookingFrame, text="Chat", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(aBookingFrame, chat_callback))
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
 

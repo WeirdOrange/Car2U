@@ -71,6 +71,11 @@ def open_bookings(current_window, booking_callback):
     current_window.destroy()  # Close the window
     booking_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def accManage(current_window, login_callback):
     global pfpState, droptabFrame
 
@@ -426,7 +431,7 @@ def insertBLOB(data):
             print("the sqlite connection is closed") 
             fetch_user_data()
 
-def adminProfile(login_callback,home_callback,detail_callback,booking_callback):
+def adminProfile(login_callback,home_callback,detail_callback,booking_callback,chat_callback):
     # Create the main application window
     global adminProfileFrame
     adminProfileFrame = Toplevel()
@@ -480,7 +485,7 @@ def adminProfile(login_callback,home_callback,detail_callback,booking_callback):
     pywinstyles.set_opacity(inventory_button,color="#FC503E")
 
     chat_button = ctk.CTkButton(master=adminProfileFrame, text="Chat", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(adminProfileFrame, chat_callback))
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
 

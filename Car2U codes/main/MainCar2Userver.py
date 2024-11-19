@@ -42,7 +42,6 @@ def client_handler(client):
 
 # Main function
 def main():
-
     # Creating the socket class object
     # AF_INET: we are going to use IPv4 addresses
     # SOCK_STREAM: we are using TCP packets for communication
@@ -62,7 +61,6 @@ def main():
 
     # This while loop will keep listening to client connections
     while 1:
-
         client, address = server.accept()
         print(f"Successfully connected to client {address[0]} {address[1]}")
 

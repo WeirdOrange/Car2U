@@ -275,7 +275,7 @@ def fetch_booking_and_price():
                     text=f"MYR {total_amount:.2f}", 
                     font=("Arial", 23, "bold"), fill="black", anchor="e")
 
-def bookingdetails(login_callback,list_callback,profile_callback,review_callback):
+def bookingdetails(login_callback,list_callback,profile_callback,review_callback,chat_callback):
     # Create main window
     global detailsFrame
     detailsFrame = Toplevel()

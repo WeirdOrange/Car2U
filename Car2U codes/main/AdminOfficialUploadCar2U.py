@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk, Toplevel
 from PIL import Image, ImageTk
 import sqlite3
 import pywinstyles
@@ -84,6 +84,11 @@ def open_carUpload():
 def open_bookings(current_window, booking_callback):
     current_window.destroy()  # Close the window
     booking_callback()
+
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
 
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
@@ -339,18 +344,19 @@ def on_treeview_select(event):
         else:
             upload_label.config(image="", text="No Image Uploaded")
 
-def uploadGUI(login_callback,home_callback,booking_callback,profile_callback):
+def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,chat_callback):
     # Create main window
-    uploadFrame = tk.Tk()
+    uploadFrame = Toplevel()
     uploadFrame.title("Car Upload Page")
     uploadFrame.geometry("1280x720")
     uploadFrame.resizable(False,False)
 
     # Load the background image
-    bg_image_path = relative_to_assets("Car Lisintg Form.png")
-    bg_image = Image.open(bg_image_path)
-    bg_image = bg_image.resize((1280, 720), Image.Resampling.LANCZOS)
-    bg_photo = ImageTk.PhotoImage(bg_image)
+    bg_photo = ctk.CTkImage(Image.open(relative_to_assets("Car Lisintg Form.png")),size=(1280, 720))
+
+    # Set the background image
+    bg_label = ctk.CTkLabel(uploadFrame,text="", image=bg_photo,width=1280,height=720)
+    bg_label.place(x=0, y=0)
 
     # Linking user data
     global userInfo
@@ -359,7 +365,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback):
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("nav.png")),size=(200,720))
-    nav_label = ctk.CTkLabel(uploadFrame, image=nav_img, text="")
+    nav_label = ctk.CTkLabel(uploadFrame, image=nav_img, text="",width=200,height=720)
     nav_label.place(x=0, y=0)
 
     logo_img = ctk.CTkImage(Image.open(relative_to_assets("Logo.png")),size=(150,60))
@@ -393,13 +399,9 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback):
     pywinstyles.set_opacity(inventory_button,color="#FC503E")
 
     chat_button = ctk.CTkButton(master=uploadFrame, text="Chat", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(uploadFrame, chat_callback))
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
-
-    # Set the background image
-    bg_label = tk.Label(uploadFrame, image=bg_photo)
-    bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
     # Label to display uploaded image with background image
     global upload_label

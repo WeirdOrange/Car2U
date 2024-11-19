@@ -54,6 +54,11 @@ def open_payment(current_window, payment_callback,bookingID):
 def open_review():
     messagebox.showinfo("Oops.","You are on the profile page")
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
 
@@ -298,7 +303,7 @@ def on_row_selected(payment_callback,event):
     else:
         default_image_label.place(x=70, y=192)  # Show default image if no row is selected
 
-def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,aboutUs_callback,payment_callback):
+def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,aboutUs_callback,payment_callback, chat_callback):
     # Create main window
     global reviewFrame
     reviewFrame = Toplevel()
@@ -340,7 +345,7 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
 
     contact_us_button = ctk.CTkButton(master=reviewFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
                                         text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
-                                        command=lambda: print("Contact Us clicked"))
+                                        command=lambda: open_chat(reviewFrame, chat_callback))
     contact_us_button.place(x=910, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 

@@ -46,6 +46,11 @@ def open_review(current_window, review_callback):
     current_window.destroy()  # Close the signup window
     review_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def Database(): #creating connection to database and creating table
     global conn, cursor
     conn = sqlite3.connect("car2u.db")
@@ -297,7 +302,7 @@ def insertBLOB(data):
             print("the sqlite connection is closed") 
             fetch_user_data()
 
-def profile(login_callback,home_callback,list_callback,about_callback,review_callback):
+def profile(login_callback,home_callback,list_callback,about_callback,review_callback, chat_callback):
     # Create the main application window
     global profileFrame
     profileFrame = Toplevel()
@@ -338,7 +343,7 @@ def profile(login_callback,home_callback,list_callback,about_callback,review_cal
 
     contact_us_button = ctk.CTkButton(master=profileFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
                                       text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
-                                      command=lambda: print("Contact Us clicked"))
+                                      command=lambda: open_chat(profileFrame, chat_callback))
     contact_us_button.place(x=910, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 

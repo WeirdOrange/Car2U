@@ -54,6 +54,11 @@ def open_bookings(current_window, booking_callback):
     current_window.destroy()  # Close the signup window
     booking_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
 
@@ -201,7 +206,7 @@ def select_calendar(event):
         conn.close()
     
 
-def adminHome(login_callback,detail_callback,booking_callback,profile_callback):
+def adminHome(login_callback,detail_callback,booking_callback,profile_callback,chat_callback):
     # Create the main application window
     global adminHomeFrame
     adminHomeFrame = Toplevel()
@@ -260,7 +265,7 @@ def adminHome(login_callback,detail_callback,booking_callback,profile_callback):
     pywinstyles.set_opacity(inventory_button,color="#FC503E")
 
     chat_button = ctk.CTkButton(master=adminHomeFrame, text="Chat", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: print("About Us clicked"))
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(adminHomeFrame, chat_callback))
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
 

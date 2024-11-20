@@ -1,3 +1,88 @@
+
+a = [1,2,3,4,5]
+b = 6
+c = 5
+
+if b not in a:
+    print("B is not in a")
+if c in a:
+    print("C is in a")
+
+"""
+import customtkinter as ctk
+import sqlite3
+import pandas as pd
+from pandas import date_range
+from tkinter import messagebox
+from datetime import datetime, timedelta
+from tkcalendar import DateEntry
+
+def fetch_booking_and_price():
+    nexttoday = pickupDate.get_date()+timedelta(1)
+    dropoffDate.config(mindate=nexttoday)
+
+def checking():
+    selected_Pdate = pickupDate.get_date()
+    selected_Ddate = dropoffDate.get_date()
+
+    if selected_Pdate != None and selected_Ddate != None:
+        print("HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII?")
+        print("Pickup: ",selected_Pdate,"DropOff: ",selected_Ddate)
+        try:
+            conn = sqlite3.connect('CAR2U.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            # Fetch booking data from BookingDetails table
+            cursor.execute('''
+                SELECT pickupDate, dropoffDate FROM BookingDetails
+                WHERE carID = ? and (pickupDate = ? or dropoffDate = ? or pickupDate = ? or dropoffDate = ?)
+            ''', (1,selected_Pdate,selected_Pdate,selected_Ddate,selected_Ddate))
+
+            booking_data = cursor.fetchall()
+            conn.close()
+
+            for row in booking_data:
+                startdate = row[0]
+                enddate = row[1]
+
+                dateRange = date_range(start=startdate,end=enddate)
+                selecteRange = date_range(start=selected_Pdate,end=selected_Ddate)
+                print(dateRange)
+                print(selecteRange)
+                for i,date in enumerate(selecteRange):
+                    for day in dateRange:
+                        #print(f"day: {day} Selected date:{date}")
+                        if day == date:
+                            result = "Rejected"
+                            print(f"Date:{day} is taken")
+                        if date[i-1] != date[i]:
+                            print(f"{date} is free")
+            
+        except sqlite3.Error as e:
+            messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+        finally:
+            conn.close()
+
+root = ctk.CTk()
+root.geometry("1280x720")
+root.title("Embedding in Tk")
+
+today = datetime.today()
+pickupDate = DateEntry(root, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10), mindate=today, date_pattern='yyyy/MM/dd')
+pickupDate.bind("<<DateEntrySelected>>", lambda event: fetch_booking_and_price())
+pickupDate.pack(pady=5)
+
+global dropoffDate
+dropoffDate = DateEntry(root, width=12, background='orange', foreground='white', borderwidth=2, font=("Skranji", 10), mindate=today, date_pattern='yyyy/MM/dd')
+dropoffDate.pack(pady=5)
+
+bttn = ctk.CTkButton(root,text="Check", command=lambda:checking())
+bttn.pack(pady=10)
+
+root.mainloop()
+"""
+"""
 from datetime import datetime
 import customtkinter as ctk
 
@@ -19,6 +104,7 @@ button.place(x=10,y=50)
 def printStuff():
     print(time_mapping.get(selectedTime.get()).time())
 root.mainloop()
+"""
 """
 import sqlite3
 import hashlib

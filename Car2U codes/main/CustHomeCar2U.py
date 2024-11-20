@@ -306,7 +306,7 @@ def bookingManual(event):
         manual = 1
 
 def openTNC(event):
-    theFile = open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\build\Terms&Condition.txt","r")
+    theFile = open(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\Terms&Condition.txt","r")
     greatString = theFile.read()
     theFile.close()
     messagebox.showinfo("Terms & Condition",greatString)

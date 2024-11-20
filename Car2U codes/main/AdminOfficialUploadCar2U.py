@@ -187,11 +187,29 @@ def refresh_treeview():
             SELECT c.carID, r.agencyName, c.registrationNo, c.model, c.colour, c.fuelType, c.seatingCapacity, c.transmissionType, c.price
             FROM CarDetails c
             JOIN RentalAgency r ON c.agencyID = r.agencyID
-        ''')
+            WHERE r.agencyID = ?
+        ''',(userInfo,))
         rows = cursor.fetchall()
 
         for row in rows:
             treeview.insert("", "end", values=row)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+def fetchName():
+    try:
+        conn, cursor = connect_db()
+        cursor = conn.cursor()
+
+        # Join CarDetails with RentalAgency to fetch agency names
+        cursor.execute('''SELECT agencyName FROM RentalAgency WHERE agencyID = ? ''',(userInfo,))
+        agencyName = cursor.fetchall()
+
+        return agencyName
+
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
@@ -405,7 +423,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
 
     # Label to display uploaded image with background image
     global upload_label
-    upload_label = tk.Label(uploadFrame, text="No Image Uploaded", fg="white", bg="#394552", width=25, height=100)
+    upload_label = tk.Label(uploadFrame, text="No Image Uploaded", fg="white", bg="#394552")
     upload_label.place(x=290, y=150, width=280, height=160)
 
     # Button to upload image
@@ -415,26 +433,26 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
     # Agency Name
     global selected_agency
     selected_agency = tk.StringVar(value="Select")
-    agency_options = ["J&C Agency", "Wheels Agency", "Auto Agency"]
+    agency_options = fetchName()[0]
     agency_menu = ttk.Combobox(uploadFrame, textvariable=selected_agency, values=agency_options, font=("Arial", 10))
     agency_menu.place(x=353, y=418, width=176.0, height= 33.0)  
 
 
     # Entry for registration number
     global entry_registration
-    entry_registration = tk.Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+    entry_registration = tk.Entry(uploadFrame, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
     entry_registration.place(x=353, y=473, width=176.0, height=33.0)
 
 
     # Entry for model
     global entry_model
-    entry_model = tk.Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+    entry_model = tk.Entry(uploadFrame, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
     entry_model.place(x=713, y=418, width=176.0, height=33.0)
 
 
     # Entry for colour
     global entry_colour
-    entry_colour = tk.Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+    entry_colour = tk.Entry(uploadFrame, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
     entry_colour.place(x=713, y=473, width=176.0, height=33.0)
 
 
@@ -464,7 +482,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
 
     # Entry for price
     global entry_price
-    entry_price = tk.Entry(bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
+    entry_price = tk.Entry(uploadFrame, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0)
     entry_price.place(x=1071, y=522, width=176.0, height=33.0)
 
     # Treeview for displaying saved data

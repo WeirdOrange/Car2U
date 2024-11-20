@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, scrolledtext, messagebox, ttk
 from tkcalendar import DateEntry
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_messages
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
@@ -106,6 +106,7 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
  
 def add_message(message):
     message_box.config(state=tk.NORMAL)
+    store_messages(message)
     message_box.insert(tk.END, message + '\n')
     message_box.config(state=tk.DISABLED)
 
@@ -118,12 +119,20 @@ def connect():
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
 
     username = fetchName() # Enter username to server
+    uesrname = str(username).replace(" ","")
     if username != '':
         client.sendall(username.encode())
     else:
         messagebox.showerror("Invalid username", "Username cannot be empty")
 
     threading.Thread(target=listen_for_messages_from_server, args=(client,)).start()
+    connectServer.configure(state="disabled")
+    previous_messages = fetch_messages()
+    if previous_messages:
+        for message in previous_messages:
+            message_box.config(state=tk.NORMAL)
+            message_box.insert(tk.END, message + '\n')
+            message_box.config(state=tk.DISABLED)
 
 def send_message():
     message = chat_input.get()
@@ -148,7 +157,7 @@ def refresh_chatlist():
         for widget in selectCustFrame.winfo_children():
             widget.destroy()
 
-        all_button = ctk.CTkButton(selectCustFrame, text="All", width=270, height=45, 
+        all_button = ctk.CTkButton(selectCustFrame, text="All", width=185, height=45, font= ("Tw Cen MT",16),
                                     fg_color="#FFD6A6", text_color="#000000")
         all_button.pack(pady=5)
 
@@ -157,9 +166,10 @@ def refresh_chatlist():
             cust_name = row[0]
             print(cust_name)
 
-            user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=270, height=45,
+            cust_name = str(cust_name).replace(" ","")
+            user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=185, height=45, font= ("Tw Cen MT",16),
                                         fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
-            user_button.place(x=15, y=100+i*60)
+            user_button.pack(pady=5)
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
@@ -184,34 +194,35 @@ def fetchName():
 
 
 def create_left_panel():
-    name = fetchName()
     left_panel = ctk.CTkFrame(chatFrame, width=225, height=595, corner_radius=0, fg_color="#111333")
     left_panel.place(x=55,y=105)
 
-    left_title = ctk.CTkLabel(left_panel, text=f"Your Name: {name}", font=("Arial", 16, "bold"), text_color="white", width=220, anchor="center")
+    left_title = ctk.CTkLabel(left_panel, text="Rental Agency", font=("Arial", 16, "bold"), text_color="white", width=220, anchor="center")
     left_title.place(x=0,y=10)
     
-    searchName = ctk.CTkEntry(left_panel, placeholder_text="Search", placeholder_text_color="#9EA3A9", text_color="white",
-                              border_color="#4B5B6D",border_width=1,width=210, height=30, fg_color="#000000")
-    searchName.place(x=5,y=60)
+    global connectServer
+    connectServer = ctk.CTkButton(left_panel, text="Connect to Server", width=200, height=30, bg_color="#067BC1", fg_color="#067BC1", text_color="white",
+                                font=("Tw Cen MT", 24), corner_radius=10, command=connect)
+    connectServer.place(x=10,y=60)
     
     global selectCustFrame
-    selectCustFrame = ctk.CTkScrollableFrame(left_panel, width=290,height=545, bg_color="#191F48", fg_color="#191F48")
-    selectCustFrame.place(x=5,y=110)
+    selectCustFrame = ctk.CTkScrollableFrame(left_panel, width=215,height=545, bg_color="#191F48", fg_color="#191F48")
+    selectCustFrame.place(x=0,y=110)
     refresh_chatlist()
 
 def create_right_panel():
+    name = fetchName()
     right_panel = ctk.CTkFrame(chatFrame, fg_color="#2E3773", width=950, height=595)
     right_panel.place(x=275,y=105)
 
-    right_label = ctk.CTkLabel(right_panel, text="Chat Area", font=("Arial", 14), text_color="white", bg_color="#2E3773", width=850, height=60)
+    right_label = ctk.CTkLabel(right_panel, text=f"Your Name : {name}", font=("Tw Cen MT",20), text_color="white", bg_color="#2E3773", width=950, height=50, anchor="center")
     right_label.place(x=0,y=0)
 
     middle_frame = ctk.CTkFrame(right_panel, width=950, height=475, bg_color="#0D112B", fg_color="#0D112B")
     middle_frame.place(x=0,y=50)
 
     global message_box
-    message_box = scrolledtext.ScrolledText(middle_frame, font=SMALL_FONT, bg=MEDIUM_GREY, fg=WHITE, width=150, height=32)
+    message_box = scrolledtext.ScrolledText(middle_frame, font=SMALL_FONT, bg=MEDIUM_GREY, fg=WHITE, width=110, height=25)
     message_box.config(state=tk.DISABLED)
     message_box.pack(side="top",fill="both")
 
@@ -219,13 +230,8 @@ def create_right_panel():
     chat_input = ctk.CTkEntry(right_panel, placeholder_text="Type your message...", fg_color="#000000", text_color="white", width=765, height=40)
     chat_input.place(x=30,y=545)
 
-    def send_message():
-        message = chat_input.get()
-        if message:
-            message_box.insert("end", f"You: {message}\n")
-            chat_input.delete(0, "end")
-
     send_button = ctk.CTkButton(right_panel, text="Send", width=80, height=30, command=send_message)
+    send_button.bind('<Return>',send_message)
     send_button.place(x=827,y=550)
 
 def custChatGUI(login_callback,home_callback,listing_callback,aboutUs_callback,profile_callback,review_callback,chat_callback):
@@ -270,12 +276,12 @@ def custChatGUI(login_callback,home_callback,listing_callback,aboutUs_callback,p
     pywinstyles.set_opacity(selections_button,color="#FB543F")
 
     contact_us_button = ctk.CTkButton(master=chatFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
-                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(chatFrame, chat_callback))
+                                      text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(chatFrame, chat_callback))
     contact_us_button.place(x=930, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 
     about_us_button = ctk.CTkButton(master=chatFrame, text="About Us", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_aboutUs(chatFrame,aboutUs_callback))
+                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_aboutUs(chatFrame,aboutUs_callback))
     about_us_button.place(x=1075, y=14)
     pywinstyles.set_opacity(about_us_button,color="#FC4D3D")
     

@@ -5,7 +5,7 @@ import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from MainCar2U_UserInfo import get_user_info,set_user_info, set_CarID
+from MainCar2U_UserInfo import get_user_info,set_user_info, store_messages,fetch_messages
 from tkinter import Toplevel,scrolledtext, messagebox, ttk
 from pathlib import Path
 from PIL import Image
@@ -98,6 +98,7 @@ def accManage(current_window, login_callback,profile_callback):
       
 def add_message(message):
     message_box.config(state=tk.NORMAL)
+    store_messages(message)
     message_box.insert(tk.END, message + '\n')
     message_box.config(state=tk.DISABLED)
 
@@ -110,6 +111,7 @@ def connect():
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
     
     username = fetchName() # Enter username to server
+    uesrname = str(username).replace(" ","")
     if username != '':
         client.sendall(username.encode())
     else:
@@ -117,6 +119,13 @@ def connect():
 
     connectServer.configure(state="disabled")
     threading.Thread(target=listen_for_messages_from_server, args=(client,)).start()
+    
+    previous_messages = fetch_messages()
+    if previous_messages:
+        for message in previous_messages:
+            message_box.config(state=tk.NORMAL)
+            message_box.insert(tk.END, message + '\n')
+            message_box.config(state=tk.DISABLED)
 
 def fetchName():
     global agencyName, userinfo
@@ -144,7 +153,7 @@ def send_message():
 
 def refresh_chatlist():
     Database()
-    cursor.execute("""SELECT userID, name FROM UserDetails""")
+    cursor.execute("""SELECT name FROM UserDetails""")
     result = cursor.fetchall()
     conn.close()# Clear existing entries
     for widget in selectCustFrame.winfo_children():
@@ -156,11 +165,11 @@ def refresh_chatlist():
 
     # Add user-specific options
     for i, row in enumerate(result):
-        cust_id = row[0]
-        cust_name = row[1]
+        cust_name = row[0]
 
+        cust_name = str(cust_name).replace(" ","")
         user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=270, height=45,
-                                     fg_color="#FFD6A6", text_color="#000000", command=lambda cust_id=cust_id: message_directed(cust_id))
+                                     fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
         user_button.pack(pady=5)
 
 def message_directed(cust_id):
@@ -254,9 +263,9 @@ def adminChat(login_callback,home_callback,detail_callback,booking_callback,prof
     bottom_frame = ctk.CTkFrame(chatFrame, width=620, height=60, bg_color="#2E3773", fg_color="#2E3773")
     bottom_frame.place(x=0,y=620)
 
-    username_label = ctk.CTkLabel(top_frame, text=f"Your Name:\t{agencyName}", font=FONT, bg_color="#2E3773", fg_color="#2E3773", text_color="#FFFFFF",
-                                    width=600, height=50, anchor="center")
-    username_label.place(x=0,y=0)
+    username_label = ctk.CTkLabel(top_frame, text=f"Your Name : {agencyName}", font=("Tw Cen MT",20), bg_color="#2E3773", fg_color="#2E3773", text_color="#FFFFFF",
+                                    width=550, height=40, anchor="center")
+    username_label.place(x=30,y=5)
 
     global message_textbox
     message_textbox = tk.Entry(bottom_frame, font=FONT, bg=MEDIUM_GREY, fg=WHITE, width=45)

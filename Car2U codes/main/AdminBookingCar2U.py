@@ -491,7 +491,9 @@ def approveBooking(remark):
         messagebox.showinfo("Booking Approved", "You have approved the booking. Remember to mark your calendar!")
 
         subject = "Car Rental Booking Approved"
-        body = str(f"Hi {custName},\nGreat News! Your reservation booking to rent the {model}, {carNo}, has been approved!\nPlease proceed to Payment from booking history and pay for the rental.\n\nReminder: Do pay for the car rental a day before the car rental date, the booking will be automatically rejected if booking is not paid")
+        body = str(f"""Hi {custName},\nGreat News! Your reservation booking to rent the {model}, {carNo}, has been approved!
+                   \nPlease proceed to Payment from booking history and pay for the rental.
+                   \n\nReminder: Do pay for the car rental at least a day before the car rental date, the booking will be automatically rejected if booking is not paid""")
         emailNotif(email,subject,body)
         refresh_currentTreeview()
         select_item

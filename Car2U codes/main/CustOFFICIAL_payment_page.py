@@ -99,7 +99,7 @@ def fetch_booking_user_car_details(booking_id):
     return details
 
 # Function to upload receipt and save as BLOB in Transactions.receipt
-def upload_receipt(transact_id):
+def upload_receipt(transact_id,review_callback):
     # Open file dialog for image selection
     receipt_path = filedialog.askopenfilename(title="Select Receipt Image", 
                                               filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
@@ -120,6 +120,13 @@ def upload_receipt(transact_id):
             ''', (receipt_blob, transact_id))
             conn.commit()
             messagebox.showinfo("Receipt Uploaded", "Receipt has been uploaded successfully!")
+            
+            # Send confirmation email to the user
+            send_confirmation_email(email, booking_details)
+
+            # Reopen Review Page
+            open_review(paymentFrame, review_callback)
+
         except sqlite3.Error as e:
             print("Failed to upload receipt:", e)
         finally:
@@ -241,13 +248,13 @@ def send_confirmation_email(user_email, booking_details):
         print("Failed to send email:", e)
 
 # Updated confirm_payment function to include receipt upload prompt
-def confirm_payment():
+def confirm_payment(review_callback):
     # Get updated details from entry fields
     updated_name = entry_name.get()
     updated_contactNo = entry_contactNo.get()
 
     # Update user details in the database
-    update_user_details(updated_name, entry_email, updated_contactNo)
+    update_user_details(updated_name, email, updated_contactNo)
 
     # Calculate total amount if booking and price data are available
     if booking_and_price_data:
@@ -265,9 +272,9 @@ def confirm_payment():
             # Set transactID and bookingStatus to "Paid" if transactID exists
             cursor.execute('''
                 UPDATE BookingDetails
-                SET transactID = ?, bookingStatus = 'Paid'
+                SET bookingStatus = 'Paid'
                 WHERE bookingID = ?
-            ''', (transact_id, booking_id))
+            ''', (booking_id,))
             conn.commit()
             
             # Fetch booking details to send in email
@@ -290,6 +297,7 @@ def confirm_payment():
 
             # Calculate total amount and map booking data to a dictionary
             total_amount = booking_data[7] * booking_data[17]
+            global booking_details
             booking_details = {
                 "bookingID": booking_data[0],
                 "registrationNo": booking_data[1],
@@ -311,8 +319,6 @@ def confirm_payment():
                 "totalAmount": total_amount
             }
 
-            # Send confirmation email to the user
-            send_confirmation_email(entry_email, booking_details)
 
         # Redirect to the appropriate payment page
         if selected_payment == "TNG":
@@ -324,7 +330,7 @@ def confirm_payment():
 
         # Show receipt upload prompt
         messagebox.showinfo("Upload Receipt", "Please upload a receipt image for the transaction.")
-        upload_receipt(transact_id)
+        upload_receipt(transact_id,review_callback)
 
 # Define actions for each button with image switching
 def tng_action():
@@ -354,6 +360,7 @@ def highlight_selected(selected_button, clicked_image):
 
 def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback, profile_callback, review_callback):
     # Initialize main CustomTkinter window
+    global paymentFrame
     paymentFrame = ctk.CTkToplevel()
     paymentFrame.title("Payment Page")
     paymentFrame.geometry("1280x720")
@@ -467,6 +474,8 @@ def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback
     # User and Booking Details
     global entry_name,entry_email,entry_contactNo
     if details:
+        global email
+        email = details[1]
         entry_name = ctk.CTkEntry(paymentFrame, font=("Sono", 14), text_color="black", placeholder_text="Name", width=266, height=40)
         entry_name.insert(0, details[0])
         entry_name.place(x=130, y=348)
@@ -486,7 +495,7 @@ def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback
     # Confirm Payment Button
     confirm_button = ctk.CTkButton(
         paymentFrame, text="CONFIRM PAYMENT", font=("Arial Bold", 23), fg_color="white", text_color="black", width=360, height=50, 
-        command= lambda: confirm_payment()
+        command= lambda: confirm_payment(review_callback)
     )
     confirm_button.place(x=825, y=604)
 

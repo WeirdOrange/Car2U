@@ -5,6 +5,7 @@ import smtplib
 import pywinstyles
 from pathlib import Path
 from tkinter import messagebox, Toplevel
+from pandas import date_range
 from datetime import datetime, date, timedelta
 from PIL import Image, ImageTk
 from MainCar2U_UserInfo import get_user_info,set_user_info,get_Car_info
@@ -79,48 +80,44 @@ def convert_data(data):
     return car_img
 
 def fetch_booking_data(selected_Pdate,selected_Ddate):
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+    if selected_Pdate and selected_Ddate:
+        try:
+            dateTaken = []
+            conn = sqlite3.connect('CAR2U.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
 
-    # Fetch booking data from BookingDetails table
-    cursor.execute('''
-        SELECT pickupDate, pickupTime, pickupLocation, 
-               dropoffDate, dropoffTime, dropoffLocation, numberOfDays
-        FROM BookingDetails
-        WHERE carID = ? and (pickupDate = ? or dropoffDate = ?)
-    ''', (carID,selected_Pdate,selected_Ddate))
+            # Fetch booking data from BookingDetails table
+            cursor.execute('''
+                SELECT pickupDate, dropoffDate, bookingStatus FROM BookingDetails
+                WHERE bookingStatus NOT in
+				(SELECT bookingStatus FROM BookingDetails 
+				WHERE bookingStatus = "Rejected" or bookingStatus = 'Cancelled') and 
+				(pickupDate = ? or dropoffDate = ? or pickupDate = ? or dropoffDate = ?)
+            ''', (carID,selected_Pdate,selected_Pdate,selected_Ddate,selected_Ddate))
 
-    booking_data = cursor.fetchone()
-    conn.close()
+            booking_data = cursor.fetchall()
+            conn.close()
 
-    if booking_data is None:
-        result = "Accepted"
-        pass
-    else:
-        result = "Rejected"
-    
-    if result == "Accepted":
-        messagebox.showinfo("Booking Slot Available!","Congrats! Pick-Up And Drop-OFF Date are both available!")
-    else:
-        #Check whether is pickup date unavailable or drop off date unavailable
-        conn = sqlite3.connect('CAR2U.db')
-        cursor = conn.cursor()
+            for row in booking_data:
+                startdate = row[0]
+                enddate = row[1]
 
-        # Fetch booking data from BookingDetails table
-        cursor.execute('''
-            SELECT pickupDate, pickupTime, pickupLocation, 
-                    dropoffDate, dropoffTime, dropoffLocation, numberOfDays
-            FROM BookingDetails
-            WHERE carID = ? and pickupDate = ?
-        ''', (carID,selected_Pdate))
-
-        booking_data = cursor.fetchone()
-        conn.close()
-
-        if booking_data is None:
-            messagebox.showinfo("Oh-No!","Drop-Off Date is currently unavailable...") 
-        else:
-            messagebox.showinfo("Oh-No!","Pick-Up Date is currently unavailable...") 
+                dateRange = date_range(start=startdate,end=enddate)
+                selecteRange = date_range(start=selected_Pdate,end=selected_Ddate)
+                for date in selecteRange:
+                    for day in dateRange:
+                        if day == date:
+                            result = "Rejected"
+                            dateTaken.append(date)
+            
+            if dateTaken:
+                messagebox.showinfo("Request Failed", f"Car is currently unavailable in the following dates:\n{dateTaken}")
+            
+        except sqlite3.Error as e:
+            messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
+        finally:
+            conn.close()
     
     return result
 
@@ -187,33 +184,10 @@ def review_data(review_callback):
         messagebox.showerror("Error", "Please make sure every Details are inserted.")
         return 0
 
-    result = fetch_booking_data(datePickup,dateDropoff)
+    fetch_booking_data(datePickup,dateDropoff)
     if not datePickup or not timePickup or not locatePickup or not dateDropoff or not timeDropoff or not locateDropoff:
         messagebox.showinfo("Input Error", "Please make sure every Details are inserted.")
         
-    elif result == "Rejected":
-        #Check whether is pickup date unavailable or drop off date unavailable
-        conn = sqlite3.connect('CAR2U.db')
-        cursor = conn.cursor()
-
-        # Fetch booking data from BookingDetails table
-        cursor.execute('''
-            SELECT pickupDate, pickupTime, pickupLocation, 
-                    dropoffDate, dropoffTime, dropoffLocation, numberOfDays
-            FROM BookingDetails
-            WHERE carID = ? and pickupDate = ?
-        ''', (carID,pickupDate))
-
-        booking_data = cursor.fetchone()
-        conn.close()
-
-        if booking_data is None:
-            messagebox.showinfo("Oh-No!","Drop-Off Date is currently unavailable...") 
-            return 0
-        else:
-            messagebox.showinfo("Oh-No!","Pick-Up Date is currently unavailable...") 
-            return 0
-
     else: # IF the values are inputted correctly
         print("Everything checks out")
         request_booking(review_callback)
@@ -248,6 +222,10 @@ def request_booking(review_callback):
 # Function to fetch car price and booking number of days using column index
 def fetch_booking_and_price():
     pickDate = pickupDate.get_date()
+    # Refuses users to select the same day or before the pickup date
+    nexttoday = pickupDate.get_date()+timedelta(1)
+    dropoffDate.config(mindate=nexttoday)
+
     dropDate = dropoffDate.get_date()
     number_of_days = (dropDate - pickDate).days
     if number_of_days < 0:
@@ -256,7 +234,7 @@ def fetch_booking_and_price():
     
     # Calculate the total amount
     global total_amount
-    total_amount = carPrice * (number_of_days + 1)
+    total_amount = carPrice * number_of_days
 
     # Define positions for both small and large totalAmount displays
     total_amount_position_small = (1212, 497)  # Position for smaller text

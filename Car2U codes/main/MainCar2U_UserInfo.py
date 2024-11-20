@@ -1,4 +1,5 @@
 userInfo = ""
+messages = []
 
 def set_user_info(userid):
     global userInfo
@@ -20,3 +21,10 @@ def set_BookingID(bookingID):
 
 def get_BookingInfo():
     return bookInfo
+
+def store_messages(message):
+    global messages
+    messages.append(message)
+
+def fetch_messages():
+    return messages

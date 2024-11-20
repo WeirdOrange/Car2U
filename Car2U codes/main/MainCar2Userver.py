@@ -9,15 +9,12 @@ active_clients = [] # List of all currently connected users
 
 # Function to send message to a single client
 def send_message_to_client(client, message):
-
     client.sendall(message.encode())
 
 # Function to send any new message to all the clients that
 # are currently connected to this server
 def send_messages_to_all(message):
-    
     for user in active_clients:
-
         send_message_to_client(user[1], message)
 
 # Function to handle client
@@ -27,11 +24,12 @@ def client_handler(client):
     # Contain the username
     while 1:
         username = client.recv(2048).decode('utf-8')
+        
+        username = str(username)
 
         if username != '':
-            active_clients.append((username, client))
-            username = str(username)
-            newUsername = username[0] + "*" * (len(username) - 2) + username[-1] 
+            if username not in active_clients:
+                active_clients.append((username, client))
             prompt_message = "SERVER~" + f"{username} added to the chat"
             send_messages_to_all(prompt_message)
             break
@@ -68,12 +66,7 @@ def main():
 
 # Function to send a direct message to a chosen user
 def send_direct_message(username,target_username, message):
-    print(active_clients)
-    print(username)
-    print(message)
-
     for user in active_clients:
-        print(user)
         if user[0] == username:
             send_message_to_client(user[1], message)
         if user[0] == target_username:

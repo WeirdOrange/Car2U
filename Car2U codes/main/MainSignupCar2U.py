@@ -68,7 +68,7 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
                     # Sending OTP to user
                     subject = 'Car2U: OTP to verify your identity'
                     body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
-                            \n\nCar2U contact: 016-407 5284 or email via this account"""
+                            \n\nCar2U contact: 016-407 5284 or email via this account\n\nBest regards,\nCar2U Team"""
                     emailNotif(email,subject,body)
                     conn.close()
 
@@ -112,7 +112,7 @@ def sign_up_get(login_callback,name,email,dob_day,dob_month,dob_year,contact,pas
                                 # Sending OTP to user
                                 subject = 'Car2U: OTP to verify your identity'
                                 body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
-                                \n\nCar2U contact: 016-407 5284 or email via this account"""
+                                \n\nCar2U contact: 016-407 5284 or email via this account\n\nBest regards,\nCar2U Team"""
                                 emailNotif(email,subject,body)
                                 continue
                             

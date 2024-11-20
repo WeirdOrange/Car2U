@@ -6,6 +6,7 @@ import smtplib
 import ssl
 import easygui
 import random, string
+import hashlib
 from MainCar2U_UserInfo import get_user_info, set_user_info
 from PIL import Image
 from email.message import EmailMessage
@@ -53,6 +54,8 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                     userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")
                     
                     if userotp == otp: # If OTP is enter correctly
+                        password = hashlib.sha256(str(password).encode()).hexdigest()
+
                         Database()
                         cursor.execute("INSERT INTO RentalAgency(agencyEmail,agencyName,agencyLocation,agencyContactNo,agencyPassword) VALUES (?,?,?,?,?)",
                                         (str(email),str(name),str(location),str(contact),str(password)))
@@ -65,7 +68,7 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                         body = f"""Someone has registered this email account in the Car2U application.
                             \nAgency Name: {name}\nAgency Email: {email}\nAgency Location: {location}\nContact No: {contact}
                             \nIf this is not you, please contact Car2U as soon as possible. 
-                            \nPlease ignore this message if this was you.\n\nCar2U contact: 016-407 5284"""
+                            \nPlease ignore this message if this was you.\n\nCar2U contact: 016-407 5284\n\nBest regards,\nCar2U Team"""
                         emailNotif(email,subject,body)
 
                         Database()
@@ -93,7 +96,7 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                             # Sending OTP to user
                             subject = 'Car2U: OTP to verify your identity'
                             body = f"""Hi {name},\nYour OTP is : {otp}\nNever Share this code to others. If this is not your actions, please contact our customer service.
-                            \n\nCar2U contact: 016-407 5284 or email via this account"""
+                            \n\nCar2U contact: 016-407 5284 or email via this account\n\nBest regards,\nCar2U Team"""
                             emailNotif(email,subject,body)
                             continue
                         

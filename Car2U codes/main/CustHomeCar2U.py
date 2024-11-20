@@ -194,7 +194,8 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
     entry_2 = ctk.CTkComboBox(master=homeFrame, width=100, state="readonly", values=capacities, fg_color="#D9D9D9", font=("Skranji", 14))
     entry_2.place(x=780, y=165)
 
-    submit_button = ctk.CTkButton(master=homeFrame, text="Find", width=85, height=35, fg_color="#067BC1", command=lambda: findcar(homeFrame,list_callback,entry_1.get(),entry_2.get()))
+    submit_button = ctk.CTkButton(master=homeFrame, text="Find", width=85, height=35, fg_color="#067BC1", font=("Tw Cen MT Condensed Extra Bold", 20), 
+                                  command=lambda: findcar(homeFrame,list_callback,entry_1.get(),entry_2.get()))
     submit_button.place(x=958, y=159)
 
     # Promotions

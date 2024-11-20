@@ -4,6 +4,7 @@ import customtkinter as ctk
 import pywinstyles
 import webbrowser  # Import webbrowser module
 import smtplib
+import easygui
 from tkinter import messagebox, Toplevel, filedialog
 from pathlib import Path
 from PIL import Image, ImageTk
@@ -119,7 +120,7 @@ def upload_receipt(transact_id,review_callback):
                 WHERE transactID = ?
             ''', (receipt_blob, transact_id))
             conn.commit()
-            messagebox.showinfo("Receipt Uploaded", "Receipt has been uploaded successfully!")
+            easygui.msgbox("Receipt Uploaded", "Receipt has been uploaded successfully!")
             
             # Send confirmation email to the user
             send_confirmation_email(email, booking_details)
@@ -329,7 +330,7 @@ def confirm_payment(review_callback):
             webbrowser.open("https://www.paypal.com/signin")
 
         # Show receipt upload prompt
-        messagebox.showinfo("Upload Receipt", "Please upload a receipt image for the transaction.")
+        easygui.msgbox("Upload Receipt", "Please upload a receipt image for the transaction.")
         upload_receipt(transact_id,review_callback)
 
 # Define actions for each button with image switching

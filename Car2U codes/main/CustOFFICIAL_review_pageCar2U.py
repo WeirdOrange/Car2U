@@ -6,7 +6,7 @@ import easygui
 from tkinter import ttk, messagebox, Toplevel
 from pathlib import Path
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info,set_BookingID
+from MainCar2U_UserInfo import get_user_info,set_user_info,set_BookingID,setRenter
 from datetime import datetime
 
 
@@ -58,6 +58,10 @@ def open_review():
 def open_chat(current_window, chat_callback):
     current_window.destroy()  # Close the window
     chat_callback()
+
+def contactRenter(chat_callback,agency):
+    setRenter(agency)
+    open_chat(reviewFrame, chat_callback)
 
 def accManage(current_window, login_callback,profile_callback):
     global pfpState, droptabFrame
@@ -256,7 +260,8 @@ def on_row_selected(payment_callback,chat_callback,event):
 
                 global contact_button
                 contact_button = tk.Button(defaultFrame, text="Contact Renter", bg="#FFB195", font=("Arial Bold", 12), bd=0,
-                                    fg="#000000", command=lambda: open_chat(reviewFrame, chat_callback))
+                                    fg="#000000", command=lambda agency=details[1]: contactRenter(chat_callback,agency))
+
                 global cancel_button
                 cancel_button = tk.Button(defaultFrame, text="Cancel Request", bg="#FF865A", font=("Arial Bold", 14), bd=0,
                                     fg="#000000", command=lambda: cancel_Request())

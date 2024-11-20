@@ -121,7 +121,7 @@ def forgorPssw(loginFrame,returnLogin):
                 # Sending OTP to user
                 subject = 'Forgot Password Request'
                 body = f"""Hey, {name}\nWe heard that you lost your Car2U password. If this was not you, please ignore this email.
-                            \nIf this was you,\n\nYour OTP is {otp}\n\nNeed Help? Contact us via Car2U support team."""
+                            \nIf this was you,\n\nYour OTP is {otp}\n\nNeed Help? Contact us via Car2U support team.\n\nBest regards,\nCar2U Team"""
                 emailNotif(askEmail,subject,body)
                 conn.close()
                 userotp = easygui.enterbox("Enter OTP (Press cancel to request for another OTP): ","Check Your Email for OTP")

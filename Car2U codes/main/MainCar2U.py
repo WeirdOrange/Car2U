@@ -6,9 +6,9 @@ import CustHomeCar2U
 import CustProfileCar2U
 import CustBookingListCar2U
 import CustAboutUsCar2U
-import CustOFFICIAL_booking_details
-import CustOFFICIAL_payment_page
-import CustOFFICIAL_review_page
+import CustOFFICIAL_booking_detailsCar2U
+import CustOFFICIAL_payment_pageCar2U
+import CustOFFICIAL_review_pageCar2U
 import CustChatCar2U
 
 import AdminHomeCar2U
@@ -46,13 +46,13 @@ def open_aboutUs():
     CustAboutUsCar2U.aboutUspage(open_login,open_upRent,open_home,open_listing,open_profile,open_review,open_chat)
 
 def open_bookDetails():
-    CustOFFICIAL_booking_details.bookingdetails(open_login,open_listing,open_profile,open_review,open_chat)
+    CustOFFICIAL_booking_detailsCar2U.bookingdetails(open_login,open_listing,open_profile,open_review,open_chat)
 
 def open_payment():
-    CustOFFICIAL_payment_page.paymentGUI(open_login,open_home,open_listing,open_aboutUs,open_profile,open_review)
+    CustOFFICIAL_payment_pageCar2U.paymentGUI(open_login,open_home,open_listing,open_aboutUs,open_profile,open_review)
 
 def open_review():
-    CustOFFICIAL_review_page.reviewGUI(open_login,open_home,open_listing,open_profile,open_aboutUs,open_payment,open_chat)
+    CustOFFICIAL_review_pageCar2U.reviewGUI(open_login,open_home,open_listing,open_profile,open_aboutUs,open_payment,open_chat)
 
 def open_chat():
     CustChatCar2U.custChatGUI(open_login,open_home,open_listing,open_aboutUs,open_profile,open_review,open_chat)

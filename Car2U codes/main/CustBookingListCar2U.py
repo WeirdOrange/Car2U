@@ -350,6 +350,10 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
         droptabFrame.destroy()
         pfpState = 1
 
+def changeDate():
+    nexttoday = pickup_date.get_date()+timedelta(1)
+    dropoff_date.config(mindate=nexttoday)
+
 def booking(login_callback,home_callback,profile_callback,about_callback,bookdetails_callback,review_callback,chat_callback):
     # Create the main application window
     global bookingFrame
@@ -448,6 +452,7 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
     pickup_entry = ctk.CTkComboBox(master=location_frame, width=175, state="readonly", values=locations, fg_color="#bbbbbb", font=("Skranji", 12))
     pickup_entry.place(x=85, y=50)
     pickup_date = DateEntry(location_frame, width=12, background='orange', foreground='white', borderwidth=2, font=("Arial", 10), mindate=today)
+    pickup_date.bind("<<DateEntrySelected>>")
     pickup_date.place(x=345, y=50)
 
     # Drop-off entry

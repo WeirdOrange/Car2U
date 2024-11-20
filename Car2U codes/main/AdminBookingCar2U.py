@@ -493,7 +493,8 @@ def approveBooking(remark):
         subject = "Car Rental Booking Approved"
         body = str(f"""Hi {custName},\nGreat News! Your reservation booking to rent the {model}, {carNo}, has been approved!
                    \nPlease proceed to Payment from booking history and pay for the rental.
-                   \n\nReminder: Do pay for the car rental at least a day before the car rental date, the booking will be automatically rejected if booking is not paid""")
+                   \nReminder: Do pay for the car rental at least a day before the car rental date, the booking will be automatically rejected if booking is not paid
+                   \n\nBest regards,\nCar2U Team""")
         emailNotif(email,subject,body)
         refresh_currentTreeview()
         select_item

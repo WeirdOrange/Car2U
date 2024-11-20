@@ -97,9 +97,8 @@ def fetch_booking_data(selected_Pdate,selected_Ddate):
                 SELECT pickupDate, dropoffDate, bookingStatus FROM BookingDetails
                 WHERE bookingStatus NOT in
 				(SELECT bookingStatus FROM BookingDetails 
-				WHERE bookingStatus = "Rejected" or bookingStatus = 'Cancelled') and carID = ? and
-				(pickupDate = ? or dropoffDate = ? or pickupDate = ? or dropoffDate = ?)
-            ''', (carID,selected_Pdate,selected_Pdate,selected_Ddate,selected_Ddate))
+				WHERE bookingStatus = "Rejected" or bookingStatus = 'Cancelled') and carID = ?
+            ''', (carID,))
 
             booking_data = cursor.fetchall()
             conn.close()
@@ -113,18 +112,18 @@ def fetch_booking_data(selected_Pdate,selected_Ddate):
                 for date in selecteRange:
                     for day in dateRange:
                         if day == date:
-                            result = "Rejected"
-                            dateTaken.append(date)
+                            print(date)
+                            dateTaken.append(date.strftime("%Y-%m-%d"))
             
             if dateTaken:
                 messagebox.showinfo("Request Failed", f"Car is currently unavailable in the following dates:\n{dateTaken}")
+            else:
+                messagebox.showinfo("Booking Slot Available!","Congrats! Pick-Up And Drop-OFF Date are both available!")
             
         except sqlite3.Error as e:
             messagebox.showerror("Error", "Error occurred during registration: {}".format(e))
         finally:
             conn.close()
-    
-    return result
 
 # Function to connect and fetch data from the database
 def fetch_car_and_agency_data():
@@ -331,9 +330,10 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
                     text=f"{car_data[7]}", font=("Arial", 14), fill="black", anchor="w")  # Left-aligned for agency name
 
     # Create the "Make Payment" button and place it on the canvas
-    chatting = ctk.CTkButton(detailsFrame, text=f"Chat With Us", font=("Arial", 10, "bold"), text_color="white", width=90, height=30, bg_color="#FEBD71", fg_color="#FEBD71", 
-                                       command=lambda: open_chat(detailsFrame, chat_callback))
-    chatting.place(x=1130, y=330)
+    chatting = ctk.CTkButton(detailsFrame, text=f"Chat With Us", font=("Arial", 12, "bold"), text_color="black", width=90, height=25, 
+                             bg_color="#FEBD71", fg_color="#FEBD71", corner_radius=20, 
+                            command=lambda: open_chat(detailsFrame, chat_callback))
+    chatting.place(x=1120, y=330)
 
     # Split and display dropoffLocation text
     agencyLocation_lines = split_text(car_data[8])

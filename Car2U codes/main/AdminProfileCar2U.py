@@ -549,26 +549,28 @@ def adminProfile(login_callback,home_callback,detail_callback,booking_callback,c
     saleLabel = ctk.CTkLabel(saleFrame, text="Cars Rating", width=115, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 20))
     saleLabel.place(x=315, y=10)
 
-    yearlyFrame = ctk.CTkFrame(statsFrame, width=440, height=205, border_width=4, border_color="#2F59C1",fg_color="#FFFFFF",bg_color="#F7F7F7")
-    yearlyFrame.place(x=490,y=155)
+    yearlyFrame = ctk.CTkFrame(statsFrame, width=440, height=340, border_width=4, border_color="#2F59C1",fg_color="#FFFFFF",bg_color="#F7F7F7")
+    yearlyFrame.place(x=490,y=15)
     pywinstyles.set_opacity(statsTitle,color="#F7F7F7")
-    yearlyLabel = ctk.CTkLabel(yearlyFrame, text="Yearly Report", width=115, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 20))
-    yearlyLabel.place(x=315, y=40)
+    yearlyLabel = ctk.CTkLabel(yearlyFrame, text="Yearly Report", width=430, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 20))
+    yearlyLabel.place(x=5, y=10)
     yearlyEarns = ctk.CTkLabel(yearlyFrame, text="Total Revenue: ", width=100, anchor="e", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
-    yearlyEarns.place(x=322,y=80)
+    yearlyEarns.place(x=50,y=200)
     yPrintBttn = ctk.CTkButton(yearlyFrame, text="Print", width=75, height=30, corner_radius=20, fg_color="#F95F43", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#FFFFFF",
                                command=lambda: save_and_print_selected_booking(yrTitle,yrRating,yrRenting,yrProfit))
-    yPrintBttn.place(x=335,y=135)
+    yPrintBttn.place(x=280,y=300)
     
     global monthStatsFrame,monthNavFrame 
     monthStatsFrame = ctk.CTkFrame(monthlyFrame, width=390, height=230)
-    monthStatsFrame.place(x=5,y=40)
-    monthNavFrame = ctk.CTkFrame(monthlyFrame, width=50, height=200)
-    monthNavFrame.place(x=400,y=5)
+    monthStatsFrame.place(x=10,y=40)
+    monthNavFrame = ctk.CTkFrame(monthlyFrame, width=10, height=200)
+    monthNavFrame.place(x=4,y=20)
     
-    global yearStatsFrame
-    yearStatsFrame = ctk.CTkFrame(yearlyFrame, width=300, height=190)
-    yearStatsFrame.place(x=5,y=5)
+    global yearStatsFrame,yearNavFrame
+    yearStatsFrame = ctk.CTkFrame(yearlyFrame, width=390, height=230)
+    yearStatsFrame.place(x=10,y=40)
+    yearNavFrame = ctk.CTkFrame(yearlyFrame, width=10, height=200)
+    yearNavFrame.place(x=4,y=20)
     refresh(str(datetime.now().month),str(datetime.now().year))
 
 
@@ -599,7 +601,6 @@ def monthlyReport(notRent,rejectBooking,gotCancelled,success,earning): # Monthly
     monthcanvas = FigureCanvasTkAgg(mfig, master=monthStatsFrame)  # A tk.DrawingArea.
     monthcanvas.draw()
     monthcanvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=True)
-
 
     global toolbar
     toolbar = VerticalToolbar(monthcanvas, monthNavFrame)
@@ -834,9 +835,10 @@ def yearlyReport(ynotRent,yrejectBooking,ygotCancelled,ysuccess,yearnings): # Ye
     
     # Create a figure for the pie 
     global yfig
-    yfig = Figure(figsize=(3, 1.9), dpi=100, constrained_layout=True)
+    yfig = Figure(figsize=(3.9, 2.3), dpi=100, constrained_layout=True)
     ax = yfig.add_subplot(111)
     ax.pie(slices,labels=labels, colors=colors, autopct='%1.1f%%',wedgeprops={'edgecolor': 'white', 'linewidth': 2, 'width': 0.9},textprops={'fontsize': 8, 'color': 'black'})
+    ax.legend(labels=labels, fontsize=7,loc='lower center', bbox_to_anchor=(0.5, -0.05), ncol=2)
     
     # Embed figure in tkinter canvas
     global yearcanvas
@@ -844,9 +846,13 @@ def yearlyReport(ynotRent,yrejectBooking,ygotCancelled,ysuccess,yearnings): # Ye
     yearcanvas.draw()
     yearcanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+    global ytoolbar
+    ytoolbar = VerticalToolbar(yearcanvas, yearNavFrame)
+    ytoolbar.update()
+
     # Add a yearly earnings label
     yearlyEarnings = ctk.CTkLabel(yearlyFrame, text=f"RM {yearnings}", width=100, anchor="center", font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#000000")
-    yearlyEarnings.place(x=322, y=100)
+    yearlyEarnings.place(x=160,y=300)
 
 
 # Custom function to reconfigure the toolbar layout

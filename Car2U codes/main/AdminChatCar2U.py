@@ -110,6 +110,7 @@ def connect():
     except:
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
     
+    global username
     username = fetchName() # Enter username to server
     uesrname = str(username).replace(" ","")
     if username != '':
@@ -123,20 +124,14 @@ def connect():
     previous_messages = fetch_messages()
     if previous_messages:
         for message in previous_messages:
-            message_box.config(state=tk.NORMAL)
-            message_box.insert(tk.END, message + '\n')
-            message_box.config(state=tk.DISABLED)
+            if message == "[SERVER] Successfully connected to the server":
+                continue
+            else:
+                message_box.config(state=tk.NORMAL)
+                message_box.insert(tk.END, message + '\n')
+                message_box.config(state=tk.DISABLED)
 
-def fetchName():
-    global agencyName, userinfo
-    userinfo = get_user_info()
-    print(f"Home: {userinfo}")
-    Database()
-    cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = ?""",(userinfo,))
-    agencyName = cursor.fetchone()[0]
-    conn.close()
-    print(agencyName)
-    return agencyName
+
 
 def send_message():
     message = message_textbox.get()
@@ -152,30 +147,48 @@ def send_message():
         messagebox.showerror("Empty message", "Message cannot be empty")
 
 def refresh_chatlist():
-    Database()
-    cursor.execute("""SELECT name FROM UserDetails""")
-    result = cursor.fetchall()
-    conn.close()# Clear existing entries
-    for widget in selectCustFrame.winfo_children():
-        widget.destroy()
+    try:
+        Database()
+        cursor.execute("""SELECT name FROM UserDetails""")
+        result = cursor.fetchall()
+        conn.close()
+        
+        # Clear existing entries
+        for widget in selectCustFrame.winfo_children():
+            widget.destroy()
 
-    all_button = ctk.CTkButton(selectCustFrame, text="All", width=270, height=45, 
-                                fg_color="#FFD6A6", text_color="#000000")
-    all_button.pack(pady=5)
+        all_button = ctk.CTkButton(selectCustFrame, text="All", width=270, height=45, 
+                                    fg_color="#FFD6A6", text_color="#000000")
+        all_button.pack(pady=5)
 
-    # Add user-specific options
-    for i, row in enumerate(result):
-        cust_name = row[0]
+        # Add user-specific options
+        for i, row in enumerate(result):
+            cust_name = row[0]
 
-        cust_name = str(cust_name).replace(" ","")
-        user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=270, height=45,
-                                     fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
-        user_button.pack(pady=5)
+            cust_name = str(cust_name).replace(" ","")
+            user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=270, height=45,
+                                        fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
+            user_button.pack(pady=5)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 def message_directed(cust_id):
     if message_textbox.get() != "":
         message_textbox.delete(0, tk.END)
     message_textbox.insert(0, f"@{cust_id} ")
+def fetchName():
+    global agencyName, userinfo
+    userinfo = get_user_info()
+    print(f"Home: {userinfo}")
+    Database()
+    cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = ?""",(userinfo,))
+    agencyName = cursor.fetchone()[0]
+    conn.close()
+    print(agencyName)
+    return agencyName
 
 def adminChat(login_callback,home_callback,detail_callback,booking_callback,profile_callback):
     # Creating a socket object
@@ -212,7 +225,7 @@ def adminChat(login_callback,home_callback,detail_callback,booking_callback,prof
 
     # Relocate buttons
     home_button = ctk.CTkButton(master=chatpage, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", 
-                                text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(chatpage, home_callback))
+                                text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(chatpage, home_callback))
     home_button.place(x=22, y=100)
     pywinstyles.set_opacity(home_button,color="#FA5740")
 
@@ -228,7 +241,7 @@ def adminChat(login_callback,home_callback,detail_callback,booking_callback,prof
     pywinstyles.set_opacity(inventory_button,color="#FC503E")
 
     chat_button = ctk.CTkButton(master=chatpage, text="Chat", width=120, fg_color=("#FC503E","#FC4D3D"), bg_color="#FC4D3D", 
-                                    text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat())
+                                    text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat())
     chat_button.place(x=22, y=295)
     pywinstyles.set_opacity(chat_button,color="#FC4D3D")
 
@@ -268,12 +281,12 @@ def adminChat(login_callback,home_callback,detail_callback,booking_callback,prof
     username_label.place(x=30,y=5)
 
     global message_textbox
-    message_textbox = tk.Entry(bottom_frame, font=FONT, bg=MEDIUM_GREY, fg=WHITE, width=45)
+    message_textbox = ctk.CTkEntry(bottom_frame, placeholder_text="Type your message...", fg_color="#000000", text_color="white", width=583, height=40)
     message_textbox.pack(side="left", padx=10)
 
     message_button = tk.Button(bottom_frame, text="Send", font=BUTTON_FONT, bg=OCEAN_BLUE, fg=WHITE, command=send_message)
     message_button.bind('<Return>',send_message)
-    message_button.pack(side="left", padx=10,fill="both")
+    message_button.pack(side="right", padx=10,fill="both")
 
     global message_box
     message_box = scrolledtext.ScrolledText(middle_frame, font=SMALL_FONT, bg=MEDIUM_GREY, fg=WHITE, width=100, height=39)

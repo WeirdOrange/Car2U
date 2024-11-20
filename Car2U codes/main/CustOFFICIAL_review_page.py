@@ -153,9 +153,9 @@ def upload_review():
     
     Database()
     cursor.execute('''
-        INSERT INTO Reviews (ratings, statement, userID, carID, bookingID)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (rating, review_text, user_id, car_id, bookingID))
+        INSERT INTO Reviews (ratings, statement, bookingID)
+        VALUES (?, ?, ?)
+    ''', (rating, review_text, bookingID))
     
     conn.commit()
     conn.close()
@@ -185,7 +185,7 @@ def cancel_Request():
             break
 
 # Function to display detailed info on row selection
-def on_row_selected(payment_callback,event):
+def on_row_selected(payment_callback,chat_callback,event):
     for widget in defaultFrame.winfo_children():
         if isinstance(widget, (tk.Button,ctk.CTkImage,ctk.CTkLabel,ctk.CTkTextbox)):
             widget.destroy()
@@ -256,7 +256,7 @@ def on_row_selected(payment_callback,event):
 
                 global contact_button
                 contact_button = tk.Button(defaultFrame, text="Contact Renter", bg="#FFB195", font=("Arial Bold", 12), bd=0,
-                                    fg="#000000", command=lambda: print("A"))
+                                    fg="#000000", command=lambda: open_chat(reviewFrame, chat_callback))
                 global cancel_button
                 cancel_button = tk.Button(defaultFrame, text="Cancel Request", bg="#FF865A", font=("Arial Bold", 14), bd=0,
                                     fg="#000000", command=lambda: cancel_Request())
@@ -384,7 +384,7 @@ def reviewGUI(login_callback,home_callback,listing_callback,profile_callback,abo
     tree.heading("Status", text="Status")
     tree.column("Status", width=100)
     tree.place(x=70, y=192, width=700, height=170)
-    tree.bind("<ButtonRelease-1>",lambda event: on_row_selected(payment_callback,event))
+    tree.bind("<ButtonRelease-1>",lambda event: on_row_selected(payment_callback,chat_callback,event))
 
     # Load and display default image if no row is selected
     global default_image_label, defaultFrame

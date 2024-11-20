@@ -342,7 +342,7 @@ def adminHome(login_callback,detail_callback,booking_callback,profile_callback,c
     refresh_treeview()
 
     viewMore = ctk.CTkButton(inventoryFrame, text="View More", bg_color="#85BCDA", fg_color="#FED000", text_color="#000000", font=("Segoe UI",16), 
-                             width=100, height=35, corner_radius=50)
+                             width=100, height=35, corner_radius=50, command=lambda: open_Cdetail(adminHomeFrame, detail_callback))
     viewMore.place(x=885,y=240)
     pywinstyles.set_opacity(viewMore,color="#85BCDA")
 

@@ -22,6 +22,13 @@ def set_BookingID(bookingID):
 def get_BookingInfo():
     return bookInfo
 
+def setRenter(agency):
+    global agencyName
+    agencyName = str(agency).replace(" ","")
+
+def getRenter():
+    return agencyName
+
 def store_messages(message):
     global messages
     messages.append(message)

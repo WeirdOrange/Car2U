@@ -69,7 +69,7 @@ def sign_up_get(login_callback,name,email,location,contact,password,cpassword):
                         emailNotif(email,subject,body)
 
                         Database()
-                        cursor.execute("""DELETE FROM UserDetails WHERE email = ?""",(email))
+                        cursor.execute("""DELETE FROM UserDetails WHERE email = ?""",(email,))
                         conn.commit()
                         open_login(RenterFrame,login_callback)
                         break

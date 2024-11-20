@@ -26,15 +26,20 @@ def client_handler(client):
         username = client.recv(2048).decode('utf-8')
         
         username = str(username)
+        newUesrname = username.replace(" ","")
+        print(newUesrname)
+        print(active_clients)
 
         if username != '':
-            if username not in active_clients:
-                active_clients.append((username, client))
+            if username not in (inner[0] for inner in active_clients):
+                active_clients.append((newUesrname, client))
             prompt_message = "SERVER~" + f"{username} added to the chat"
             send_messages_to_all(prompt_message)
+            print(active_clients)
             break
         else:
             print("Client username is empty")
+        print(active_clients)
 
     threading.Thread(target=listen_for_messages, args=(client, username, )).start()
 
@@ -69,9 +74,12 @@ def send_direct_message(username,target_username, message):
     for user in active_clients:
         if user[0] == username:
             send_message_to_client(user[1], message)
+            continue
         if user[0] == target_username:
             send_message_to_client(user[1], message)
-    print(f"User {target_username} not found or not connected.")
+            break
+        else:
+            print(f"User {target_username} not found or not connected.")
     return
 
 # Modified listen_for_messages function to handle direct messages

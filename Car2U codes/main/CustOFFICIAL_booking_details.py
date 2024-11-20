@@ -44,6 +44,11 @@ def open_review(current_window, review_callback):
     current_window.destroy()  # Close the signup window
     review_callback()
 
+# Function to handle chats button click
+def open_chat(current_window, chat_callback):
+    current_window.destroy()  # Close the window
+    chat_callback()
+
 def accManage(current_window, login_callback,profile_callback,review_callback):
     global pfpState, droptabFrame
 
@@ -92,7 +97,7 @@ def fetch_booking_data(selected_Pdate,selected_Ddate):
                 SELECT pickupDate, dropoffDate, bookingStatus FROM BookingDetails
                 WHERE bookingStatus NOT in
 				(SELECT bookingStatus FROM BookingDetails 
-				WHERE bookingStatus = "Rejected" or bookingStatus = 'Cancelled') and 
+				WHERE bookingStatus = "Rejected" or bookingStatus = 'Cancelled') and carID = ? and
 				(pickupDate = ? or dropoffDate = ? or pickupDate = ? or dropoffDate = ?)
             ''', (carID,selected_Pdate,selected_Pdate,selected_Ddate,selected_Ddate))
 
@@ -297,7 +302,7 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
             "price": (1212, 466),
             "agencyName": (954, 249),
             "agencyLocation": (1014, 280),
-            "agencyContactNo": (1014, 343),
+            "agencyContactNo": (1014, 343)
         }
 
     # Place the labels with specific font sizes and bold styling for model and colour
@@ -324,6 +329,11 @@ def bookingdetails(login_callback,list_callback,profile_callback,review_callback
 
     canvas.create_text(positions["agencyName"][0], positions["agencyName"][1], 
                     text=f"{car_data[7]}", font=("Arial", 14), fill="black", anchor="w")  # Left-aligned for agency name
+
+    # Create the "Make Payment" button and place it on the canvas
+    chatting = ctk.CTkButton(detailsFrame, text=f"Chat With Us", font=("Arial", 10, "bold"), text_color="white", width=90, height=30, bg_color="#FEBD71", fg_color="#FEBD71", 
+                                       command=lambda: open_chat(detailsFrame, chat_callback))
+    chatting.place(x=1130, y=330)
 
     # Split and display dropoffLocation text
     agencyLocation_lines = split_text(car_data[8])
@@ -475,7 +485,7 @@ def send_booking_email():
                 CarDetails.registrationNo, CarDetails.model, CarDetails.colour, CarDetails.fuelType, 
                 CarDetails.seatingCapacity, CarDetails.transmissionType, CarDetails.price,
                 RentalAgency.agencyName, RentalAgency.agencyLocation, RentalAgency.agencyContactNo,
-                UserDetails.email
+                UserDetails.email,RentalAgency.agencyEmail
             FROM BookingDetails
             INNER JOIN CarDetails ON BookingDetails.carID = CarDetails.carID
             INNER JOIN RentalAgency ON CarDetails.agencyID = RentalAgency.agencyID
@@ -492,50 +502,98 @@ def send_booking_email():
             # Unpack data
             (bookingID, pickupLocation, pickupDate, pickupTime, dropoffLocation, dropoffDate, dropoffTime, 
             registrationNo, model, colour, fuelType, seatingCapacity, transmissionType, 
-            price, agencyName, agencyLocation, agencyContactNo, user_email) = data
-
-            # Email content
-            subject = "Car Rental Booking Details Confirmation"
-            body = f"""
-            Dear Customer,
-            Your booking request have been made. Here are your booking details: 
-            Booking ID: {bookingID}
-
-            Car Details:
-            Registration No: {registrationNo}
-            Model: {model}
-            Colour: {colour}
-            Fuel Type: {fuelType}
-            Seating Capacity: {seatingCapacity}
-            Transmission Type: {transmissionType}
-            Price per day: MYR {price:.2f}
-
-            Pickup & Dropoff Details:
-            Pickup: {pickupLocation}, {pickupDate}, {pickupTime}
-            Dropoff: {dropoffLocation}, {dropoffDate}, {dropoffTime}
-    
-            Agency Details:
-            Name: {agencyName}
-            Location: {agencyLocation}
-            Contact: {agencyContactNo}
-
-
-            Your booking request wil be processed within 2 business days. An email will be sent upon approval to proceed with payment. 
-            Thank you for choosing Car2U. We hope you have a pleasant experience with us.
-            
-            Best regards,
-            Car2U Team
-            """
+            price, agencyName, agencyLocation, agencyContactNo, user_email,agency_email) = data
 
             # Send email
             sender_email = "cartwoyouofficial@gmail.com"
             sender_password = "kcft xbdi orcq awzn"
 
             try:
+                # Email content
+                subject = "Car Rental Booking Details Confirmation"
+                body = f"""
+                Dear Customer,
+                Your booking request have been made. Here are your booking details: 
+                Booking ID: {bookingID}
+
+                Car Details:
+                \tRegistration No: {registrationNo}
+                \tModel: {model}
+                \tColour: {colour}
+                \tFuel Type: {fuelType}
+                \tSeating Capacity: {seatingCapacity}
+                \tTransmission Type: {transmissionType}
+                \tPrice per day: MYR {price:.2f}
+
+                Pickup & Dropoff Details:
+                \tPickup: {pickupLocation}, {pickupDate}, {pickupTime}
+                \tDropoff: {dropoffLocation}, {dropoffDate}, {dropoffTime}
+        
+                Agency Details:
+                \tName: {agencyName}
+                \tAddress: {agencyLocation}
+                \tContact: {agencyContactNo}
+
+
+                Your booking request wil be processed within 2 business days. An email will be sent upon approval to proceed with payment. 
+                Thank you for choosing Car2U. We hope you have a pleasant experience with us.
+                
+                Best regards,
+                Car2U Team
+                """
+
                 # Create email message
                 msg = MIMEMultipart()
                 msg['From'] = sender_email
                 msg['To'] = user_email
+                msg['Subject'] = subject
+                msg.attach(MIMEText(body, 'plain'))
+
+                # Setup server connection
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.send_message(msg)
+                server.quit()
+
+                # Email content 2
+                subject = "Car Rental Booking Request Pending"
+                body = f"""
+                Dear Renter,
+                A booking request have been made. Here are the booking details: 
+                Booking ID: {bookingID}
+
+                Car Details: 
+                \tRegistration No: {registrationNo}
+                \tModel: {model}
+                \tColour: {colour}
+                \tFuel Type: {fuelType}
+                \tSeating Capacity: {seatingCapacity}
+                \tTransmission Type: {transmissionType}
+                \tPrice per day: MYR {price:.2f}
+
+                Pickup & Dropoff Details:
+                \tPickup: {pickupLocation}, {pickupDate}, {pickupTime}
+                \tDropoff: {dropoffLocation}, {dropoffDate}, {dropoffTime}
+        
+                Agency Details:
+                \tName: {agencyName}
+                \tAddress: {agencyLocation}
+                \tContact: {agencyContactNo}
+
+                
+                Please response to this booking request as soon as possible (within 2 business days). Do check if the vehicle's condition is viable to rent out.
+                Booking Rejections are only allowed when the car had an accident or is under maintenance, else a warning would be issued. 
+                Thank You for cooperating.
+                
+                Best regards,
+                Car2U Team
+                """
+                
+                # Create email message
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = agency_email
                 msg['Subject'] = subject
                 msg.attach(MIMEText(body, 'plain'))
 

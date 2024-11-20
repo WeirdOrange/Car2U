@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, scrolledtext, messagebox, ttk
 from tkcalendar import DateEntry
-from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_messages
+from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_messages,getRenter
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
@@ -36,38 +36,38 @@ def Database(): #creating connection to database and creating table
 
 # Function to handle login button click
 def open_login(current_window, login_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     userInfo = ""
     set_user_info(userInfo)
     login_callback()
 
 # Function to handle profile button click
-def open_home():
-    messagebox.showinfo("You are on the Home page")
+def open_home(current_window, home_callback):
+    current_window.destroy()  # Close the window
+    home_callback()
 
 # Function to handle selection button click
 def open_listing(current_window, list_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     list_callback()
 
 # Function to handle profile button click
 def open_profile(current_window, profile_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     profile_callback()
 
 # Function to handle about us button click
 def open_aboutUs(current_window, about_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     about_callback()
     
 # Function to handle chats button click
-def open_chat(current_window, chat_callback):
-    current_window.destroy()  # Close the window
-    chat_callback()
+def open_chat():
+    messagebox.showinfo("Chat Page Clicked","You are on the on the Chatting Page")
 
 # Function to handle profile button click
 def open_review(current_window, review_callback):
-    current_window.destroy()  # Close the signup window
+    current_window.destroy()  # Close the window
     review_callback()
 
 def accManage(current_window, login_callback,profile_callback,review_callback):
@@ -118,6 +118,7 @@ def connect():
     except:
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
 
+    global username
     username = fetchName() # Enter username to server
     uesrname = str(username).replace(" ","")
     if username != '':
@@ -130,9 +131,12 @@ def connect():
     previous_messages = fetch_messages()
     if previous_messages:
         for message in previous_messages:
-            message_box.config(state=tk.NORMAL)
-            message_box.insert(tk.END, message + '\n')
-            message_box.config(state=tk.DISABLED)
+            if message == "[SERVER] Successfully connected to the server":
+                continue
+            else:
+                message_box.config(state=tk.NORMAL)
+                message_box.insert(tk.END, message + '\n')
+                message_box.config(state=tk.DISABLED)
 
 def send_message():
     message = chat_input.get()
@@ -170,6 +174,11 @@ def refresh_chatlist():
             user_button = ctk.CTkButton(selectCustFrame, text=cust_name, width=185, height=45, font= ("Tw Cen MT",16),
                                         fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
             user_button.pack(pady=5)
+        
+        renter = getRenter()
+        if renter:
+            chat_input.insert(0, f"@{renter} ")
+    
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
@@ -276,7 +285,7 @@ def custChatGUI(login_callback,home_callback,listing_callback,aboutUs_callback,p
     pywinstyles.set_opacity(selections_button,color="#FB543F")
 
     contact_us_button = ctk.CTkButton(master=chatFrame, text="Contact Us", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
-                                      text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat(chatFrame, chat_callback))
+                                      text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_chat())
     contact_us_button.place(x=930, y=14)
     pywinstyles.set_opacity(contact_us_button,color="#FC503E")
 
@@ -288,7 +297,6 @@ def custChatGUI(login_callback,home_callback,listing_callback,aboutUs_callback,p
     # Build interface
     create_left_panel()
     create_right_panel()
-
 
 
 def listen_for_messages_from_server(client):

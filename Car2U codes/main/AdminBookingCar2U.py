@@ -485,7 +485,7 @@ def approveBooking(remark):
     try:
         Database()
         cursor = conn.cursor()
-        cursor.execute('''UPDATE BookingDetails SET bookingStatus = "Approve", bookingRemark = ?
+        cursor.execute('''UPDATE BookingDetails SET bookingStatus = "Approved", bookingRemark = ?
                             WHERE bookingID = ?''', (remark,bookingID,))
         conn.commit()
         messagebox.showinfo("Booking Approved", "You have approved the booking. Remember to mark your calendar!")
@@ -517,7 +517,10 @@ def rejectBooking(remark):
             messagebox.showinfo("Booking Rejected", "Oh! It seems you have rejected the booking. If this was a mistake, please contact Car2U service.")
             
             subject = "Car Rental Booking Rejected"
-            body = f"Hi {custName},\nWe are sorry to say that your reservation booking to rent the {model}, {carNo}, has been rejected. Late payment or sudden maintenance required for the car may had happened, do contact the rental agency to have a better understanding of what happened."
+            body = f"""Hi {custName},\nWe are sorry to say that your reservation booking to rent the {model}, {carNo}, has been rejected. 
+                    \n\nRenter's Rejection Remark: {remark}
+                    \n\nLate payment or sudden maintenance required for the car may had happened, 
+                    do contact the rental agency or contact our customer service line to have a better understanding of what happened.\n\nBest regards,\nCar2U Team"""
             emailNotif(email,subject,body)
             refresh_currentTreeview()
             refresh_history_treeview()

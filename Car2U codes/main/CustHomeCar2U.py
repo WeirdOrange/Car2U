@@ -241,7 +241,7 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
                                  command=lambda:open_aboutUs(homeFrame, about_callback))
     aboutus_label.place(x=290,y=620)
     pywinstyles.set_opacity(aboutus_label,color="#2A333D")
-    upRenter_label = ctk.CTkButton(master=homeFrame, text="Upgrade to Renter", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
+    upRenter_label = ctk.CTkButton(master=homeFrame, text="Upgrade to Rental Agent", bg_color="#2A333D", fg_color="#2A333D", text_color="#9EA3A9", 
                                   font=("Tw Cen MT Condensed Extra Bold", 20),
                                  command=lambda:open_upRent(homeFrame, uprent_callback))
     upRenter_label.place(x=430,y=577)

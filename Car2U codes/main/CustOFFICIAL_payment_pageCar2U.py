@@ -120,6 +120,7 @@ def upload_receipt(transact_id,review_callback):
                 WHERE transactID = ?
             ''', (receipt_blob, transact_id))
             conn.commit()
+            conn.close()
             easygui.msgbox("Receipt Uploaded", "Receipt has been uploaded successfully!")
             
             # Send confirmation email to the user
@@ -131,7 +132,8 @@ def upload_receipt(transact_id,review_callback):
         except sqlite3.Error as e:
             print("Failed to upload receipt:", e)
         finally:
-            conn.close()
+            if conn:
+                conn.close()
     else:
         messagebox.showinfo("No File Selected", "No receipt image was uploaded.")
 
@@ -157,18 +159,23 @@ def fetch_booking_and_price():
 
 # Function to update name, email, and contactNo in UserDetails table
 def update_user_details(name, email, contactNo):
-    conn = sqlite3.connect('CAR2U.db')
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect('CAR2U.db')
+        cursor = conn.cursor()
 
-    # Updating only name, email, and contactNo fields in UserDetails
-    cursor.execute('''
-        UPDATE UserDetails
-        SET name = ?, email = ?, contactNo = ?
-        WHERE userID = ?
-    ''', (name, email, contactNo, userInfo))
+        # Updating only name, email, and contactNo fields in UserDetails
+        cursor.execute('''
+            UPDATE UserDetails
+            SET name = ?, email = ?, contactNo = ?
+            WHERE userID = ?
+        ''', (name, email, contactNo, userInfo))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        print("An error occurred:", e)  # Print error if it fails
+    finally:
+        conn.close()
 
 def add_transaction(transaction_method, total_amount, booking_id):
     try:
@@ -267,34 +274,40 @@ def confirm_payment(review_callback):
         
         # Update BookingDetails with transactID if transactID was successfully returned
         if transact_id:
-            conn = sqlite3.connect('CAR2U.db')
-            cursor = conn.cursor()
-            
-            # Set transactID and bookingStatus to "Paid" if transactID exists
-            cursor.execute('''
-                UPDATE BookingDetails
-                SET bookingStatus = 'Paid'
-                WHERE bookingID = ?
-            ''', (booking_id,))
-            conn.commit()
-            
-            # Fetch booking details to send in email
-            cursor.execute('''
-                SELECT b.bookingID, c.registrationNo, c.model, c.colour, c.fuelType, 
-                       c.seatingCapacity, c.transmissionType, c.price,
-                       b.pickupLocation, b.pickupDate, b.pickupTime, 
-                       b.dropoffLocation, b.dropoffDate, b.dropoffTime,
-                       a.agencyName, a.agencyLocation, a.agencyContactNo,
-                       b.numberOfDays
-                FROM BookingDetails b
-                JOIN CarDetails c ON b.carID = c.carID
-                JOIN RentalAgency a ON c.agencyID = a.agencyID
-                WHERE b.bookingID = ?
-            ''', (booking_id,))
-            booking_data = cursor.fetchone()
+            try:
+                conn = sqlite3.connect('CAR2U.db')
+                cursor = conn.cursor()
+                
+                # Set transactID and bookingStatus to "Paid" if transactID exists
+                cursor.execute('''
+                    UPDATE BookingDetails
+                    SET bookingStatus = 'Paid'
+                    WHERE bookingID = ?
+                ''', (booking_id,))
+                conn.commit()
+                
+                # Fetch booking details to send in email
+                cursor.execute('''
+                    SELECT b.bookingID, c.registrationNo, c.model, c.colour, c.fuelType, 
+                        c.seatingCapacity, c.transmissionType, c.price,
+                        b.pickupLocation, b.pickupDate, b.pickupTime, 
+                        b.dropoffLocation, b.dropoffDate, b.dropoffTime,
+                        a.agencyName, a.agencyLocation, a.agencyContactNo,
+                        b.numberOfDays
+                    FROM BookingDetails b
+                    JOIN CarDetails c ON b.carID = c.carID
+                    JOIN RentalAgency a ON c.agencyID = a.agencyID
+                    WHERE b.bookingID = ?
+                ''', (booking_id,))
+                booking_data = cursor.fetchone()
 
-            # Close database connection
-            conn.close()
+                # Close database connection
+                conn.close()
+            except sqlite3.Error as e:
+                print("An error occurred:", e)  # Print error if it fails
+            finally:
+                if conn:
+                    conn.close()
 
             # Calculate total amount and map booking data to a dictionary
             total_amount = booking_data[7] * booking_data[17]
@@ -325,9 +338,11 @@ def confirm_payment(review_callback):
         if selected_payment == "TNG":
             webbrowser.open("https://payment.tngdigital.com.my/sc/bDLnXXwSUR")
         elif selected_payment == "Bank":
-            webbrowser.open("https://www.cimbclicks.com.my/clicks/#/")
+            messagebox.showerror("Feature unavailable","We are sorry to say that this feature is still a work in progress.")
+            #webbrowser.open("https://www.cimbclicks.com.my/clicks/#/")
         elif selected_payment == "Paypal":
-            webbrowser.open("https://www.paypal.com/signin")
+            messagebox.showerror("Feature unavailable","We are sorry to say that this feature is still a work in progress.")
+            #webbrowser.open("https://www.paypal.com/signin")
 
         # Show receipt upload prompt
         easygui.msgbox("Upload Receipt", "Please upload a receipt image for the transaction.")
@@ -341,11 +356,13 @@ def tng_action():
 
 def bank_action():
     global selected_payment
+    messagebox.showerror("Feature unavailable","We are sorry to say that this feature is still a work in progress.")
     selected_payment = "Bank"
     highlight_selected(bank, bank_clicked_photo)
 
 def card_action():
     global selected_payment
+    messagebox.showerror("Feature unavailable","We are sorry to say that this feature is still a work in progress.")
     selected_payment = "Paypal"
     highlight_selected(card, paypal_clicked_photo)
 
@@ -362,7 +379,7 @@ def highlight_selected(selected_button, clicked_image):
 def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback, profile_callback, review_callback):
     # Initialize main CustomTkinter window
     global paymentFrame
-    paymentFrame = ctk.CTkToplevel()
+    paymentFrame = Toplevel()
     paymentFrame.title("Payment Page")
     paymentFrame.geometry("1280x720")
     paymentFrame.resizable(False,False)
@@ -506,29 +523,29 @@ def paymentGUI(login_callback, home_callback, listing_callback, aboutUs_callback
     # Load default and clicked versions of TNG image
     global tng_photo,bank_photo,paypal_photo,tng_clicked_photo,bank_clicked_photo,paypal_clicked_photo
     tng_image = Image.open(relative_to_assets("tng button.png"))
-    tng_image = tng_image.resize((360, 65), Image.Resampling.LANCZOS)
+    tng_image = tng_image.resize((305, 60), Image.Resampling.LANCZOS)
     tng_photo = ImageTk.PhotoImage(tng_image)
 
     tng_clicked_image = Image.open(relative_to_assets("tng click.png"))
-    tng_clicked_image = tng_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
+    tng_clicked_image = tng_clicked_image.resize((305, 60), Image.Resampling.LANCZOS)
     tng_clicked_photo = ImageTk.PhotoImage(tng_clicked_image)
 
     # Load default and clicked versions of bank image
     bank_image = Image.open(relative_to_assets("online banking button.png"))
-    bank_image = bank_image.resize((360, 65), Image.Resampling.LANCZOS)
+    bank_image = bank_image.resize((305, 60), Image.Resampling.LANCZOS)
     bank_photo = ImageTk.PhotoImage(bank_image)
 
     bank_clicked_image = Image.open(relative_to_assets("bank click.png"))
-    bank_clicked_image = bank_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
+    bank_clicked_image = bank_clicked_image.resize((305, 60), Image.Resampling.LANCZOS)
     bank_clicked_photo = ImageTk.PhotoImage(bank_clicked_image)
 
     # Load default and clicked versions of card image
     paypal_image = Image.open(relative_to_assets("paypal button.png"))
-    paypal_image = paypal_image.resize((360, 65), Image.Resampling.LANCZOS)
+    paypal_image = paypal_image.resize((305, 60), Image.Resampling.LANCZOS)
     paypal_photo = ImageTk.PhotoImage(paypal_image)
 
     paypal_clicked_image = Image.open(relative_to_assets("paypal clicked.png"))
-    paypal_clicked_image = paypal_clicked_image.resize((360, 65), Image.Resampling.LANCZOS)
+    paypal_clicked_image = paypal_clicked_image.resize((305, 60), Image.Resampling.LANCZOS)
     paypal_clicked_photo = ImageTk.PhotoImage(paypal_clicked_image)
 
     # Payment Method Buttons

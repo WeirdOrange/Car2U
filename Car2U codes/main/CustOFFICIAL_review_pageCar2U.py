@@ -180,11 +180,12 @@ def cancel_Request():
                 UPDATE BookingDetails
                 SET bookingStatus = "Cancelled"
                 WHERE bookingID = ?
-            ''', (bookingID))
+            ''', (bookingID,))
             
             conn.commit()
             conn.close()
             easygui.msgbox(f"Booking Request Terminated", "Your booking request has been cancelled.")
+            break
         elif cancel == "Back":
             break
 

@@ -87,9 +87,7 @@ def convert_data(data):
     global receiptIMG
     img_byte = BytesIO(data)
     img = Image.open(img_byte)
-    img = img.resize((480, 480), Image.Resampling.LANCZOS)
-    receiptIMG = ctk.CTkImage(light_image=img, size=(480,480))
-    return receiptIMG
+    return img
     
 # Email notification
 def emailNotif(email_receiver,subject,body):
@@ -238,7 +236,7 @@ def select_item(event):
             cursor.execute('''SELECT C.model,C.registrationNo,B.bookingRemark,
                             CONCAT(CAST(B.pickupDate AS CHAR), ' till ', CAST(B.dropoffDate AS CHAR)) AS period,
                             U.name,U.email,U.contactNo,B.bookingStatus,B.totalAmount,B.pickupLocation,
-                            B.dropoffLocation,B.pickupTime,B.dropoffTime,B.bookingID,C.seatingCapacity,T.transactID,T.receipt
+                            B.dropoffLocation,B.pickupTime,B.dropoffTime,B.bookingID,C.seatingCapacity,T.transactID,T.receipt, C.carImage
                             FROM BookingDetails B
                             INNER JOIN CarDetails C ON B.carID = C.carID
                             INNER JOIN UserDetails U ON B.userID = U.userID
@@ -250,11 +248,13 @@ def select_item(event):
                 if isinstance(widget, (ctk.CTkFrame,ctk.CTkButton)):
                     widget.destroy()
             # Car Content
-            global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG
+            global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG,carImage
             for row in car_data:
                 model = row[0]
                 carNo = row[1]
                 addons = row[2]
+                if addons == "":
+                    addons = "None"
                 period = row[3]
                 # Customer Content
                 custName = row[4]
@@ -277,9 +277,17 @@ def select_item(event):
                     payStatus = "Done"
                 receipt = row[16]
                 if receipt != None:
-                    receiptIMG = convert_data(receipt)
+                    img = convert_data(receipt)
+                    receiptIMG = ctk.CTkImage(light_image=img, size=(280,480))
                 else:
                     receiptIMG = ""
+
+                car = row[17]
+                if car != None:
+                    img = convert_data(car)
+                    carImage = ctk.CTkImage(light_image=img, size=(200,100))
+                else:
+                    carImage = ""
             refresh_detail()
         except sqlite3.Error as e:
             print(f"SQLite error: {e}")
@@ -310,10 +318,14 @@ def refresh_detail():
     detail_title = ctk.CTkLabel(detailsFrame, text="Booking Details", font=("Segoe UI Bold",24))
     detail_title.place(x=280,y=5)
 
-    global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG
+    global model,carNo,addons,period,custName,email,contact,status,price,pickup,dropoff,pickTime,dropTime,seats,payStatus,receiptIMG,carImage
     # Placeholder for car image
-    car_image = ctk.CTkLabel(detailsFrame, text="Car Photo", width=200, height=100, fg_color="#D9D9D9", bg_color="#D9D9D9")
-    car_image.place(x=50, y=45)
+    if carImage:
+        car_image = ctk.CTkLabel(detailsFrame, text="", image=carImage, width=200, height=100, fg_color="#D9D9D9", bg_color="#D9D9D9")
+        car_image.place(x=50, y=45)
+    else:
+        car_image = ctk.CTkLabel(detailsFrame, text="Car Photo", width=200, height=100, fg_color="#D9D9D9", bg_color="#D9D9D9")
+        car_image.place(x=50, y=45)
 
     statusTitle = ctk.CTkLabel(detailsFrame,text="Booking Status:",width=140,height=21,anchor='center', font=("Segoe UI Bold",16))
     statusTitle.place(x=300,y=45)

@@ -80,6 +80,6 @@ root.withdraw() #Hides root window
 UserInfo = ""
 
 # Start with the login screen
-open_login()
+open_home()
 
 root.mainloop()  # Only call mainloop once

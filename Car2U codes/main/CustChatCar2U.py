@@ -191,14 +191,17 @@ def message_directed(cust_id):
     chat_input.insert(0, f"@{cust_id} ")
 
 def fetchName():
-    global agencyName, userInfo
-    userInfo = get_user_info()
-    print(f"Home: {userInfo}")
-    Database()
-    cursor.execute("""SELECT name FROM UserDetails WHERE userID = ?""",(userInfo,))
-    agencyName = cursor.fetchone()[0]
-    conn.close()
-    print(agencyName)
+    try:
+        global agencyName, userInfo
+        userInfo = get_user_info()
+        print(f"Home: {userInfo}")
+        Database()
+        cursor.execute("""SELECT name FROM UserDetails WHERE userID = ?""",(userInfo,))
+        agencyName = cursor.fetchone()[0]
+        conn.close()
+        print(agencyName)
+    except Exception:
+        messagebox.showerror("User Not Found","Please log in as user in order to use the Chatting System. Thanks.")
     return agencyName
 
 

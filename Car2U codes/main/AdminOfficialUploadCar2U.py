@@ -401,7 +401,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
 
     # Relocate buttons
     home_button = ctk.CTkButton(master=uploadFrame, text="Home", width=120, fg_color=("#F95C41","#FA5740"), bg_color="#FA5740", 
-                                text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(uploadFrame, home_callback))
+                                text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), command=lambda: open_home(uploadFrame, home_callback))
     home_button.place(x=22, y=100)
     pywinstyles.set_opacity(home_button,color="#FA5740")
 
@@ -411,7 +411,7 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
     pywinstyles.set_opacity(booking_button,color="#FB543F")
 
     inventory_button = ctk.CTkButton(master=uploadFrame, text="Inventory", width=120, fg_color=("#FB543F","#FC503E"), bg_color="#FC503E", 
-                                      text_color="#000000", font=("Tw Cen MT Condensed Extra Bold", 20), 
+                                      text_color="#FFF6F6", font=("Tw Cen MT Condensed Extra Bold", 20), 
                                       command=lambda: open_carUpload())
     inventory_button.place(x=22, y=230)
     pywinstyles.set_opacity(inventory_button,color="#FC503E")

@@ -273,11 +273,11 @@ def upRenter(login_callback, home_callback):
         pywinstyles.set_opacity(login_button,color="#1C69C1")
 
     # Title and subtitle on the right
-    title_label = ctk.CTkLabel(RenterFrame, text="Become A Renter!", font=('Bauhaus 93', 48), bg_color="#5E32C1")
+    title_label = ctk.CTkLabel(RenterFrame, text="Become An Agent!", font=('Bauhaus 93', 48), bg_color="#5E32C1")
     title_label.place(x=710, y=240)
     pywinstyles.set_opacity(title_label,color="#5E32C1")
-    subtitle_label = ctk.CTkLabel(RenterFrame, text="Join Us On Your Journey\nOf Becoming A Renter!", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 24), bg_color="#503DC1")
-    subtitle_label.place(x=770, y=310)
+    subtitle_label = ctk.CTkLabel(RenterFrame, text="Join Us On Your Journey\nOn Becoming A Part Of Our Rental Collaborators!", text_color="#FFFFFF", font=('Tw Cen MT Condensed Extra Bold', 24), bg_color="#503DC1")
+    subtitle_label.place(x=690, y=310)
     pywinstyles.set_opacity(subtitle_label,color="#503DC1")
 
     info_checker()

@@ -117,6 +117,8 @@ def fetch_booking_data(selected_Pdate,selected_Ddate):
             
             if dateTaken:
                 messagebox.showinfo("Request Failed", f"Car is currently unavailable in the following dates:\n{dateTaken}")
+                no = 1
+                return no 
             else:
                 messagebox.showinfo("Booking Slot Available!","Congrats! Pick-Up And Drop-OFF Date are both available!")
             
@@ -188,10 +190,11 @@ def review_data(review_callback):
         messagebox.showerror("Error", "Please make sure every Details are inserted.")
         return 0
 
-    fetch_booking_data(datePickup,dateDropoff)
+    no = fetch_booking_data(datePickup,dateDropoff)
     if not datePickup or not timePickup or not locatePickup or not dateDropoff or not timeDropoff or not locateDropoff:
         messagebox.showinfo("Input Error", "Please make sure every Details are inserted.")
-        
+    elif no == 1:
+        return 0 
     else: # IF the values are inputted correctly
         print("Everything checks out")
         request_booking(review_callback)

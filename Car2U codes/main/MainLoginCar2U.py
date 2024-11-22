@@ -136,7 +136,7 @@ def forgorPssw(loginFrame,returnLogin):
                         passw = easygui.multenterbox(msg, title, fieldNames)   
                         if not passw:
                             break
-                        if len(passw) < 8:
+                        if len(str(passw)) < 8:
                             easygui.msgbox("Passwords are required to have at least 8 letters. Please try again.")
 
                         elif passw[0].strip() == "" or passw[0] != passw[1]:

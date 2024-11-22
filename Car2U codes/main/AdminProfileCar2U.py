@@ -213,7 +213,7 @@ def save_selected_as_pdf(title,rating,bookings,total):
     y_position = y_position - 10
     c.line(40, y_position, width-40, y_position) 
     
-    bookingsfield = ["Car No.","Numbers of days booked","Revenues"]
+    bookingsfield = ["Car No.","Numbers of dakys booked","Revenues"]
 
     x_position = 60
     y_position = y_position-20
@@ -787,7 +787,8 @@ def yearlyinfo(year): # Yearly Report
     Database()
     cursor.execute("""SELECT printf("%.2f", (sum(totalAmount))) from BookingDetails b
                         INNER join CarDetails c on b.carID=c.carID
-                        WHERE bookingStatus in ("Approved","On Rent", "Rented") and pickupDate >= ? and pickupDate <= ? and c.agencyID = ?""",(firstday,lastday,userInfo))
+                        WHERE bookingStatus in ("Approved","On Rent", "Rented") and pickupDate >= ? and pickupDate <= ? and c.agencyID = ?""",
+                        (firstday,lastday,userInfo))
     yrProfit = cursor.fetchall()
     conn.close()
 

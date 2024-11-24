@@ -15,7 +15,7 @@ from email.message import EmailMessage
 
 # Set up the asset path 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Main-Login")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Main-Login")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

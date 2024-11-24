@@ -9,7 +9,7 @@ from io import BytesIO
 from MainCar2U_UserInfo import get_user_info,set_user_info
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Admin-Upload-Car")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Upload-Car")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -18,40 +18,6 @@ def relative_to_assets(path: str) -> Path:
 def connect_db():
     conn = sqlite3.connect('CAR2U.db')
     cursor = conn.cursor()
-
-    # Create CarDetails table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS CarDetails (
-            carID INTEGER PRIMARY KEY AUTOINCREMENT,
-            registrationNo VARCHAR(10) UNIQUE,
-            model VARCHAR(20) NOT NULL,
-            colour VARCHAR(20) NOT NULL,
-            fuelType VARCHAR(20) NOT NULL,
-            seatingCapacity VARCHAR(20) NOT NULL,
-            transmissionType VARCHAR(20) NOT NULL,
-            price DECIMAL(10, 2) NOT NULL,
-            carImage BLOB,
-            agencyID INTEGER NOT NULL,
-            dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (agencyID) REFERENCES RentalAgency(agencyID)
-        )
-    ''')
-
-    # Create RentalAgency table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS RentalAgency (
-            agencyID INTEGER PRIMARY KEY AUTOINCREMENT,
-            agencyName VARCHAR(30) NOT NULL,
-            agencyLocation VARCHAR(100) NOT NULL,
-            agencyEmail VARCHAR(150) NOT NULL UNIQUE,
-            agencyPassword VARCHAR(100) NOT NULL,
-            agencyContactNo VARCHAR(15) NOT NULL,
-            agencyLogo BLOB,
-            dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    conn.commit()
     return conn, cursor
 
 # Function to handle login button click

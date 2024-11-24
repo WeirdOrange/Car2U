@@ -17,7 +17,7 @@ from io import BytesIO
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Booking-Details")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Booking-Details")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

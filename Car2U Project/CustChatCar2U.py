@@ -12,7 +12,7 @@ from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Chat")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Chat")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

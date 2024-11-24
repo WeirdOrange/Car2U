@@ -23,7 +23,7 @@ SMALL_FONT = ("Helvetica", 13)
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Admin-Chat")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Chat")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

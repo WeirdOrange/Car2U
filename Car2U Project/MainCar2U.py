@@ -18,6 +18,7 @@ import AdminProfileCar2U
 import AdminChatCar2U
 
 import tkinter as tk
+import sqlite3
 
 # Define the callbacks
 def open_signup():
@@ -31,6 +32,7 @@ def returnLogin():
 
 def open_upRent():
     CustUpRenterCar2U.upRenter(open_login,open_home)
+
 
 # User Callbacks
 def open_home():
@@ -74,10 +76,103 @@ def open_admin_Profile():
 def open_admin_Chat():
     AdminChatCar2U.adminChat(open_login,open_admin_home,open_car_details,open_admin_Booking,open_admin_Profile)
 
+def Database(): #creating connection to database and creating table
+    try:
+        global conn, cursor
+        conn = sqlite3.connect("car2u.db")
+        cursor = conn.cursor()
+
+        query = """
+            CREATE TABLE IF NOT EXISTS UserDetails (
+                userID INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(150) NOT NULL UNIQUE,
+                password VARCHAR(100) NOT NULL,
+                gender BINARY,
+                dob DATE NOT NULL,
+                contactNo VARCHAR(15) NOT NULL,
+                nationality VARCHAR(100),
+                profilePic BLOB,
+                dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS CarDetails (
+                carID INTEGER PRIMARY KEY AUTOINCREMENT,
+                registrationNo VARCHAR(10) UNIQUE,
+                model VARCHAR(20) NOT NULL,
+                colour VARCHAR(20) NOT NULL,
+                fuelType VARCHAR(20) NOT NULL,
+                seatingCapacity VARCHAR(20) NOT NULL,
+                transmissionType VARCHAR(20) NOT NULL,
+                price DECIMAL(10, 2) NOT NULL,
+                carImage BLOB,
+                agencyID INTEGER NOT NULL,
+                dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (agencyID) REFERENCES RentalAgency(agencyID)
+            );
+
+            CREATE TABLE IF NOT EXISTS RentalAgency (
+                agencyID INTEGER PRIMARY KEY AUTOINCREMENT,
+                agencyName VARCHAR(30) NOT NULL,
+                agencyLocation VARCHAR(100) NOT NULL,
+                agencyEmail VARCHAR(150) NOT NULL UNIQUE,
+                agencyPassword VARCHAR(100) NOT NULL,
+                agencyContactNo VARCHAR(15) NOT NULL,
+                agencyLogo BLOB,
+                dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS BookingDetails (
+                bookingID INTEGER PRIMARY KEY AUTOINCREMENT,
+                carID INTEGER NOT NULL,
+                userID INTEGER NOT NULL,
+                pickupDate DATE NOT NULL,
+                pickupTime TIME NOT NULL,
+                pickupLocation VARCHAR(100) NOT NULL,
+                dropoffDate DATE NOT NULL,
+                dropoffTime TIME NOT NULL,
+                dropoffLocation VARCHAR(100) NOT NULL,
+                numberOfDays INTEGER GENERATED ALWAYS AS (JULIANDAY(dropoffDate) - JULIANDAY(pickupDate)),
+                totalAmount REAL,
+                bookingStatus VARCHAR (30),
+                bookingRemark VARCHAR (100),
+                dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (carID) REFERENCES CarDetails(carID),
+                FOREIGN KEY (userID) REFERENCES UserDetails(userID)
+            );
+
+            CREATE TABLE IF NOT EXISTS Transactions (
+                transactID INTEGER PRIMARY KEY AUTOINCREMENT,
+                transactionMethod VARCHAR(30) NOT NULL,
+                totalAmount DECIMAL(10, 2) NOT NULL,
+                receipt BLOB,
+                bookingID INTEGER,
+                dateCreated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (bookingID) REFERENCES BookingDetails(bookingID)
+            );
+
+            CREATE TABLE IF NOT EXISTS Reviews (
+                reviewID    INTEGER PRIMARY KEY AUTOINCREMENT,
+                ratings    REAL NOT NULL,
+                statement    VARCHAR(200),
+                bookingID    INTEGER NOT NULL,
+                dateCreated    DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (bookingID) REFERENCES BookingDetails(bookingID)
+            );
+        """
+
+        cursor.executescript(query)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Error has happened: ",e)
+
 global root
 root = tk.Tk()
 root.withdraw() #Hides root window
 UserInfo = ""
+
+Database()
 
 # Start with the login screen
 open_home()

@@ -15,7 +15,7 @@ from tkinter import messagebox, Toplevel
 
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Upgrade-Renter")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Upgrade-Renter")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

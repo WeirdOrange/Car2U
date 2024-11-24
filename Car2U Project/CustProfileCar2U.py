@@ -10,7 +10,7 @@ from PIL import Image, ImageTk
 from io import BytesIO
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U codes\main\assets\Cust-Profile")
+ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Profile")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

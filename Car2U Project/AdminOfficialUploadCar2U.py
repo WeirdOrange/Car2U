@@ -6,10 +6,14 @@ import sqlite3
 import pywinstyles
 from pathlib import Path
 from io import BytesIO
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,fetch_file_path
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Admin-Upload-Car"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Upload-Car")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -160,7 +164,7 @@ def refresh_treeview():
         for row in rows:
             treeview.insert("", "end", values=row)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        messagebox.showerror(f"An error occurred: {e}")
     finally:
         if conn:
             conn.close()
@@ -177,7 +181,7 @@ def fetchName():
         return agencyName
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        messagebox.showerror(f"An error occurred: {e}")
     finally:
         if conn:
             conn.close()
@@ -345,7 +349,6 @@ def uploadGUI(login_callback,home_callback,booking_callback,profile_callback,cha
     # Linking user data
     global userInfo
     userInfo = get_user_info()
-    print(f"Upload Car: {userInfo}")
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("nav.png")),size=(200,720))

@@ -4,7 +4,7 @@ import pywinstyles
 import sqlite3
 import tkinter
 import os
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info, fetch_file_path
 from tkinter import Toplevel, messagebox, filedialog, Scrollbar
 from tkcalendar import Calendar, DateEntry
 from calendar import monthrange
@@ -27,8 +27,12 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 import numpy as np
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Admin-Profile"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Profile")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -110,7 +114,6 @@ def fetch_user_data():
     global result
     Database()
     userInfo = get_user_info()
-    print(f"UserID : {userInfo}")
     query = f"""SELECT agencyName,agencyEmail,agencyLocation,agencyContactNo,agencyLogo FROM RentalAgency WHERE agencyID = '{userInfo}'"""
     cursor.execute(query)
     result = cursor.fetchall()
@@ -330,8 +333,6 @@ def accInfo():
                               font=("Tw Cen MT Condensed Extra Bold", 16), text_color="#FFFFFF", command=lambda: editInfo())
     edit_info.place(x=640, y=125)
     pywinstyles.set_opacity(edit_info,color="#DEF3FF")
-        
-    print(infoData)
 
 def editInfo():
     for widget in info_frame.winfo_children():
@@ -435,14 +436,13 @@ def adminProfile(login_callback,home_callback,detail_callback,booking_callback,c
     # Create the main application window
     global adminProfileFrame
     adminProfileFrame = Toplevel()
-    adminProfileFrame.title("Profile Page")
+    adminProfileFrame.title("Admin Profile")
     adminProfileFrame.geometry("1280x720")
     adminProfileFrame.resizable(False, False)
     adminProfileFrame.config(bg="white")
 
     global userInfo
     userInfo = get_user_info()
-    print(f"Profile : {userInfo}")
 
     # Background
     bg_img = ctk.CTkImage(Image.open(relative_to_assets("bg.png")),size=(1280,720))
@@ -734,14 +734,11 @@ def yearlyinfo(year): # Yearly Report
     unRent = cursor.fetchall()
     conn.close()
 
-    print(unRent)
     if not unRent:
         ynotRent = 0
-        print(ynotRent)
     else:
         for row in unRent:
             ynotRent = row[0]
-            print(ynotRent)
 
     # Fetching rejected bookings
     Database()

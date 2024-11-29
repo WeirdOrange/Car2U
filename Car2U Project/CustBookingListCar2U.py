@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 import pywinstyles
 import sqlite3
-from MainCar2U_UserInfo import get_user_info,set_user_info, set_CarID
+from MainCar2U_UserInfo import get_user_info,set_user_info, set_CarID,fetch_file_path
 from CustHomeCar2U import getCarLocate,getCarPax
 from tkcalendar import DateEntry
 from datetime import datetime, timedelta
@@ -11,9 +11,12 @@ from PIL import Image, ImageTk
 from tkinter import Toplevel, messagebox
 from io import BytesIO
 
-# Set up the asset path (same as original)
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Selections"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Selections")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -358,7 +361,7 @@ def booking(login_callback,home_callback,profile_callback,about_callback,bookdet
     # Create the main application window
     global bookingFrame
     bookingFrame = Toplevel()
-    bookingFrame.title("Login")
+    bookingFrame.title("Car Selections")
     bookingFrame.geometry("1280x720")
     bookingFrame.resizable(False, False)
 

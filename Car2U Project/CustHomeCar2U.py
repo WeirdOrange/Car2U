@@ -2,14 +2,17 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox
 from tkcalendar import DateEntry
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info, fetch_file_path
 import tkinter as tk
 import customtkinter as ctk 
 import pywinstyles
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Home"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Home")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -89,7 +92,6 @@ def accManage(current_window, login_callback,profile_callback,review_callback):
         pfpState = 1
 
 def findcar(homeFrame,list_callback,location,pax):
-    print(location,"  ",pax)
     if location != None:
         saveCarLocate(location)
     if pax != None:
@@ -114,7 +116,7 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
     # Create the main application window
     global homeFrame
     homeFrame = Toplevel()
-    homeFrame.title("Login")
+    homeFrame.title("Home")
     homeFrame.geometry("1280x720")
     homeFrame.resizable(False, False)
     homeFrame.config(bg="white")
@@ -276,7 +278,6 @@ def homepage(login_callback,uprent_callback,list_callback,profile_callback,about
 
     global userInfo
     userInfo = get_user_info()
-    print(f"Home : {userInfo}")
 
 def bookingManual(event):
     global manual

@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,fetch_file_path
 from tkinter import Toplevel, messagebox, filedialog
 from tkcalendar import Calendar, DateEntry
 from datetime import datetime
@@ -9,8 +9,12 @@ from pathlib import Path
 from PIL import Image, ImageTk
 from io import BytesIO
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Profile"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Profile")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -62,7 +66,6 @@ def fetch_user_data():
     global result
     Database()
     userInfo = get_user_info()
-    print(f"UserID : {userInfo}")
     query = f"""SELECT *,(date()-dob) AS age FROM UserDetails where userID = '{userInfo}'"""
     cursor.execute(query)
     result = cursor.fetchall()
@@ -110,7 +113,6 @@ def accInfo():
 
         dob = datetime.strptime(row[5],"%Y-%m-%d")
         dob = dob.date()
-        print(dob)
     
     # Placeholder for user image
     user_image = ctk.CTkButton(profileFrame, image=pfp_img, text="", width=240, height=240, fg_color="#D9D9D9", 
@@ -140,7 +142,6 @@ def accInfo():
                               font=("Tw Cen MT Condensed Extra Bold", 16), command=lambda: editInfo())
     edit_info.place(x=625, y=218)
         
-    print(infoData)
 
 def editInfo():
     def genderSelect():
@@ -313,7 +314,6 @@ def profile(login_callback,home_callback,list_callback,about_callback,review_cal
 
     global userInfo
     userInfo = get_user_info()
-    print(f"Profile : {userInfo}")
 
     # Background
     bg_img = ctk.CTkImage(Image.open(relative_to_assets("image_1.png")),size=(1280,720))

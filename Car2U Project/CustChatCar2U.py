@@ -8,11 +8,14 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, scrolledtext, messagebox, ttk
 from tkcalendar import DateEntry
-from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_messages,getRenter
+from MainCar2U_UserInfo import get_user_info,set_user_info,store_messages,fetch_messages,getRenter, fetch_file_path
+
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Chat"
 
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Chat")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -253,7 +256,7 @@ def custChatGUI(login_callback,home_callback,listing_callback,aboutUs_callback,p
 
     global chatFrame
     chatFrame = Toplevel()
-    chatFrame.title("User Chat Interface")
+    chatFrame.title("Messenge Client")
     chatFrame.geometry("1280x720")
     chatFrame.resizable(False,False)
 

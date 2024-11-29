@@ -7,15 +7,18 @@ import easygui
 import random, string
 import smtplib
 import ssl
-from MainCar2U_UserInfo import set_user_info
+from MainCar2U_UserInfo import set_user_info,fetch_file_path
 from pathlib import Path
 from tkinter import messagebox,Toplevel
 from PIL import ImageTk, Image
 from email.message import EmailMessage
 
-# Set up the asset path 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Main-Login"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Main-Login")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

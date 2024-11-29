@@ -6,12 +6,15 @@ import easygui
 from tkinter import ttk, messagebox, Toplevel
 from pathlib import Path
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info,set_BookingID,setRenter
+from MainCar2U_UserInfo import get_user_info,set_user_info,set_BookingID,setRenter, fetch_file_path
 from datetime import datetime
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Review"
 
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Review")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

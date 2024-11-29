@@ -5,7 +5,7 @@ import tkinter as tk
 import customtkinter as ctk
 import pywinstyles
 import sqlite3
-from MainCar2U_UserInfo import get_user_info,set_user_info, store_messages,fetch_messages
+from MainCar2U_UserInfo import get_user_info,set_user_info, store_messages,fetch_messages, fetch_file_path
 from tkinter import Toplevel,scrolledtext, messagebox, ttk
 from pathlib import Path
 from PIL import Image
@@ -21,9 +21,12 @@ FONT = ("Helvetica", 17)
 BUTTON_FONT = ("Helvetica", 15)
 SMALL_FONT = ("Helvetica", 13)
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Admin-Chat"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Chat")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -170,7 +173,7 @@ def refresh_chatlist():
                                         fg_color="#FFD6A6", text_color="#000000", command=lambda cust_name=cust_name: message_directed(cust_name))
             user_button.pack(pady=5)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        messagebox.showerror(f"An error occurred: {e}")
     finally:
         if conn:
             conn.close()
@@ -182,12 +185,10 @@ def message_directed(cust_id):
 def fetchName():
     global agencyName, userinfo
     userinfo = get_user_info()
-    print(f"Home: {userinfo}")
     Database()
     cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = ?""",(userinfo,))
     agencyName = cursor.fetchone()[0]
     conn.close()
-    print(agencyName)
     return agencyName
 
 def adminChat(login_callback,home_callback,detail_callback,booking_callback,profile_callback):
@@ -198,7 +199,7 @@ def adminChat(login_callback,home_callback,detail_callback,booking_callback,prof
 
     chatpage = Toplevel()
     chatpage.geometry("1280x720")
-    chatpage.title("Messenger Client")
+    chatpage.title("Admin Messenger Client")
     chatpage.resizable(False, False)
 
     bg_img = ctk.CTkImage(Image.open(relative_to_assets("admin_bg.png")),size=(1280,720))

@@ -8,13 +8,16 @@ import easygui
 from tkinter import messagebox, Toplevel, filedialog
 from pathlib import Path
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info,get_BookingInfo
+from MainCar2U_UserInfo import get_user_info,set_user_info,get_BookingInfo, fetch_file_path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Payment"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Payment")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

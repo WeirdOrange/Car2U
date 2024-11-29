@@ -1,6 +1,10 @@
 userInfo = ""
 messages = []
 
+def fetch_file_path():
+    file_path = "D:\\Ivan\\Ivan\\Ivan\\Deg CS\\ALL Project\\Car2U\\Car2U Project\\assets"
+    return file_path
+
 def set_user_info(userid):
     global userInfo
     userInfo = userid

@@ -5,15 +5,18 @@ import smtplib
 import ssl
 from easygui import buttonbox
 from email.message import EmailMessage
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info, fetch_file_path
 from tkinter import Toplevel, ttk, messagebox, PhotoImage
 from PIL import Image, ImageTk
 from pathlib import Path
 from io import BytesIO
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Admin-Booking"
+
 # Set up the asset path (same as original)
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Booking")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -289,11 +292,8 @@ def select_item(event):
                 else:
                     carImage = ""
             refresh_detail()
-        except sqlite3.Error as e:
-            print(f"SQLite error: {e}")
-            messagebox.showerror("Error", f"Error occurred during registration: {e}")
+            
         except Exception as e:
-            print(f"General error: {e}")
             messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
         except sqlite3.Error as e:

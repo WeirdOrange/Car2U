@@ -2,14 +2,17 @@ from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox
 from tkcalendar import DateEntry
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,fetch_file_path
 import tkinter as tk
 import customtkinter as ctk 
 import pywinstyles
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-AboutUs"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-AboutUs")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -93,7 +96,7 @@ def aboutUspage(login_callback,uprent_callback,home_callback,list_callback,profi
     # Create the main application window
     global aboutFrame
     aboutFrame = Toplevel()
-    aboutFrame.title("Login")
+    aboutFrame.title("About Us")
     aboutFrame.geometry("1280x720")
     aboutFrame.resizable(False, False)
     aboutFrame.config(bg="white")
@@ -222,7 +225,6 @@ def aboutUspage(login_callback,uprent_callback,home_callback,list_callback,profi
 
     global userInfo
     userInfo = get_user_info()
-    print(f"About Us : {userInfo}")
 
 def bookingManual(event):
     global manual

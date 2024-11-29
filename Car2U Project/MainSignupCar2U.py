@@ -7,6 +7,7 @@ import ssl
 import easygui
 import random, string
 import hashlib
+from MainCar2U_UserInfo import fetch_file_path
 from datetime import date
 from dateutil.parser import parse
 from PIL import Image
@@ -14,9 +15,12 @@ from email.message import EmailMessage
 from pathlib import Path
 from tkinter import messagebox, Toplevel
 
-# Set up the asset path (same as original)
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Main-SignUp"
+
+# Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Main-SignUp")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

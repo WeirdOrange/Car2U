@@ -6,9 +6,9 @@ Car2U was created as a assignment project completely using python. Car2U is an O
 
 ## Instructions
 1. Install all the required python modules in requirements.txt using pip install.
-2. Except for main.py, MainCar2U_UserInfo.py and MainCar2Userver.py, change the file path in ASSETS_PATH within each python file according to the file location installed.
-3. The application should be able to run on main.py without error
-   Note: MainCar2Userver.py will need to be run as another instance if one wishes to use the chatting system.
+2. ASSETS_PATH in MainCar2U_UserInfo.py is required to change into the file path where the assets file of the repository installed.
+3. The application should be able to run MainCar2Userver.py and main.py as two instances.
+   Note: MainCar2Userver.py will need to be run as another instance if one wishes to use the chatting system. Only the chatting system will be unable to be connected if the file did not run.
 
 ## Project Status:
 Completed

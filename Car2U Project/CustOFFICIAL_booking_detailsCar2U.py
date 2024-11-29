@@ -8,16 +8,19 @@ from tkinter import messagebox, Toplevel
 from pandas import date_range
 from datetime import datetime, date, timedelta
 from PIL import Image, ImageTk
-from MainCar2U_UserInfo import get_user_info,set_user_info,get_Car_info
+from MainCar2U_UserInfo import get_user_info,set_user_info,get_Car_info, fetch_file_path
 from CustBookingListCar2U import getPickLocate,getDropLocate,getPickDate,getDropDate
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from tkcalendar import DateEntry
 from io import BytesIO
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Cust-Booking-Details"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Cust-Booking-Details")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)

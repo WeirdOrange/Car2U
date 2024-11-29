@@ -1,7 +1,7 @@
 from pathlib import Path
 from PIL import Image
 from tkinter import Toplevel, messagebox, ttk
-from MainCar2U_UserInfo import get_user_info,set_user_info
+from MainCar2U_UserInfo import get_user_info,set_user_info, fetch_file_path
 from tkcalendar import Calendar
 from datetime import datetime,date
 from calendar import monthrange
@@ -10,9 +10,12 @@ import customtkinter as ctk
 import pywinstyles
 import sqlite3
 
+file_path = fetch_file_path()
+assetPath = f"{file_path}\\Admin-Home"
+
 # Set up the asset path
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"D:\Ivan\Ivan\Ivan\Deg CS\ALL Project\Car2U\Car2U Project\assets\Admin-Home")
+ASSETS_PATH = OUTPUT_PATH / Path(assetPath)
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -210,7 +213,7 @@ def adminHome(login_callback,detail_callback,booking_callback,profile_callback,c
     # Create the main application window
     global adminHomeFrame
     adminHomeFrame = Toplevel()
-    adminHomeFrame.title("Login")
+    adminHomeFrame.title("Admin Home")
     adminHomeFrame.geometry("1280x720")
     adminHomeFrame.resizable(False, False)
     adminHomeFrame.config(bg="white")
@@ -222,12 +225,10 @@ def adminHome(login_callback,detail_callback,booking_callback,profile_callback,c
     # Linking user data
     global userinfo
     userinfo = get_user_info()
-    print(f"Home: {userinfo}")
     Database()
     cursor.execute("""SELECT agencyName FROM RentalAgency WHERE agencyID = ?""",(userinfo,))
     agencyName = cursor.fetchone()[0]
     conn.close()
-    print(agencyName)
 
     # Navigation Tab
     nav_img = ctk.CTkImage(Image.open(relative_to_assets("nav.png")),size=(200,720))
